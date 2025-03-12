@@ -1,0 +1,28 @@
+1. Team Number: 011-8
+2. Team Name: Watchlist
+3. 
+Neha Ramachandra-nera4157@colorado.edu-nehabykadi, 
+Conner Groth-conner.groth@colorado.edu-connergroth,
+Joe Zakrzewski-joe.zakrzewski@colorado.edu-joe-z-school,
+Lizzie Ruff-lizzie.ruff@colorado.edu-liru4345,
+Maeve Pettey-maeve.pettey@colorado.edu-maevePettey,
+Ella Pasternak-ella.pasternak@colorado.edu-elpaster
+4. MovieMate
+5. This application is a movie social media and you can post movies and recommendations and ratings.ONLY MOVIES NO TV SHOWS 
+- Movie Posts
+- Followers
+- Comments Likes
+- Another tab that lists new movies
+- Feeds
+- Profile 
+- Watch List
+- Filter
+- Tabs: My Watchlist   Search Movies   Posts   Logout              User
+
+
+6. Ages 16-30, Movie Fanatics,
+7. For movie fanatics, who are looking for recommendations or a fandom community. MovieMate is a social media application that connects movie watchers together. Unlike Rotten Tomatoes, our product is interactive and connects people. 
+
+10. Communication Plan: We are using MS Teams for communication. 
+11. Meeting Plan: Team Meetings on a Case by Case basis with meetings scheduled on MS Teams and a weekly check-in on Fridays(brief text saying what you've done this week) Weekly Meeting with TA-Zoom Fridays at 5:30
+
