@@ -8,8 +8,16 @@ Lizzie Ruff-lizzie.ruff@colorado.edu-liru4345,
 Maeve Pettey-maeve.pettey@colorado.edu-maevePettey,
 Ella Pasternak-ella.pasternak@colorado.edu-elpaster
 4. MovieMate
-5. This application is a movie social media and you can post movies and recommendations and ratings. This is specifically limited to movies so no tv shows. We will have tabs for friend posts, where you can see your friend's movie recommendations and interact with them. We will also have a tab for general movie recommendations with posts of the highest rated movies pulled from a movie API and there will be a toggle at the side where you can search for specific movies or filter by genres.
-   Each user has their own profile so they must register and login to access the site. In their profile they will be able to see their movie watchlist that is created by them interacting with posts or them adding specific movies from the search feature. They will also have a watched tab that will contain all the movies that they have watched and they can create posts about them and their friends can see these lists as well. They can also see their own posts, bio, and profile information with a choice of a profile picture icon. The profile page will also contain their friends list so they can see who they are following. Finally they will also have the option to logout on this page as well.
+5. This application is a movie social media and you can post movies and recommendations and ratings. This is specifically limited to movies so no tv shows. We will have tabs
+for friend posts, where you can see your friend's movie recommendations and interact with them. We will also have a tab for general movie recommendations with posts of the 
+highest rated movies pulled from a movie API and there will be a toggle at the side where you can search for specific movies or filter by genres.
+
+   Each user has their own profile so they must register and login to access the site. In their profile they will be able to see their movie watchlist that is created by
+them interacting with posts or them adding specific movies from the search feature. They will also have a watched tab that will contain all the movies that they have watched 
+and they can create posts about them and their friends can see these lists as well. They can also see their own posts, bio, and profile information with a choice of a
+profile picture icon. The profile page will also contain their friends list so they can see who they are following. Finally they will also have the option to logout on this 
+page as well.
+
 6. Ages 16-30, Movie Fanatics,
 7. For movie fanatics, who are looking for recommendations or a fandom community. MovieMate is a social media application that connects movie watchers together. Unlike Rotten Tomatoes, our product is interactive and connects people. 
 
