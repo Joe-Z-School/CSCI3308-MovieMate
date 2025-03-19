@@ -3,7 +3,7 @@ Repository for CSCI3308 Software Development Final Project of a Social Movie app
 
 
 # Description
-- Description of application
+- MovieMates is a social media styled application that aims to bring movie fanatics together in one place to share recently watched movies, how they would rate the movie, and a small description of their thoughts on the movies they have seen. MovieMates will allow users to create personal profiles where they can share their recently watched movies, connect with friends and other movie fanatics, and build a list of movies they want to see at some point. A page dedicated to the recently top rated and new movie releases will provide users the ability to search for specific movies based on genres incase they have a specific preference for movie types, or just want to venture into a genre new to the user.
 
 # Contributors
 
