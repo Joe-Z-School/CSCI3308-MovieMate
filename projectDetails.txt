@@ -17,11 +17,10 @@ them interacting with posts or them adding specific movies from the search featu
 and they can create posts about them and their friends can see these lists as well. They can also see their own posts, bio, and profile information with a choice of a
 profile picture icon. The profile page will also contain their friends list so they can see who they are following. Finally they will also have the option to logout on this 
 page as well.
-6. For this project, we will be using the Scrum framework, an Agile methodology. We will divide our project into 4 different sprints with each sprint aiming to complete a set of tasks/ a feature. at the beginning of each sprint we will plan what tasks need to be completed and set times/dates for meetings to discuss rogress and updates. By using Scrum we will be able to have a collaborative and organized environment that allows for iterative feedback and continuous improvement. 
-7. Ages 16-30, Movie Fanatics,
-8. For movie fanatics, who are looking for recommendations or a fandom community. MovieMate is a social media application that connects movie watchers together. Unlike Rotten Tomatoes, our product is interactive and connects people. 
-9. https://github.com/Joe-Z-School/CSCI3308-MovieMate
-
+6. Ages 16-30, that would classify themselves as Movie Fanatics that are needing an easy to use application to keep track of the movies they have previously seen, while acquiring recommendations from and connections with other movie fanatics to grow their passion for movies.
+7. For movie fanatics, who are looking for recommendations or a fandom community. MovieMate is a social media application that connects movie watchers together. Unlike Rotten Tomatoes, our product is interactive and connects people. 
+8. https://github.com/Joe-Z-School/CSCI3308-MovieMate
+9. For this project, we will be using the Scrum framework, an Agile methodology. We will divide our project into 4 different sprints with each sprint aiming to complete a set of tasks/ a feature. at the beginning of each sprint we will plan what tasks need to be completed and set times/dates for meetings to discuss rogress and updates. By using Scrum we will be able to have a collaborative and organized environment that allows for iterative feedback and continuous improvement.
 10. Communication Plan: We are using MS Teams for communication. 
 11. Meeting Plan: Team Meetings on a Case by Case basis with meetings scheduled on MS Teams and a weekly check-in on Fridays(brief text saying what you've done this week) Weekly Meeting with TA-Zoom Fridays at 5:30
 
