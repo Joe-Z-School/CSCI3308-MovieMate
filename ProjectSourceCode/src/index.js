@@ -94,12 +94,36 @@ app.get('/', (req, res) => {
   });
 
   
-
   app.get('/register', (req, res) => {
     //do something
     res.render('pages/register');
   });
 
+// Register
+app.post('/register', async (req, res) => {
+    //hash the password using bcrypt library
+    const hash = await bcrypt.hash(req.body.password, 10);
+
+    const username = req.body.username;
+    const email = req.body.email;
+    const profile_icon = req.body.profile_icon;
+    const bio = req.body.bio;
+
+    // Generate a timestamp for when this request is made
+    const created_at = new Date().toISOString();
+    
+    //creating insert
+    const insert = `INSERT INTO users (username, password, email, profile_icon, bio, created_at) VALUES( $1, $2, $3, $4, $5, $6)`;
+    
+    try{
+        await db.none(insert, [username, hash, email, profile_icon, bio, created_at]);
+        console.log('data successfully added');
+        res.redirect('/login');
+    }catch (err){
+        req.session.Message = 'An error occurred';
+        res.redirect('/register');
+    };
+});
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
