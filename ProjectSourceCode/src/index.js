@@ -93,7 +93,43 @@ app.get('/', (req, res) => {
     res.render('pages/login');
   });
 
-  
+
+  app.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+       
+        const result = await db.query('SELECT * FROM users WHERE username = $1', [req.body.username]);
+       
+        if (result.length === 0) {
+            return res.render('pages/register', {
+                message: 'Username not found.',
+            });
+        }
+ 
+ 
+        const user = result[0];
+        console.log('User from DB:', user);
+        console.log('Entered password:', password);
+ 
+ 
+        const match = await bcrypt.compare(req.body.password, user.password);
+ 
+ 
+        if (!match) {
+            return res.render('pages/login', {
+                message: 'Incorrect username or password.',
+            });
+        }
+ 
+ 
+        req.session.user = user;
+        req.session.save();
+        res.redirect('discover');
+    } catch (err) {
+        res.render('pages/login', { message: 'Error during login. Please try again.' });
+    }
+ });
+ 
 
   app.get('/register', (req, res) => {
     //do something
