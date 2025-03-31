@@ -138,6 +138,18 @@ app.get('/', (req, res) => {
   });
 
 
+
+// *****************************************************
+// <!-- Friends Posts -->
+
+// Display the main page
+app.get('/social', (req, res) => {
+  
+  res.render('pages/social', { layout:'main', posts: initialPosts });
+});
+
+
+
 // *****************************************************
 // <!-- Section 5 : Start Server-->
 // *****************************************************
