@@ -27,14 +27,15 @@
                     <button class="btn" id="add-button-{{@index}}" onclick="toggleWatchlist('{{title}}', '{{cover}}', '{{whereToWatch}}', {{@index}} )" data-bs-toggle="tooltip" data-bs-title="Add to WatchList">
                         <i class="bi bi-plus-circle" id="add-icon-{{@index}}"></i>
                     </button>
-                    <button class="btn btn-primary">Add to Watchlist</button>
                 </div>
             </div>
             </div>
         {{/each}}
         </div>
+        <br>
         <div id="loading" class="text-center mt-4" style="display: none;">
         <p>Loading more posts...</p>
         </div>
+        <br>
     </div>
 </body>
