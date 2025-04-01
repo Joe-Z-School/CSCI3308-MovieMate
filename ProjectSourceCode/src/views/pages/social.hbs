@@ -21,8 +21,12 @@
                     <p class="card-text">Review: {{review}}</p>
                     <p class="card-text">Description: {{description}}</p>
                     <p class="card-text">Where To Watch: {{whereToWatch}}</p>
-                    <button class="btn btn-primary" onclick="addLike( {{postdata}}, {{@index}} )">Add to Likes</button>
-                    <button class="btn btn-primary" onClick="addWatchlist( {{moviedata}}, {{@index}} )">Add to Watchlist</button>
+                    <button class="btn" id="heart-button-{{@index}}" onclick="toggleLikes('{{posts}}', {{@index}} )" data-bs-toggle="tooltip" data-bs-title="Like Post">
+                        <i class="bi bi-heart" id="heart-icon-{{@index}}"></i>
+                    </button>
+                    <button class="btn" id="add-button-{{@index}}" onclick="toggleWatchlist('{{title}}', '{{cover}}', '{{whereToWatch}}', {{@index}} )" data-bs-toggle="tooltip" data-bs-title="Add to WatchList">
+                        <i class="bi bi-plus-circle" id="add-icon-{{@index}}"></i>
+                    </button>
                     <button class="btn btn-primary">Add to Watchlist</button>
                 </div>
             </div>
