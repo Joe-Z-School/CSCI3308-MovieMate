@@ -162,12 +162,20 @@ const posts = [
 ];
 
 // Display the main page
-app.get('/social', (req, res) => {
-  
+app.get('/social', (req, res) => {  
+  const initialPosts = posts.slice(0, 5); // Load the first 5 posts
   res.render('pages/social', { layout:'main', posts: initialPosts });
-
 });
 
+// Load paginated posts
+app.get('/load-more', (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Default to page 1
+  const limit = 5; // Number of posts per batch
+  const startIndex = (page - 1) * limit;
+  const paginatedPosts = posts.slice(startIndex, startIndex + limit);
+
+  res.json({ posts: paginatedPosts });
+});
 
 
 // *****************************************************
