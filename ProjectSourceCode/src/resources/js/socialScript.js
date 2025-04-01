@@ -67,12 +67,18 @@ window.onscroll = () => {
     }, 150);
 };
 
-
-function addWatchlist(moviedata, index) {
-
-    const watchlist = document.querySelectorAll('.watchlist');
+function toggleWatchlist(title, picture, whereToWatch, index) {
+    const addedIcon = document.getElementById(`add-icon-${index}`);
+    const addButton = document.getElementById(`add-button-${index}`);
+    const isAdded = addedIcon.classList.contains('bi-dash-circle');
     
-    if (!watchlist) {        
+    if (!isAdded) {
+        // Change to minus sign
+        addedIcon.classList.remove('bi-plus-circle');
+        addedIcon.classList.add('bi-dash-circle');
+        addedIcon.style.color = 'red';
+        addButton.setAttribute('data-bs-title', 'Remove from WatchList');
+        
         // Add to watchlist
         fetch('/add-to-watchlist', {
             method: 'POST',
@@ -85,12 +91,18 @@ function addWatchlist(moviedata, index) {
             })
             .catch(error => console.error('Error:', error));
     }
-    else {        
+    else {
+        // Change back to plus sign
+        addedIcon.classList.remove('bi-dash-circle');
+        addedIcon.classList.add('bi-plus-circle');
+        addedIcon.style.color = 'black';
+        addButton.setAttribute('data-bs-title', 'Add to WatchList');
+        
         // Remove from watchlist
         fetch('/remove-from-watchlist', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify( { title } ),
+            body: JSON.stringify({ title }),
         })
             .then(response => response.json())
             .then(data => {
@@ -98,17 +110,26 @@ function addWatchlist(moviedata, index) {
             })
             .catch(error => console.error('Error:', error));
     }
+    new bootstrap.Tooltip(addButton);
 }
 
-function addLike(postdata, index) {
-    const post = posts[index];
+function toggleLikes(posts, index) {
+    const heartIcon = document.getElementById(`heart-icon-${index}`);
+    const heartButton = document.getElementById(`heart-button-${index}`);
+    const isFilled = heartIcon.classList.contains('bi-heart-fill');
     
-    if (!post) {        
+    if (!isFilled) {
+        // Change to filled red heart
+        heartIcon.classList.remove('bi-heart');
+        heartIcon.classList.add('bi-heart-fill');
+        heartIcon.style.color = 'red';
+        heartButton.setAttribute('data-bs-title', 'Unlike Post');
+        
         // Add post to Liked Posts
         fetch('/add-to-likedposts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify( { user, title, description } ),
+            body: JSON.stringify({ title, picture, whereToWatch }),
         })
         .then(response => response.json())
             .then(data => {
@@ -116,12 +137,18 @@ function addLike(postdata, index) {
             })
             .catch(error => console.error('Error:', error));
     }
-    else {        
-        // Remove post from Liked Posts
+    else {
+        // Change back to hollow blue heart
+        heartIcon.classList.remove('bi-heart-fill');
+        heartIcon.classList.add('bi-heart');
+        heartIcon.style.color = 'black';
+        heartButton.setAttribute('data-bs-title', 'Like Post');
+        
+        // Remove movie data from watchlist
         fetch('/remove-from-likedposts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify( { title } ),
+            body: JSON.stringify({ title }),
         })
             .then(response => response.json())
             .then(data => {
@@ -129,4 +156,12 @@ function addLike(postdata, index) {
             })
             .catch(error => console.error('Error:', error));
     }
+    new bootstrap.Tooltip(heartButton);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(tooltipTriggerEl => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
