@@ -72,6 +72,11 @@ function toggleWatchlist(title, picture, whereToWatch, index) {
     const addButton = document.getElementById(`add-button-${index}`);
     const isAdded = addedIcon.classList.contains('bi-dash-circle');
     
+    const existingTooltip = bootstrap.Tooltip.getInstance(addButton);
+    if (existingTooltip) {
+        existingTooltip.dispose();
+    }
+
     if (!isAdded) {
         // Change to minus sign
         addedIcon.classList.remove('bi-plus-circle');
@@ -97,7 +102,7 @@ function toggleWatchlist(title, picture, whereToWatch, index) {
         addedIcon.classList.add('bi-plus-circle');
         addedIcon.style.color = 'black';
         addButton.setAttribute('data-bs-title', 'Add to WatchList');
-        
+    
         // Remove from watchlist
         fetch('/remove-from-watchlist', {
             method: 'POST',
@@ -118,6 +123,12 @@ function toggleLikes(posts, index) {
     const heartButton = document.getElementById(`heart-button-${index}`);
     const isFilled = heartIcon.classList.contains('bi-heart-fill');
     
+    // Dispose of existing tooltips
+    const existingTooltip = bootstrap.Tooltip.getInstance(heartButton);
+    if (existingTooltip) {
+        existingTooltip.dispose();
+    }
+
     if (!isFilled) {
         // Change to filled red heart
         heartIcon.classList.remove('bi-heart');
@@ -129,39 +140,40 @@ function toggleLikes(posts, index) {
         fetch('/add-to-likedposts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, picture, whereToWatch }),
+            body: JSON.stringify({ posts }),
         })
         .then(response => response.json())
-            .then(data => {
-                console.log(data.message);
-            })
-            .catch(error => console.error('Error:', error));
-    }
-    else {
-        // Change back to hollow blue heart
+        .then(data => {
+            console.log(data.message);
+        })
+        .catch(error => console.error('Error:', error));
+    } else {
+        // Change back to default heart
         heartIcon.classList.remove('bi-heart-fill');
         heartIcon.classList.add('bi-heart');
         heartIcon.style.color = 'black';
         heartButton.setAttribute('data-bs-title', 'Like Post');
         
-        // Remove movie data from watchlist
+        // Remove post from Liked Posts
         fetch('/remove-from-likedposts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title }),
+            body: JSON.stringify({ posts }),
         })
-            .then(response => response.json())
-            .then(data => {
+        .then(response => response.json())
+        .then(data => {
             console.log(data.message);
-            })
-            .catch(error => console.error('Error:', error));
+        })
+        .catch(error => console.error('Error:', error));
     }
+
+    // Recreate the tooltip
     new bootstrap.Tooltip(heartButton);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(tooltipTriggerEl => {
-        new bootstrap.Tooltip(tooltipTriggerEl);
+        new bootstrap.Tooltip(tooltipTriggerEl, { trigger: 'hover' });
     });
 });
