@@ -1,7 +1,5 @@
-<body id="socialPage">
-
+<body id="socialPage">    
     <script src="../resources/js/socialScript.js"></script>
-
     <div class="container mt-4">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
         <div class="row justify-content-between">
@@ -12,25 +10,27 @@
                 <a class="btn btn-primary" href="/findfriends">Find Friends</a>
             </div>
         </div>
-
         <div id="movie-container" class="row">
         {{#each posts}}
             <div class="row row-cols-1 row-cols-md-1 g-4">
-                <div class="card h-100">
-                    <p class="card-text">~USER~ {{user}}</p>
-                    <img src="{{cover}}" class="card-img-top" alt="{{title}} cover image">
-                    <div class="card-body">
-                        <h5 class="card-title text-center">Movie Title: {{title}}</h5>
-                        <p class="card-text">Review: {{review}}</p>
-                        <p class="card-text">Description: {{description}}</p>
-                        <p class="card-text">Where To Watch: {{whereToWatch}}</p>
-                        <button class="btn btn-primary" onclick="addLike( {{postdata}}, {{@index}} )">Add to Likes</button>
-                        <button class="btn btn-primary" onClick="addWatchlist( {{moviedata}}, {{@index}} )">Add to Watchlist</button>
-                    </div>
+            <div class="card h-100">
+                <p class="card-text">~USER~ {{user}}</p>
+                <img src="{{cover}}" class="card-img-top" alt="{{title}}">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Movie Title: {{title}}</h5>
+                    <p class="card-text">Review: {{review}}</p>
+                    <p class="card-text">Description: {{description}}</p>
+                    <p class="card-text">Where To Watch: {{whereToWatch}}</p>
+                    <button class="btn btn-primary" onclick="addLike( {{postdata}}, {{@index}} )">Add to Likes</button>
+                    <button class="btn btn-primary" onClick="addWatchlist( {{moviedata}}, {{@index}} )">Add to Watchlist</button>
+                    <button class="btn btn-primary">Add to Watchlist</button>
                 </div>
+            </div>
             </div>
         {{/each}}
         </div>
-
+        <div id="loading" class="text-center mt-4" style="display: none;">
+        <p>Loading more posts...</p>
+        </div>
     </div>
 </body>
