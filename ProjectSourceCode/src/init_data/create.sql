@@ -1,57 +1,72 @@
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS movies;
+DROP TABLE IF EXISTS friends;
+DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS movies_to_comments;
+DROP TABLE IF EXISTS movies_to_users;
 DROP TABLE IF EXISTS comments;
-// Use DBML to define your database structure
-// Docs: https://dbml.dbdiagram.io/docs
+DROP TABLE IF EXISTS movies;
+DROP TABLE IF EXISTS users;
 
-CREATE Table friends {
-  following_user_id INT NOT NULL
-  followed_user_id INT NOT NULL
-  friends_since INT
-}
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50) UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  email VARCHAR(200),
+  profile_icon VARCHAR(100),
+  bio VARCHAR(150),
+  created_at TIMESTAMP
+);
 
-CREATE Table users {
-  id INT SERIAL PRIMARY KEY
-  username varchar(50) UNIQUE
-  password varchar(50) NOT NULL
-  email varchar(200)
-  profile_icon varchar(100)
-  bio varchar(150)
-  created_at timestamp
-}
+CREATE TABLE movies (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100),
+  imdb_id VARCHAR(20) UNIQUE,
+  year VARCHAR(10),
+  rating DECIMAL,
+  genre VARCHAR(100),
+  poster VARCHAR(255)
+);
 
-CREATE Table movies {
-  id INT SERIAL PRIMARY KEY
-  name varchar(100)
-  rating decimal
-  genre varchar(50)
-}
+CREATE TABLE comments (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(50),
+  comment VARCHAR(200),
+  rating DECIMAL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-CREATE Table comments {
-  id INT SERIAL PRIMARY KEY
-  username varchar(50)
-  comment varchar(200)
-  rating decimal
-}
+CREATE TABLE movies_to_comments (
+  movie_id INTEGER NOT NULL,
+  comment_id INTEGER NOT NULL,
+  PRIMARY KEY (movie_id, comment_id),
+  FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+  FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE
+);
 
-CREATE Table movies_to_comments {
-  movie_id integer NOT NULL
-  comment_id integer NOT NULL
-}
+CREATE TABLE movies_to_users (
+  user_id INTEGER NOT NULL,
+  movie_id INTEGER NOT NULL,
+  status VARCHAR(50) NOT NULL, 
+  PRIMARY KEY (user_id, movie_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+);
 
-CREATE Table movies_to_users {
-  user_id integer NOT NULL
-  movie_id integer NOT NULL
-  status varchar(50)
-}
+CREATE TABLE friends (
+  following_user_id INTEGER NOT NULL,
+  followed_user_id INTEGER NOT NULL,
+  friends_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (following_user_id, followed_user_id),
+  FOREIGN KEY (following_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (followed_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 
-CREATE Table posts {
-  id INT SERIAL PRIMARY KEY
-  title varchar
-  body text 
-  user_id integer NOT NULL
-  status varchar
-  liked varchar
-  created_at timestamp
-}
-
+CREATE TABLE posts (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(100),
+  body TEXT, 
+  user_id INTEGER NOT NULL,
+  status VARCHAR(50),
+  liked VARCHAR(50),
+  created_at TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
