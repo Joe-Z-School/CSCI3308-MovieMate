@@ -75,6 +75,11 @@ app.use((req, res, next) => {
     console.log(`Incoming request: ${req.method} ${req.url}`);
     next();
 });
+
+Handlebars.registerHelper('json', function(context) {
+  return JSON.stringify(context);
+});
+
 // *****************************************************
 // <!-- Section 4 : API Routes -->
 // *****************************************************
@@ -151,7 +156,7 @@ app.post('/register', async (req, res) => {
         res.redirect('/register');
     };
 });
-
+/*
 // Authentication Middleware.
 const auth = (req, res, next) => {
   if (!req.session.user) {
@@ -168,7 +173,7 @@ app.get('/findFriends', (req, res) => {
   //do something
   res.render('pages/findFriends');
 });
-
+*/
 // *****************************************************
 // <!-- Logout -->
 // *****************************************************
