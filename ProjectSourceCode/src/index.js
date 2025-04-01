@@ -97,40 +97,28 @@ app.get('/', (req, res) => {
   
 
   app.post('/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-       
-        const result = await db.query('SELECT * FROM users WHERE username = $1', [req.body.username]);
-       
-        if (result.length === 0) {
-            return res.render('pages/register', {
-                message: 'Username not found.',
-            });
-        }
- 
- 
-        const user = result[0];
-        console.log('User from DB:', user);
-        console.log('Entered password:', password);
- 
- 
+    //get the username
+    const username = req.body.username;
+    //get the user from the usernmae
+    const getUser = `SELECT * FROM users WHERE users.username = $1`;
+    //let response = await db.none(insert, [username, hash]);
+    try{
+        let user = await db.one(getUser, username);
         const match = await bcrypt.compare(req.body.password, user.password);
- 
- 
-        if (!match) {
-            return res.render('pages/login', {
-                message: 'Incorrect username or password.',
-            });
+        if (!match){
+            res.render('pages/login', {layout: 'main' , message: 'Incorrect username or password.'});
+        }else{
+            console.log('user logged in');
+            req.session.user = user;
+            req.session.save();
+            res.redirect('/findFriends');
         }
- 
- 
-        req.session.user = user;
-        req.session.save();
-        res.redirect('discover');
-    } catch (err) {
-        res.render('pages/login', { message: 'Error during login. Please try again.' });
-    }
- });
+    }catch (err){
+        req.session.Message = 'An error occurred';
+        res.redirect('/register');
+
+    };
+});
  
 
   app.get('/register', (req, res) => {
@@ -164,9 +152,37 @@ app.post('/register', async (req, res) => {
     };
 });
 
+// Authentication Middleware.
+const auth = (req, res, next) => {
+  if (!req.session.user) {
+    // Default to login page.
+    return res.redirect('/login');
+  }
+  next();
+};
+
+// Authentication Required
+app.use(auth);
+
+app.get('/findFriends', (req, res) => {
+  //do something
+  res.render('pages/findFriends');
+});
+
+// *****************************************************
+// <!-- Logout -->
+// *****************************************************
+//To log out
+app.get('/logout', (req, res) => {
+  console.log("succesfully logged out");
+  req.session.destroy(function(err) {
+    res.render('pages/login', {message : 'Logged out Successfully'});
+  });
+});
 
 // *****************************************************
 // <!-- Friends Posts -->
+// *****************************************************
 
 // Sample data
 const posts = [
@@ -240,6 +256,7 @@ app.post('/remove-from-watchlist', async (req, res) => {
       res.render('pages/social', {layout: 'main', error: true, message: 'Failed to remove movie from watchlist.'});
     });  
 });
+
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
