@@ -11,7 +11,9 @@ const pgp = require('pg-promise')(); // To connect to the Postgres DB from the n
 const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
 const bcrypt = require('bcryptjs'); //  To hash passwords
-const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
+const axios = require('axios'); // To make HTTP requests from our server. 
+
+const movieController = require('./controllers/movieController'); // import movieController.js
 
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
@@ -89,45 +91,59 @@ const user = {
     password: undefined
 };
 
-// TODO - Include your API routes here
-app.get('/', (req, res) => {
-    res.redirect('/login'); //this will call the /anotherRoute route in the API
-  });
-  
-  app.get('/login', (req, res) => {
-    //do something
-    res.render('pages/login');
-  });
+// OMDB API Routes
+app.get('/api/movies/search', movieController.searchMovies);
+app.get('/api/movies/details/:imdbId', movieController.getMovieDetails);
+app.post('/api/movies/watchlist', movieController.addToWatchlist);
+app.post('/api/movies/watched', movieController.markAsWatched);
+app.post('/api/movies/review', movieController.addReview);
+app.get('/api/movies/reviews/:imdbId', movieController.getMovieReviews);
 
-  app.post('/login', async (req, res) => {
-    //get the username
-    const username = req.body.username;
-    //get the user from the usernmae
-    const getUser = `SELECT * FROM users WHERE users.username = $1`;
-    //let response = await db.none(insert, [username, hash]);
-    try{
-        let user = await db.one(getUser, username);
-        const match = await bcrypt.compare(req.body.password, user.password);
-        if (!match){
-            res.render('pages/login', {layout: 'main' , message: 'Incorrect username or password.'});
-        }else{
-            console.log('user logged in');
-            req.session.user = user;
-            req.session.save();
-            res.redirect('/findFriends');
-        }
-    }catch (err){
-        req.session.Message = 'An error occurred';
-        res.redirect('/register');
-
-    };
+// Page Routes
+app.get('/movies/details/:imdbId', (req, res) => {
+  res.render('pages/movie-details', { 
+    imdbId: req.params.imdbId,
+    user: req.session.user 
+  });
 });
- 
 
-  app.get('/register', (req, res) => {
-    //do something
-    res.render('pages/register');
-  });
+app.get('/', (req, res) => {
+  res.redirect('/login'); //this will call the /anotherRoute route in the API
+});
+
+app.get('/login', (req, res) => {
+  //do something
+  res.render('pages/login');
+});
+
+app.post('/login', async (req, res) => {
+  //get the username
+  const username = req.body.username;
+  //get the user from the usernmae
+  const getUser = `SELECT * FROM users WHERE users.username = $1`;
+  //let response = await db.none(insert, [username, hash]);
+  try{
+      let user = await db.one(getUser, username);
+      const match = await bcrypt.compare(req.body.password, user.password);
+      if (!match){
+          res.render('pages/login', {layout: 'main' , message: 'Incorrect username or password.'});
+      }else{
+          console.log('user logged in');
+          req.session.user = user;
+          req.session.save();
+          res.redirect('/findFriends');
+      }
+  }catch (err){
+      req.session.Message = 'An error occurred';
+      res.redirect('/register');
+
+  };
+});
+
+app.get('/register', (req, res) => {
+  //do something
+  res.render('pages/register');
+});
 
 // Register
 app.post('/register', async (req, res) => {
