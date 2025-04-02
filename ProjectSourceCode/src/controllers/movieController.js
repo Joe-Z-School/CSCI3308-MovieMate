@@ -1,6 +1,39 @@
 const omdbApi = require('../api/omdbApi');
 const db = require('../index').db;
 
+// Get new/trending movies
+exports.getNewMovies = async (req, res) => {
+  try {
+    // These could be updated periodically or stored in your database
+    const popularMovies = [
+      'tt15398776', // Oppenheimer
+      'tt9362722',  // Spider-Man: Across the Spider-Verse
+      'tt1517268',  // Barbie
+      'tt1630029',  // Avatar: The Way of Water
+      'tt10151854', // The Fabelmans
+      'tt8760708',  // TOP GUN: Maverick
+      'tt6710474',  // Everything Everywhere All at Once
+      'tt11813216', // The Banshees of Inisherin
+      'tt10640346', // Babylon
+      'tt14444726'  // The menu
+    ];
+
+    // Get details for each movie
+    const moviePromises = popularMovies.map(imdbId => omdbApi.getMovieDetails(imdbId));
+    const results = await Promise.all(moviePromises);
+
+    // Filter out any failures and extract the movie data
+    const movies = results
+      .filter(result => result.success)
+      .map(result => result.movie);
+
+    return res.json({ success: true, results: movies });
+  } catch (error) {
+    console.error('Error fetching new movies:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
 // search movies from OMDB API
 exports.searchMovies = async (req, res) => {
   try {
