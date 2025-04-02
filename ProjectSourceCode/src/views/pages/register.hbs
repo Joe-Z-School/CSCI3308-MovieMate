@@ -1,60 +1,80 @@
+<style>
+    .page-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .form-section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-grow: 1;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+</style>
 {{> title}}
-<div class="form-container">
-  <h2>Register</h2>
-  <form action="/register" method="POST">
-    <div>
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" class="form-control" required>
-    </div>
+<div class="page-container">
+    <div class="form-section">
+        <div class="form-container">
+            <h2>Register</h2>
+            <form action="/register" method="POST">
+                <div>
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-control" required>
+                </div>
 
-    <div>
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" class="form-control" required>
-    </div>
+                <div>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" required>
+                </div>
 
-    <div>
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" class="form-control" required>
-    </div>
+                <div>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
 
-    <div>
-      <label for="profile_icon">Select Profile Icon:</label>
-      <div class="product-container">
-        <div class="color-options">
-          <span class="color-option" style="background-color: red;" data-value="red"></span>
-          <span class="color-option" style="background-color: yellow;" data-value="yellow"></span>
-          <span class="color-option" style="background-color: green;" data-value="green"></span>
-          <span class="color-option" style="background-color: blue;" data-value="blue"></span>
+                <div>
+                    <label for="profile_icon">Select Profile Icon:</label>
+                    <div class="product-container">
+                        <div class="color-options">
+                            <span class="color-option" style="background-color: red;" data-value="red"></span>
+                            <span class="color-option" style="background-color: yellow;" data-value="yellow"></span>
+                            <span class="color-option" style="background-color: green;" data-value="green"></span>
+                            <span class="color-option" style="background-color: blue;" data-value="blue"></span>
+                        </div>
+                    </div>
+                    <!-- Hidden input field to store selected profile icon -->
+                    <input type="hidden" id="profile_icon" name="profile_icon">
+                </div>
+
+                <div>
+                    <label for="bio">Your Bio</label>
+                    <textarea id="bio" name="bio" class="form-control"></textarea>
+                </div>
+
+                <button type="submit" class="btn-login">Register</button>
+                <div class="mt-3">
+                    <p class="mb-0">Have an account already? <a href="/login">Login</a></p>
+                </div>
+            </form>
         </div>
-      </div>
-      <!-- Hidden input field to store selected profile icon -->
-      <input type="hidden" id="profile_icon" name="profile_icon">
     </div>
-
-    <div>
-      <label for="bio">Your Bio</label>
-      <textarea id="bio" name="bio" class="form-control"></textarea>
-    </div>
-
-    <button type="submit" class="btn-login">Register</button>
-    <div class="mt-3">
-      <p class="mb-0">Have an account already? <a href="/login">Login</a></p>
-    </div>
-  </form>
 </div>
 
 <script>
-  const colorOptions = document.querySelectorAll('.color-option');
-  const profileIconInput = document.getElementById('profile_icon');
+    const colorOptions = document.querySelectorAll('.color-option');
+    const profileIconInput = document.getElementById('profile_icon');
 
-  colorOptions.forEach(option => {
-    option.addEventListener('click', function() {
-      colorOptions.forEach(opt => opt.classList.remove('selected'));
-      this.classList.add('selected');
-      
-      // Set the value of the hidden input field
-      const selectedColor = this.getAttribute('data-value');
-      profileIconInput.value = selectedColor;
+    colorOptions.forEach(option => {
+        option.addEventListener('click', function () {
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+
+            // Set the value of the hidden input field
+            const selectedColor = this.getAttribute('data-value');
+            profileIconInput.value = selectedColor;
+        });
     });
-  });
 </script>

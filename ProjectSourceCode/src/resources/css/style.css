@@ -1,11 +1,7 @@
 body {
     background-color: #C4C3E3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
     margin: 0;
-    flex-direction: column;
+    min-height: 100vh;
 }
 
 /* REGISTER AND LOGIN */
