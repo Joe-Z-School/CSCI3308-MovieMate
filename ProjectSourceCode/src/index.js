@@ -93,7 +93,6 @@ app.get('/', (req, res) => {
     res.render('pages/login');
   });
 
-
   app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -105,7 +104,6 @@ app.get('/', (req, res) => {
                 message: 'Username not found.',
             });
         }
- 
  
         const user = result[0];
         console.log('User from DB:', user);
@@ -121,10 +119,9 @@ app.get('/', (req, res) => {
             });
         }
  
- 
         req.session.user = user;
         req.session.save();
-        res.redirect('discover');
+        res.redirect('home');
     } catch (err) {
         res.render('pages/login', { message: 'Error during login. Please try again.' });
     }
@@ -136,7 +133,12 @@ app.get('/', (req, res) => {
     res.render('pages/register');
   });
 
-
+  app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+      res.render('pages/logout', {
+      });
+    });
+  });
 // *****************************************************
 // <!-- Section 5 : Start Server-->
 // *****************************************************
