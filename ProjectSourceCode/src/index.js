@@ -155,6 +155,7 @@ app.post('/register', async (req, res) => {
     };
 });
 
+/*
 // Authentication Middleware.
 const auth = (req, res, next) => {
   if (!req.session.user) {
@@ -166,6 +167,7 @@ const auth = (req, res, next) => {
 
 // Authentication Required
 app.use(auth);
+*/
 
 app.get('/findFriends', async (req, res) => {
   const userId = req.session.user.id;
@@ -345,8 +347,20 @@ app.post('/remove-from-watchlist', async (req, res) => {
 
 
 // *****************************************************
+// <!-- Lab 11 : Testing-->
+// *****************************************************
+app.get('/welcome', (req, res) => {
+  res.json({status: 'success', message: 'Welcome!'});
+});
+
+// *****************************************************
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-app.listen(3000);
+
+// module.exports for testing
+module.exports = app.listen(3000);
+
+// Typical app.listen:
+// app.listen(3000); 
 console.log('Server is listening on port 3000');
