@@ -111,6 +111,9 @@
             </div>
         </div>
 
+        <!-- Hidden input field to store selected profile icon -->
+        <input type="hidden" id="profile_icon" name="profile_icon">
+
         <label for="bio">Your Bio</label>
         <textarea id="bio" name="bio"></textarea>
 
@@ -127,7 +130,9 @@
             
             this.classList.add('selected');
             
-            const selectedColor = this.getAttribute('profile_icon');
+            // Set the value of the hidden input field
+            const selectedColor = this.getAttribute('data-value');
+            profileIconInput.value = selectedColor;
         });
     });
 </script>
