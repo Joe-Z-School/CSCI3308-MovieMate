@@ -99,8 +99,6 @@ app.get('/', (req, res) => {
     res.render('pages/login');
   });
 
-  
-
   app.post('/login', async (req, res) => {
     //get the username
     const username = req.body.username;
