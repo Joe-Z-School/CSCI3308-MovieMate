@@ -11,7 +11,9 @@ const pgp = require('pg-promise')(); // To connect to the Postgres DB from the n
 const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
 const bcrypt = require('bcryptjs'); //  To hash passwords
-const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
+const axios = require('axios'); // To make HTTP requests from our server. 
+
+const movieController = require('./controllers/movieController'); // import movieController.js
 
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
@@ -72,11 +74,11 @@ app.use(
 );
 
 app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.url}`);
-  next();
+    console.log(`Incoming request: ${req.method} ${req.url}`);
+    next();
 });
 
-Handlebars.registerHelper('json', function (context) {
+Handlebars.registerHelper('json', function(context) {
   return JSON.stringify(context);
 });
 
@@ -85,11 +87,26 @@ Handlebars.registerHelper('json', function (context) {
 // *****************************************************
 
 const user = {
-  username: undefined,
-  password: undefined
+    username: undefined,
+    password: undefined
 };
 
-// TODO - Include your API routes here
+// OMDB API Routes
+app.get('/api/movies/search', movieController.searchMovies);
+app.get('/api/movies/details/:imdbId', movieController.getMovieDetails);
+app.post('/api/movies/watchlist', movieController.addToWatchlist);
+app.post('/api/movies/watched', movieController.markAsWatched);
+app.post('/api/movies/review', movieController.addReview);
+app.get('/api/movies/reviews/:imdbId', movieController.getMovieReviews);
+
+// Page Routes
+app.get('/movies/details/:imdbId', (req, res) => {
+  res.render('pages/movie-details', { 
+    imdbId: req.params.imdbId,
+    user: req.session.user 
+  });
+});
+
 app.get('/', (req, res) => {
   res.redirect('/login'); //this will call the /anotherRoute route in the API
 });
@@ -105,24 +122,23 @@ app.post('/login', async (req, res) => {
   //get the user from the usernmae
   const getUser = `SELECT * FROM users WHERE users.username = $1`;
   //let response = await db.none(insert, [username, hash]);
-  try {
-    let user = await db.one(getUser, username);
-    const match = await bcrypt.compare(req.body.password, user.password);
-    if (!match) {
-      res.render('pages/login', { layout: 'main', message: 'Incorrect username or password.' });
-    } else {
-      console.log('user logged in');
-      req.session.user = user;
-      req.session.save();
-      res.redirect('/findFriends');
-    }
-  } catch (err) {
-    req.session.Message = 'An error occurred';
-    res.redirect('/register');
+  try{
+      let user = await db.one(getUser, username);
+      const match = await bcrypt.compare(req.body.password, user.password);
+      if (!match){
+          res.render('pages/login', {layout: 'main' , message: 'Incorrect username or password.'});
+      }else{
+          console.log('user logged in');
+          req.session.user = user;
+          req.session.save();
+          res.redirect('/findFriends');
+      }
+  }catch (err){
+      req.session.Message = 'An error occurred';
+      res.redirect('/register');
 
   };
 });
-
 
 app.get('/register', (req, res) => {
   //do something
@@ -131,28 +147,28 @@ app.get('/register', (req, res) => {
 
 // Register
 app.post('/register', async (req, res) => {
-  //hash the password using bcrypt library
-  const hash = await bcrypt.hash(req.body.password, 10);
+    //hash the password using bcrypt library
+    const hash = await bcrypt.hash(req.body.password, 10);
 
-  const username = req.body.username;
-  const email = req.body.email;
-  const profile_icon = req.body.profile_icon;
-  const bio = req.body.bio;
+    const username = req.body.username;
+    const email = req.body.email;
+    const profile_icon = req.body.profile_icon;
+    const bio = req.body.bio;
 
-  // Generate a timestamp for when this request is made
-  const created_at = new Date().toISOString();
-
-  //creating insert
-  const insert = `INSERT INTO users (username, password, email, profile_icon, bio, created_at) VALUES( $1, $2, $3, $4, $5, $6)`;
-
-  try {
-    await db.none(insert, [username, hash, email, profile_icon, bio, created_at]);
-    console.log('data successfully added');
-    res.redirect('/login');
-  } catch (err) {
-    req.session.Message = 'An error occurred';
-    res.redirect('/register');
-  };
+    // Generate a timestamp for when this request is made
+    const created_at = new Date().toISOString();
+    
+    //creating insert
+    const insert = `INSERT INTO users (username, password, email, profile_icon, bio, created_at) VALUES( $1, $2, $3, $4, $5, $6)`;
+    
+    try{
+        await db.none(insert, [username, hash, email, profile_icon, bio, created_at]);
+        console.log('data successfully added');
+        res.redirect('/login');
+    }catch (err){
+        req.session.Message = 'An error occurred';
+        res.redirect('/register');
+    };
 });
 
 // Authentication Middleware.
@@ -169,7 +185,7 @@ app.use(auth);
 
 app.get('/findFriends', async (req, res) => {
   const userId = req.session.user.id;
-  
+
   try {
     const users = await db.any(
       `SELECT 
@@ -183,7 +199,7 @@ app.get('/findFriends', async (req, res) => {
        ON f.following_user_id = $1 AND f.followed_user_id = u.id
      WHERE u.id != $1
      ORDER BY u.username ASC`,
-      [userId]
+    [userId]
     );
 
     res.render('pages/findFriends', {
@@ -202,41 +218,23 @@ app.get('/findFriends', async (req, res) => {
   }
 });
 
-
+//Allowing the user to follow others
 app.post('/users/follow', async (req, res) => {
-  const followerId = req.session.user.id;               // the logged-in user
-  const followingId = parseInt(req.body.following_id);  // the user being followed
+  const followerId = req.session.user.id; // the logged-in user
+  const followingId = parseInt(req.body.following_id); // the user being followed
   const created_at = new Date().toISOString();
 
   try {
-    await db.tx(async t => {
-      // Try to insert into friends table
-      const result = await t.result(
-        `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
-         VALUES ($1, $2, $3)
-         ON CONFLICT DO NOTHING`,
-        [followerId, followingId, created_at]
-      );
-
-      if (result.rowCount > 0) {
-        // Only update counts if a new row was inserted
-        await t.none(
-          `UPDATE users SET following_count = following_count + 1 WHERE id = $1`,
-          [followerId]
-        );
-
-        await t.none(
-          `UPDATE users SET followers_count = followers_count + 1 WHERE id = $1`,
-          [followingId]
-        );
-
-        console.log(`${req.session.user.username} now follows user ${followingId}`);
-
-      } else {
-        console.log(`${req.session.user.username} already follows user ${followingId} — no count change`);
-      }
-    });
-
+    // Insert the follow relationship if it doesn't already exist
+    await db.none(
+      `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
+       VALUES ($1, $2, $3)
+       ON CONFLICT DO NOTHING`, // prevents duplicate follows
+      [followerId,followingId, created_at ]
+    );
+      console.log(`${req.session.user.username} now follows this person`);
+      
+    // Optionally redirect back to the friend list
     res.redirect('/findFriends');
 
   } catch (err) {
@@ -250,41 +248,18 @@ app.post('/users/follow', async (req, res) => {
 });
 
 
-
-// Allowing Users to unfollow
+//Allowing Users to unfollow
 app.post('/users/unfollow', async (req, res) => {
   const followerId = req.session.user.id;
   const followingId = parseInt(req.body.following_id);
 
   try {
-    await db.tx(async t => {
-      // Try to delete the relationship
-      const result = await t.result(
-        `DELETE FROM friends
-         WHERE following_user_id = $1 AND followed_user_id = $2`,
-        [followerId, followingId]
-      );
-
-      if (result.rowCount > 0) {
-        // Only update counts if a row was actually deleted
-        await t.none(
-          `UPDATE users SET following_count = following_count - 1 WHERE id = $1`,
-          [followerId]
-        );
-
-        await t.none(
-          `UPDATE users SET followers_count = followers_count - 1 WHERE id = $1`,
-          [followingId]
-        );
-
-        console.log(`${req.session.user.username} unfollowed user ${followingId}`);
-      } else {
-        console.log(`${req.session.user.username} was not following user ${followingId} — no count change`);
-      }
-    });
-
+    await db.none(
+      `DELETE FROM friends
+       WHERE following_user_id = $1 AND followed_user_id = $2`,
+      [followerId, followingId]
+    );
     res.redirect('/findFriends');
-
   } catch (err) {
     console.error('Error unfollowing user:', err.message);
     res.render('pages/findFriends', {
@@ -293,9 +268,8 @@ app.post('/users/unfollow', async (req, res) => {
       message: 'Something went wrong while trying to unfollow this user.'
     });
   }
-
+  
 });
-
 
 // *****************************************************
 // <!-- Logout -->
@@ -303,8 +277,8 @@ app.post('/users/unfollow', async (req, res) => {
 //To log out
 app.get('/logout', (req, res) => {
   console.log("succesfully logged out");
-  req.session.destroy(function (err) {
-    res.render('pages/login', { message: 'Logged out Successfully' });
+  req.session.destroy(function(err) {
+    res.render('pages/login', {message : 'Logged out Successfully'});
   });
 });
 
@@ -332,9 +306,9 @@ const posts = [
 ];
 
 // Display the main page
-app.get('/social', (req, res) => {
+app.get('/social', (req, res) => {  
   const initialPosts = posts.slice(0, 5); // Load the first 5 posts
-  res.render('pages/social', { layout: 'main', posts: initialPosts, email: req.session.user.email });
+  res.render('pages/social', { layout:'main', posts: initialPosts });
 });
 
 // Load paginated posts
@@ -353,25 +327,25 @@ app.post('/add-to-watchlist', async (req, res) => {
 
   if (!title || !picture || !whereToWatch) {
     res.render('pages/social', { layout: 'main', message: 'Incomplete movie information.', status: 400 });
-    return;
+    return; 
   }
 
   db.tx(async insert => {
     // Remove the course from the student's list of courses.
     await insert.query('INSERT INTO watchlist (title, picture, whereToWatch) VALUES ($1, $2, $3)', [title, picture, whereToWatch]);
   }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully added ${title} to your watchlist.` });
-  }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to add movie to watchlist.' });
-  });
-
+      res.render('pages/social', {layout: 'main', success: true, message: `Successfully added ${title} to your watchlist.`});
+    }).catch(err => {
+      res.render('pages/social', {layout: 'main', error: true, message: 'Failed to add movie to watchlist.'});
+    }); 
+  
 });
 
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
 
   if (!title) {
-    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400 });
+    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400});
     return;
   }
 
@@ -379,25 +353,12 @@ app.post('/remove-from-watchlist', async (req, res) => {
     // Remove the course from the student's list of courses.
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
-  }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
-  });
+      res.render('pages/social', {layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.`});
+    }).catch(err => {
+      res.render('pages/social', {layout: 'main', error: true, message: 'Failed to remove movie from watchlist.'});
+    });  
 });
 
-// *****************************************************
-//  <!-- Profile Page --!>
-// *****************************************************
-// Display the main page
-app.get('/profile', (req, res) => {
-  const profileUsername = req.params.username;
-  const loggedInUsername = req.session.user ? req.session.user.username : null;
-  const isOwnProfile = loggedInUsername === profileUsername;
-  res.render('pages/profile', {
-    username: req.session.user.username,
-    isOwnProfile: isOwnProfile
-  });
-});
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
