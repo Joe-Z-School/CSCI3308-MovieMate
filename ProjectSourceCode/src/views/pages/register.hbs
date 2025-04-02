@@ -1,138 +1,60 @@
-<style>
-    /*all of the following is to style the register form and make it look nicer. can be removed/changed if necessary*/
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        margin: 0;
-        background-color: #f4f4f4;
-    }
-
-    .form-container {
-        background-color: #fff;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        width: 400px;
-    }
-
-    .form-container h1 {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #333;
-    }
-
-    .form-container label {
-        display: block;
-        margin-bottom: 5px;
-        color: #555;
-    }
-
-    .form-container input[type="text"],
-    .form-container input[type="email"],
-    .form-container input[type="password"],
-    .form-container select,
-    .form-container textarea {
-        width: calc(100% - 12px);
-        padding: 10px;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        box-sizing: border-box;
-    }
-
-    .form-container button {
-        background-color: #007bff;
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        width: 100%;
-        font-size: 16px;
-    }
-
-    .form-container button:hover {
-        background-color: #0056b3;
-    }
-
-    .form-container br {
-        display: none;
-    }
-
-    .color-options {
-        display: flex;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .color-option {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 2px solid #ccc;
-        cursor: pointer;
-        transition: transform 0.3s;
-    }
-
-    .color-option.selected {
-        border: 4px solid black;
-        transform: scale(1.1);
-    }
-
-    .product-container {
-        display: flex;
-        flex-direction: column;
-    }
-
-</style>
-
+{{> title}}
 <div class="form-container">
-    <h1>Register</h1>
-    <form action="/register" method="POST">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" required>
+  <h2>Register</h2>
+  <form action="/register" method="POST">
+    <div>
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" class="form-control" required>
+    </div>
 
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required>
+    <div>
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" class="form-control" required>
+    </div>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required>
-        
-        {{!-- I just used colors in place of profile icons for now--> can be changed when we figure out what imgs to use --}}
-        <label for="profile_icon">Select Profile Icon:</label>
-        <div class="product-container">
-            <div class="color-options">
-                <span class="color-option" style="background-color: red;" profile_icon="red"></span>
-                <span class="color-option" style="background-color: yellow;" profile_icon="yellow"></span>
-                <span class="color-option" style="background-color: green;" profile_icon="green"></span>
-                <span class="color-option" style="background-color: blue;" profile_icon="blue"></span>
-            </div>
+    <div>
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" class="form-control" required>
+    </div>
+
+    <div>
+      <label for="profile_icon">Select Profile Icon:</label>
+      <div class="product-container">
+        <div class="color-options">
+          <span class="color-option" style="background-color: red;" data-value="red"></span>
+          <span class="color-option" style="background-color: yellow;" data-value="yellow"></span>
+          <span class="color-option" style="background-color: green;" data-value="green"></span>
+          <span class="color-option" style="background-color: blue;" data-value="blue"></span>
         </div>
+      </div>
+      <!-- Hidden input field to store selected profile icon -->
+      <input type="hidden" id="profile_icon" name="profile_icon">
+    </div>
 
-        <!-- Hidden input field to store selected profile icon -->
-        <input type="hidden" id="profile_icon" name="profile_icon">
+    <div>
+      <label for="bio">Your Bio</label>
+      <textarea id="bio" name="bio" class="form-control"></textarea>
+    </div>
 
-        <label for="bio">Your Bio</label>
-        <textarea id="bio" name="bio"></textarea>
-
-        <button type="submit">Register</button>
-    </form>
+    <button type="submit" class="btn-login">Register</button>
+    <div class="mt-3">
+      <p class="mb-0">Have an account already? <a href="/login">Login</a></p>
+    </div>
+  </form>
 </div>
 
 <script>
-    const colorOptions = document.querySelectorAll('.color-option');
-    
-    colorOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            colorOptions.forEach(opt => opt.classList.remove('selected'));
-            
-            this.classList.add('selected');
-            
-            // Set the value of the hidden input field
-            const selectedColor = this.getAttribute('data-value');
-            profileIconInput.value = selectedColor;
-        });
+  const colorOptions = document.querySelectorAll('.color-option');
+  const profileIconInput = document.getElementById('profile_icon');
+
+  colorOptions.forEach(option => {
+    option.addEventListener('click', function() {
+      colorOptions.forEach(opt => opt.classList.remove('selected'));
+      this.classList.add('selected');
+      
+      // Set the value of the hidden input field
+      const selectedColor = this.getAttribute('data-value');
+      profileIconInput.value = selectedColor;
     });
+  });
 </script>
