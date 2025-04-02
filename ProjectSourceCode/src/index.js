@@ -167,9 +167,92 @@ const auth = (req, res, next) => {
 // Authentication Required
 app.use(auth);
 
-app.get('/findFriends', (req, res) => {
-  //do something
-  res.render('pages/findFriends');
+app.get('/findFriends', async (req, res) => {
+  const userId = req.session.user.id;
+
+  try {
+    const users = await db.any(
+      `SELECT 
+      u.id, u.username, u.profile_icon, u.bio,
+      CASE 
+        WHEN f.following_user_id IS NOT NULL THEN TRUE
+        ELSE FALSE
+      END AS is_following
+     FROM users u
+     LEFT JOIN friends f 
+       ON f.following_user_id = $1 AND f.followed_user_id = u.id
+     WHERE u.id != $1
+     ORDER BY u.username ASC`,
+    [userId]
+    );
+
+    res.render('pages/findFriends', {
+      email: req.session.user.email,
+      users
+    });
+
+  } catch (err) {
+    console.error('Error loading users:', err.message);
+    res.render('pages/findFriends', {
+      email: req.session.user.email,
+      users: [],
+      error: true,
+      message: 'Something went wrong while loading users.'
+    });
+  }
+});
+
+//Allowing the user to follow others
+app.post('/users/follow', async (req, res) => {
+  const followerId = req.session.user.id; // the logged-in user
+  const followingId = parseInt(req.body.following_id); // the user being followed
+  const created_at = new Date().toISOString();
+
+  try {
+    // Insert the follow relationship if it doesn't already exist
+    await db.none(
+      `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
+       VALUES ($1, $2, $3)
+       ON CONFLICT DO NOTHING`, // prevents duplicate follows
+      [followerId,followingId, created_at ]
+    );
+      console.log(`${req.session.user.username} now follows this person`);
+      
+    // Optionally redirect back to the friend list
+    res.redirect('/findFriends');
+
+  } catch (err) {
+    console.error('Error following user:', err.message);
+    res.render('pages/findFriends', {
+      users: [],
+      error: true,
+      message: 'Something went wrong while trying to follow this user.'
+    });
+  }
+});
+
+
+//Allowing Users to unfollow
+app.post('/users/unfollow', async (req, res) => {
+  const followerId = req.session.user.id;
+  const followingId = parseInt(req.body.following_id);
+
+  try {
+    await db.none(
+      `DELETE FROM friends
+       WHERE following_user_id = $1 AND followed_user_id = $2`,
+      [followerId, followingId]
+    );
+    res.redirect('/findFriends');
+  } catch (err) {
+    console.error('Error unfollowing user:', err.message);
+    res.render('pages/findFriends', {
+      users: [],
+      error: true,
+      message: 'Something went wrong while trying to unfollow this user.'
+    });
+  }
+  
 });
 
 // *****************************************************
