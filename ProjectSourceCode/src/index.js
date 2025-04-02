@@ -395,6 +395,7 @@ app.get('/profile', (req, res) => {
   const isOwnProfile = loggedInUsername === profileUsername;
   res.render('pages/profile', {
     username: req.session.user.username,
+    profile_icon: req.session.user.profile_icon,
     isOwnProfile: isOwnProfile
   });
 });
