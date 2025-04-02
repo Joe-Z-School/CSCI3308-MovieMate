@@ -82,23 +82,19 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    const profileIcons = document.querySelectorAll('.icon-row img');  // Select all profile icon images
-    const profileIconInput = document.getElementById('profile_icon'); // The hidden input element
+    const profileIcons = document.querySelectorAll('.icon-row img'); 
+    const profileIconInput = document.getElementById('profile_icon'); 
 
     profileIcons.forEach(icon => {
         icon.addEventListener('click', function() {
-            // Remove the 'selected' class from all icons
             profileIcons.forEach(icon => icon.classList.remove('selected'));
             
-            // Add the 'selected' class to the clicked icon
             this.classList.add('selected');
             
-            // Define and set the selected icon to the hidden input's value
             const selectedIcon = this.getAttribute('data-image');
             profileIconInput.value = selectedIcon;
 
-            // Log the selected icon for debugging
-            console.log('Selected Icon:', selectedIcon); // Check the value in the console
+            console.log('Selected Icon:', selectedIcon); 
         });
     });
 });
