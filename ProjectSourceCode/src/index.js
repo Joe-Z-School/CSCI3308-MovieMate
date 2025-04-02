@@ -169,7 +169,7 @@ app.use(auth);
 
 app.get('/findFriends', async (req, res) => {
   const userId = req.session.user.id;
-
+  
   try {
     const users = await db.any(
       `SELECT 
@@ -202,23 +202,41 @@ app.get('/findFriends', async (req, res) => {
   }
 });
 
-//Allowing the user to follow others
+
 app.post('/users/follow', async (req, res) => {
-  const followerId = req.session.user.id; // the logged-in user
-  const followingId = parseInt(req.body.following_id); // the user being followed
+  const followerId = req.session.user.id;               // the logged-in user
+  const followingId = parseInt(req.body.following_id);  // the user being followed
   const created_at = new Date().toISOString();
 
   try {
-    // Insert the follow relationship if it doesn't already exist
-    await db.none(
-      `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
-       VALUES ($1, $2, $3)
-       ON CONFLICT DO NOTHING`, // prevents duplicate follows
-      [followerId, followingId, created_at]
-    );
-    console.log(`${req.session.user.username} now follows this person`);
+    await db.tx(async t => {
+      // Try to insert into friends table
+      const result = await t.result(
+        `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
+         VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING`,
+        [followerId, followingId, created_at]
+      );
 
-    // Optionally redirect back to the friend list
+      if (result.rowCount > 0) {
+        // Only update counts if a new row was inserted
+        await t.none(
+          `UPDATE users SET following_count = following_count + 1 WHERE id = $1`,
+          [followerId]
+        );
+
+        await t.none(
+          `UPDATE users SET followers_count = followers_count + 1 WHERE id = $1`,
+          [followingId]
+        );
+
+        console.log(`${req.session.user.username} now follows user ${followingId}`);
+
+      } else {
+        console.log(`${req.session.user.username} already follows user ${followingId} — no count change`);
+      }
+    });
+
     res.redirect('/findFriends');
 
   } catch (err) {
@@ -232,18 +250,41 @@ app.post('/users/follow', async (req, res) => {
 });
 
 
-//Allowing Users to unfollow
+
+// Allowing Users to unfollow
 app.post('/users/unfollow', async (req, res) => {
   const followerId = req.session.user.id;
   const followingId = parseInt(req.body.following_id);
 
   try {
-    await db.none(
-      `DELETE FROM friends
-       WHERE following_user_id = $1 AND followed_user_id = $2`,
-      [followerId, followingId]
-    );
+    await db.tx(async t => {
+      // Try to delete the relationship
+      const result = await t.result(
+        `DELETE FROM friends
+         WHERE following_user_id = $1 AND followed_user_id = $2`,
+        [followerId, followingId]
+      );
+
+      if (result.rowCount > 0) {
+        // Only update counts if a row was actually deleted
+        await t.none(
+          `UPDATE users SET following_count = following_count - 1 WHERE id = $1`,
+          [followerId]
+        );
+
+        await t.none(
+          `UPDATE users SET followers_count = followers_count - 1 WHERE id = $1`,
+          [followingId]
+        );
+
+        console.log(`${req.session.user.username} unfollowed user ${followingId}`);
+      } else {
+        console.log(`${req.session.user.username} was not following user ${followingId} — no count change`);
+      }
+    });
+
     res.redirect('/findFriends');
+
   } catch (err) {
     console.error('Error unfollowing user:', err.message);
     res.render('pages/findFriends', {
@@ -254,6 +295,7 @@ app.post('/users/unfollow', async (req, res) => {
   }
 
 });
+
 
 // *****************************************************
 // <!-- Logout -->

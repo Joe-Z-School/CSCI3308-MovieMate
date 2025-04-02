@@ -14,8 +14,8 @@ CREATE TABLE users (
   profile_icon VARCHAR(100),
   bio VARCHAR(150),
   created_at TIMESTAMP,
-  followers_count INTEGER DEFAULT 0,
-  following_count INTEGER DEFAULT 0
+  followers_count INTEGER ,
+  following_count INTEGER
 );
 
 CREATE TABLE movies (
