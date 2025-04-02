@@ -1,2 +1,58 @@
-{{> nav}}
-<h2 class="mb-4">Find and Follow Users</h2>
+<div class="container mt-4">
+
+
+    <h2 class="mb-4">Find and Follow Users</h2>
+
+
+    <div class="input-group mb-4">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search by username..."
+            onkeyup="filterUsers()">
+    </div>
+
+
+    <table class="table" id="userTable">
+        <thead>
+            <tr>
+                <th scope="col">Profile</th>
+                <th scope="col">Username</th>
+                <th scope="col">Bio</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each users}}
+            <tr class="user-row">
+                <td>
+                    <!-- <img src="{{profile_icon}}" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%;">-->
+                    <p> filler </p>
+                </td>
+                <td>{{username}}</td>
+                <td>{{bio}}</td>
+                <td>
+                    <form action="{{#if is_following}}/users/unfollow{{else}}/users/follow{{/if}}" method="POST">
+                        <input type="hidden" name="following_id" value="{{id}}">
+                        {{#if is_following}}
+                        <button type="submit" class="btn btn-outline-danger">Unfollow</button>
+                        {{else}}
+                        <button type="submit" class="btn btn-primary">Follow</button>
+                        {{/if}}
+                    </form>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function filterUsers() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('.user-row');
+
+
+        rows.forEach(row => {
+            const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            row.style.display = username.includes(input) ? '' : 'none';
+        });
+    }
+</script>
