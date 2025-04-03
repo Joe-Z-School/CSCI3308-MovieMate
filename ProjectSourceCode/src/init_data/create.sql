@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS movies_to_users;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS movies;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS messages;
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -71,4 +72,13 @@ CREATE TABLE posts (
   liked VARCHAR(50),
   created_at TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    sender_id INT REFERENCES users(id),
+    recipient_id INT REFERENCES users(id),
+    content TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE
 );
