@@ -401,6 +401,42 @@ app.get('/profile', (req, res) => {
 });
 
 // *****************************************************
+// <!-- Messages Page -->
+// *****************************************************
+
+ // Socket.IO dependency
+ io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('send_message', (data) => {
+    io.emit('receive_message', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
+
+app.get('/messaging', authenticate, async (req, res) => {
+  const { user } = req.session;
+  
+  try{
+    const friends = await db.query(`
+      SELECT u.id, u.username, u.profile_icon, COUNT(m.id) AS unread_count
+        FROM users u
+        LEFT JOIN messages m ON m.sender_id = u.id AND m.recipient_id = $1 AND m.is_read = FALSE
+        WHERE u.id != $1
+        GROUP BY u.id, u.username, u.profile_icon`, [user.id]);
+
+      res.render('pages/messaging', {layout: 'main', friends: friends.rows} );
+  } catch (error) {
+    console.error('Error fetching friends with unread messages:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
+// *****************************************************
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
