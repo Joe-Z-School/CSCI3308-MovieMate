@@ -134,6 +134,8 @@ app.post('/register', async (req, res) => {
   //hash the password using bcrypt library
   const hash = await bcrypt.hash(req.body.password, 10);
 
+  const first_name = req.body.first_name;
+  const last_name = req.body.last_name;
   const username = req.body.username;
   const email = req.body.email;
   const profile_icon = req.body.profile_icon;
@@ -143,10 +145,10 @@ app.post('/register', async (req, res) => {
   const created_at = new Date().toISOString();
 
   //creating insert
-  const insert = `INSERT INTO users (username, password, email, profile_icon, bio, created_at) VALUES( $1, $2, $3, $4, $5, $6)`;
+  const insert = `INSERT INTO users (username, password, email, profile_icon, bio, created_at, first_name, last_name) VALUES( $1, $2, $3, $4, $5, $6, $7, $8)`;
 
   try {
-    await db.none(insert, [username, hash, email, profile_icon, bio, created_at]);
+    await db.none(insert, [username, hash, email, profile_icon, bio, created_at, first_name, last_name]);
     console.log('data successfully added');
     res.redirect('/login');
   } catch (err) {
@@ -173,7 +175,7 @@ app.get('/findFriends', async (req, res) => {
   try {
     const users = await db.any(
       `SELECT 
-      u.id, u.username, u.profile_icon, u.bio,
+      u.id, u.username, u.profile_icon, u.bio, u.first_name, u.last_name,
       CASE 
         WHEN f.following_user_id IS NOT NULL THEN TRUE
         ELSE FALSE

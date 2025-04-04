@@ -12,29 +12,36 @@
 
 
     <table class="table" id="userTable">
-        <thead>
+        {{!-- <thead>
             <tr>
                 <th scope="col">Profile</th>
                 <th scope="col">Username</th>
                 <th scope="col">Bio</th>
                 <th scope="col">Action</th>
             </tr>
-        </thead>
+        </thead> --}}
         <tbody>
             {{#each users}}
             <tr class="user-row">
                 <td>
                     <img src="../../resources/img/{{profile_icon}}" alt="Profile" style="width: 50px; height: 50px; border-radius: 50%;">
                 </td>
-                <td>{{username}}</td>
+                <td>
+                  <div>
+                    <strong style="color: #5F4B8B">{{first_name}} {{last_name}}</strong>
+                  </div>
+                  <div>
+                    @{{username}}
+                  </div> 
+                </td>
                 <td>{{bio}}</td>
                 <td>
                     <form action="{{#if is_following}}/users/unfollow{{else}}/users/follow{{/if}}" method="POST">
                         <input type="hidden" name="following_id" value="{{id}}">
                         {{#if is_following}}
-                        <button type="submit" class="btn btn-outline-danger">Unfollow</button>
+                        <button type="submit" class="btn btn-outline-danger" style="padding: 10px 20px; font-size: 16px; border-radius: 5px;">Unfollow</button>
                     {{else}}
-                        <button type="submit" class="btn btn-primary">Follow</button>
+                        <button type="submit" style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
                     {{/if}}
             </form>
            </td>
