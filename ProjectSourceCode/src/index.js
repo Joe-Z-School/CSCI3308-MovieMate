@@ -4,27 +4,11 @@
 
 const express = require('express'); // To build an application server or API
 const app = express();
-const handlebars = require('express-handlebars');
-const Handlebars = require('handlebars');
-const path = require('path');
 const pgp = require('pg-promise')(); // To connect to the Postgres DB from the node server
-const bodyParser = require('body-parser');
-const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
-const bcrypt = require('bcryptjs'); //  To hash passwords
-const axios = require('axios'); // To make HTTP requests from our server. 
-
-const movieController = require('./controllers/movieController'); // import movieController.js
 
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
 // *****************************************************
-
-// create `ExpressHandlebars` instance and configure the layouts and partials dir.
-const hbs = handlebars.create({
-  extname: 'hbs',
-  layoutsDir: __dirname + '/views/layouts',
-  partialsDir: __dirname + '/views/partials',
-});
 
 // database configuration
 const dbConfig = {
@@ -35,7 +19,28 @@ const dbConfig = {
   password: process.env.POSTGRES_PASSWORD, // the password of the user account
 };
 
+// Initialize db early, before any modules that might require it
 const db = pgp(dbConfig);
+// Expose db globally for other modules to import
+exports.db = db;
+
+// Now continue with other imports that might use the db
+const handlebars = require('express-handlebars');
+const Handlebars = require('handlebars');
+const path = require('path');
+const bodyParser = require('body-parser');
+const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
+const bcrypt = require('bcryptjs'); //  To hash passwords
+const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
+
+const movieController = require('./controllers/movieController');
+
+// create `ExpressHandlebars` instance and configure the layouts and partials dir.
+const hbs = handlebars.create({
+  extname: 'hbs',
+  layoutsDir: __dirname + '/views/layouts',
+  partialsDir: __dirname + '/views/partials',
+});
 
 // test your database
 db.connect()
@@ -74,11 +79,11 @@ app.use(
 );
 
 app.use((req, res, next) => {
-    console.log(`Incoming request: ${req.method} ${req.url}`);
-    next();
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
 });
 
-Handlebars.registerHelper('json', function(context) {
+Handlebars.registerHelper('json', function (context) {
   return JSON.stringify(context);
 });
 
@@ -98,12 +103,20 @@ app.post('/api/movies/watchlist', movieController.addToWatchlist);
 app.post('/api/movies/watched', movieController.markAsWatched);
 app.post('/api/movies/review', movieController.addReview);
 app.get('/api/movies/reviews/:imdbId', movieController.getMovieReviews);
+app.get('/api/movies/new', movieController.getNewMovies);
 
 // Page Routes
 app.get('/movies/details/:imdbId', (req, res) => {
   res.render('pages/movie-details', { 
     imdbId: req.params.imdbId,
     user: req.session.user 
+  });
+});
+
+app.get('/explore', (req, res) => {
+  res.render('pages/explore', { 
+    user: req.session.user,
+    title: 'Explore Movies - MovieMates'
   });
 });
 
