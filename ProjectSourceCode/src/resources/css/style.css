@@ -250,11 +250,9 @@ body {
 .left-column-explore {
     width: 250px;
     padding: 25px;
-    background-color: #f4f4f4;
+    background-color: #4a3a6d;
     height: 100%; 
     box-sizing: border-box;
-    border-top: 3px solid #5F4B8B;
-    border-right: 3px solid #5F4B8B;
 }
 
 .main-content-explore {
