@@ -9,4 +9,3 @@ INSERT INTO users (username, password, email, profile_icon, bio, followers_count
 ('amy_codes', 'amyrules', 'amy@example.com', '/Profile_pic_option_1.png', 'Front-end dev & dog mom.', 0, 1, CURRENT_TIMESTAMP, 'Amy', 'Codes'),
 ('omar_ocean', 'waves123', 'omar@example.com', '/profile_pic_option_5.png', 'Surfer. Engineer. Explorer.', 2, 1, CURRENT_TIMESTAMP, 'Omar', 'Ocean'),
 ('taylor_dev', 'password456', 'taylor@example.com', '/Profile_pic_option_1.png', 'Backend builder & API fan.', 3, 3, CURRENT_TIMESTAMP, 'Taylor', 'Dev');
-
