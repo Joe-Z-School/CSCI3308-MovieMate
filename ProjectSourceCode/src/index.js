@@ -23,6 +23,8 @@ const http = require('http'); // To create an HTTP server
 const server = http.createServer(app);
 const io = new Server(server); // To create a Socket.IO server
 
+const movieController = require('./controllers/movieController');
+
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
 // *****************************************************
