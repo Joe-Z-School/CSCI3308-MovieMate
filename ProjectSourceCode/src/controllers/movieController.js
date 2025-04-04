@@ -4,7 +4,7 @@ const db = require('../index').db;
 // Get new/trending movies
 exports.getNewMovies = async (req, res) => {
   try {
-    // These could be updated periodically or stored in your database
+    // These could be updated periodically or stored in the database
     const popularMovies = [
       'tt15398776', // Oppenheimer
       'tt9362722',  // Spider-Man: Across the Spider-Verse
