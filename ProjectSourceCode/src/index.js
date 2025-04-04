@@ -13,6 +13,15 @@ const session = require('express-session'); // To set the session object. To sto
 const bcrypt = require('bcryptjs'); //  To hash passwords
 const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
 
+
+// *****************************************************
+// <!-- Socket.IO Server Creation -->
+// *****************************************************
+const { Server } = require('socket.io'); // To enable real-time communication between the server and the client
+const http = require('http'); // To create an HTTP server
+const server = http.createServer(app);
+const io = new Server(server); // To create a Socket.IO server
+
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
 // *****************************************************
@@ -405,7 +414,7 @@ app.get('/profile', (req, res) => {
 // *****************************************************
 
  // Socket.IO dependency
- io.on('connection', (socket) => {
+io.on('connection', (socket) => {
   console.log('A user connected');
 
   socket.on('send_message', (data) => {
@@ -417,7 +426,7 @@ app.get('/profile', (req, res) => {
   });
 });
 
-app.get('/messaging', authenticate, async (req, res) => {
+app.get('/messaging', auth, async (req, res) => {
   const { user } = req.session;
   
   try{
