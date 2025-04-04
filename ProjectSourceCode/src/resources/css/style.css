@@ -238,3 +238,26 @@ body {
 .post-action:hover {
     color: #5F4B8B;
 }
+
+
+/* Search Feature on explore page */
+
+.container-explore {
+    display: flex;
+    height: 100vh; 
+}
+
+.left-column-explore {
+    width: 250px;
+    padding: 25px;
+    background-color: #f4f4f4;
+    height: 100%; 
+    box-sizing: border-box;
+    border-top: 3px solid #5F4B8B;
+    border-right: 3px solid #5F4B8B;
+}
+
+.main-content-explore {
+    flex-grow: 1;
+    padding: 20px;
+}
