@@ -372,6 +372,20 @@ app.post('/remove-from-watchlist', async (req, res) => {
     });  
 });
 
+// *****************************************************
+//  <!-- Profile Page --!>
+// *****************************************************
+// Display the main page
+app.get('/profile', (req, res) => {
+  const profileUsername = req.params.username;
+  const loggedInUsername = req.session.user ? req.session.user.username : null;
+  const isOwnProfile = loggedInUsername === profileUsername;
+  res.render('pages/profile', {
+    username: req.session.user.username,
+    profile_icon: req.session.user.profile_icon,
+    isOwnProfile: isOwnProfile
+  });
+});
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
