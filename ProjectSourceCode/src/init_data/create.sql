@@ -72,3 +72,13 @@ CREATE TABLE posts (
   created_at TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE follow_requests (
+  id SERIAL PRIMARY KEY,
+  requester_id INTEGER NOT NULL,
+  receiver_id INTEGER NOT NULL,
+  status TEXT DEFAULT 'pending', -- could be 'pending', 'approved', 'rejected'
+  requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+);

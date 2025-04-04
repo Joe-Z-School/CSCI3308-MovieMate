@@ -22,6 +22,7 @@ const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
   partialsDir: __dirname + '/views/partials',
+  
 });
 
 // database configuration
@@ -55,6 +56,8 @@ app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json()); // specify the usage of JSON for parsing request body.
 app.use(express.static(__dirname + '/'));
+
+
 
 // initialize session variables
 app.use(
@@ -167,22 +170,36 @@ const auth = (req, res, next) => {
 // Authentication Required
 app.use(auth);
 
+// *****************************************************
+// <!-- User Following/Followes -->
+// *****************************************************
 app.get('/findFriends', async (req, res) => {
   const userId = req.session.user.id;
-  
+
   try {
     const users = await db.any(
-      `SELECT 
-      u.id, u.username, u.profile_icon, u.bio,
-      CASE 
-        WHEN f.following_user_id IS NOT NULL THEN TRUE
-        ELSE FALSE
-      END AS is_following
-     FROM users u
-     LEFT JOIN friends f 
-       ON f.following_user_id = $1 AND f.followed_user_id = u.id
-     WHERE u.id != $1
-     ORDER BY u.username ASC`,
+      `
+      SELECT 
+        u.id,
+        u.username,
+        u.profile_icon,
+        u.bio,
+        CASE 
+          WHEN f.following_user_id IS NOT NULL THEN TRUE
+          ELSE FALSE
+        END AS is_following,
+        CASE 
+          WHEN fr.status = 'pending' THEN TRUE
+          ELSE FALSE
+        END AS is_requested
+      FROM users u
+      LEFT JOIN friends f 
+        ON f.following_user_id = $1 AND f.followed_user_id = u.id
+      LEFT JOIN follow_requests fr
+        ON fr.requester_id = $1 AND fr.receiver_id = u.id
+      WHERE u.id != $1
+      ORDER BY u.username ASC
+      `,
       [userId]
     );
 
@@ -202,53 +219,26 @@ app.get('/findFriends', async (req, res) => {
   }
 });
 
-
 app.post('/users/follow', async (req, res) => {
-  const followerId = req.session.user.id;               // the logged-in user
-  const followingId = parseInt(req.body.following_id);  // the user being followed
-  const created_at = new Date().toISOString();
+  const requesterId = req.session.user.id;
+  const receiverId = parseInt(req.body.following_id);
+  const requestedAt = new Date().toISOString();
 
   try {
-    await db.tx(async t => {
-      // Try to insert into friends table
-      const result = await t.result(
-        `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
-         VALUES ($1, $2, $3)
-         ON CONFLICT DO NOTHING`,
-        [followerId, followingId, created_at]
-      );
+    await db.none(
+      `INSERT INTO follow_requests (requester_id, receiver_id, status, requested_at)
+       VALUES ($1, $2, 'pending', $3)
+       ON CONFLICT DO NOTHING`, // prevent duplicates
+      [requesterId, receiverId, requestedAt]
+    );
 
-      if (result.rowCount > 0) {
-        // Only update counts if a new row was inserted
-        await t.none(
-          `UPDATE users SET following_count = following_count + 1 WHERE id = $1`,
-          [followerId]
-        );
-
-        await t.none(
-          `UPDATE users SET followers_count = followers_count + 1 WHERE id = $1`,
-          [followingId]
-        );
-
-        console.log(`${req.session.user.username} now follows user ${followingId}`);
-
-      } else {
-        console.log(`${req.session.user.username} already follows user ${followingId} — no count change`);
-      }
-    });
-
+    console.log(`Follow request sent from ${requesterId} to ${receiverId}`);
     res.redirect('/findFriends');
-
   } catch (err) {
-    console.error('Error following user:', err.message);
-    res.render('pages/findFriends', {
-      users: [],
-      error: true,
-      message: 'Something went wrong while trying to follow this user.'
-    });
+    console.error('Error sending follow request:', err.message);
+    res.status(500).send('Internal server error');
   }
 });
-
 
 
 // Allowing Users to unfollow
@@ -296,6 +286,59 @@ app.post('/users/unfollow', async (req, res) => {
 
 });
 
+//to unsend a follow request
+app.post('/users/cancel-request', async (req, res) => {
+  const requesterId = req.session.user.id;
+  const receiverId = parseInt(req.body.receiver_id);
+
+  try {
+    await db.result(
+      `DELETE FROM follow_requests
+       WHERE requester_id = $1 AND receiver_id = $2 AND status = 'pending'`,
+      [requesterId, receiverId]
+    );
+
+    console.log(`User ${requesterId} canceled follow request to ${receiverId}`);
+    res.redirect('/findFriends');
+  } catch (err) {
+    console.error('Error cancelling follow request:', err.message);
+    res.status(500).send('Error cancelling request');
+  }
+});
+
+
+
+
+// *****************************************************
+// <!--Notifications -->
+// *****************************************************
+app.get('/notifications', async (req, res) => {
+  const userId = req.session.user.id;
+
+  try {
+    const followRequests = await db.any(
+      `SELECT fr.id AS request_id, u.username, u.profile_icon AS profile_pic, fr.requested_at
+       FROM follow_requests fr
+       JOIN users u ON u.id = fr.requester_id
+       WHERE fr.receiver_id = $1 AND fr.status = 'pending'
+       ORDER BY fr.requested_at DESC`,
+      [userId]
+    );
+
+    res.render('pages/notifications', {
+      followRequests
+    });
+
+  } catch (err) {
+    console.error('Error loading follow requests:', err.message);
+    res.render('pages/notifications', {
+      followRequests: [],
+      error: true,
+      message: 'Something went wrong while loading requests.'
+    });
+  }
+});
+
 
 // *****************************************************
 // <!-- Logout -->
@@ -307,6 +350,132 @@ app.get('/logout', (req, res) => {
     res.render('pages/login', { message: 'Logged out Successfully' });
   });
 });
+
+app.post('/follow-request/approve/:id', async (req, res) => {
+  const requestId = parseInt(req.params.id);
+
+  try {
+    const request = await db.one(
+      `SELECT requester_id, receiver_id FROM follow_requests WHERE id = $1`,
+      [requestId]
+    );
+
+    await db.tx(async t => {
+      await t.none(
+        `UPDATE follow_requests SET status = 'approved' WHERE id = $1`,
+        [requestId]
+      );
+
+      await t.none(
+        `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
+         VALUES ($1, $2, NOW())`,
+        [request.requester_id, request.receiver_id]
+      );
+
+      await t.none(
+        `UPDATE users SET following_count = following_count + 1 WHERE id = $1`,
+        [request.requester_id]
+      );
+
+      await t.none(
+        `UPDATE users SET followers_count = followers_count + 1 WHERE id = $1`,
+        [request.receiver_id]
+      );
+    });
+
+    res.redirect('/notifications#requests'); // Redirect back to notifications after approval
+  } catch (err) {
+    console.error('Error approving follow request:', err.message);
+    res.status(500).send('Something went wrong.');
+  }
+});
+
+app.post('/follow-request/decline/:id', async (req, res) => {
+  const requestId = parseInt(req.params.id);
+
+  try {
+    await db.result(
+      `DELETE FROM follow_requests WHERE id = $1`,
+      [requestId]
+    );
+
+    res.redirect('/notifications#requests');
+  } catch (err) {
+    console.error('Error declining follow request:', err.message);
+    res.status(500).send('Something went wrong.');
+  }
+});
+
+// *****************************************************
+// <!-- Data base info to add for testing-->
+// *****************************************************
+/* Temporary way to add request data and to add friend data for your user account*/
+//just visit: http://localhost:3000/dev/create-follow-requests
+app.get('/dev/create-follow-requests', async (req, res) => {
+  try {
+    const requests = [
+      { requester_id: 2, receiver_id: 11 },
+      { requester_id: 3, receiver_id: 11 },
+      { requester_id: 4, receiver_id: 11 },
+      { requester_id: 5, receiver_id: 11 },
+      { requester_id: 6, receiver_id: 11 }
+    ];
+
+    for (const reqData of requests) {
+      await db.none(
+        `INSERT INTO follow_requests (requester_id, receiver_id, status, requested_at)
+         VALUES ($1, $2, 'pending', CURRENT_TIMESTAMP)`,
+        [reqData.requester_id, reqData.receiver_id]
+      );
+    }
+
+    res.send('Test follow requests created.');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Failed to create test follow requests.');
+  }
+});
+
+/* Temporary way to add test friends */
+//just visit: http://localhost:3000/dev/create-friends
+app.get('/dev/create-friends', async (req, res) => {
+  try {
+    const friends = [
+      { follower_id: 11, followed_id: 2 }, // YourUser → max_power
+      { follower_id: 11, followed_id: 3 }, // Youruser → sara_sky
+      { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
+      { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
+    ];
+
+    for (const pair of friends) {
+      await db.tx(async t => {
+        await t.none(
+          `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
+           VALUES ($1, $2, NOW())
+           ON CONFLICT DO NOTHING`,
+          [pair.follower_id, pair.followed_id]
+        );
+
+        await t.none(
+          `UPDATE users SET following_count = following_count + 1 WHERE id = $1`,
+          [pair.follower_id]
+        );
+
+        await t.none(
+          `UPDATE users SET followers_count = followers_count + 1 WHERE id = $1`,
+          [pair.followed_id]
+        );
+      });
+    }
+
+    res.send('Test friendships created.');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Failed to create test friendships.');
+  }
+});
+
+
 
 // *****************************************************
 // <!-- Friends Posts -->
