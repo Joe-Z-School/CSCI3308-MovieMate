@@ -1,4 +1,3 @@
-
 <style>
     body {
         display: flex;
@@ -11,11 +10,11 @@
 {{> nav}}
 <div class="profile-container">
     <div class="profile-header">
-        <img src="../../resources/img/{{profile_icon}}" alt="Profile Picture" class="profile-pic">
+        <img src="../../resources/img/{{user.profile_icon}}" alt="Profile Picture" class="profile-pic">
 
         <div class="profile-info">
-            <h1 class="profile-name">{{username}}</h1>
-            <p class="profile-username">@{{username}}</p>
+            <h1 class="profile-name">{{user.first_name}}</h1>
+            <p class="profile-username">@{{user.username}}</p>
             {{#if isOwnProfile}}
             <a href="/profile/edit"><button class="btn-edit">Edit Profile</button></a>
             {{else}}
@@ -40,7 +39,7 @@
     </div>
 
     <div class="profile-bio">
-        <p>{{bio}}</p>
+        <p>{{user.bio}}</p>
     </div>
 
     <div class="post-container">

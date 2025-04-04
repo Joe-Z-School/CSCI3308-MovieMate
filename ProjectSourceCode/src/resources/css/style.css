@@ -240,11 +240,12 @@ body {
 }
 
 .navbar-logo {
-    height: 50px; 
+    height: 50px;
     width: auto;
 }
+
 .navbar-light {
-    background-color: #f8f9fa; 
+    background-color: #f8f9fa;
 }
 
 .nav-link {
@@ -260,4 +261,12 @@ body {
 /* Navbar toggler style for mobile */
 .navbar-toggler-icon {
     background-color: #5F4B8B;
+}
+
+.profile-img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 3px solid #5F4B8B;
+    object-fit: cover;
 }

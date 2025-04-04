@@ -220,7 +220,7 @@ app.get('/findFriends', async (req, res) => {
         u.profile_icon,
         u.bio,
         u.first_name, 
-        u.last_name
+        u.last_name,
         CASE 
           WHEN f.following_user_id IS NOT NULL THEN TRUE
           ELSE FALSE
@@ -241,15 +241,14 @@ app.get('/findFriends', async (req, res) => {
     );
 
     res.render('pages/findFriends', {
-      email: req.session.user.email,
-      profile_icon: req.session.user.profile_icon,
+      user: req.session.user,
       users
     });
 
   } catch (err) {
     console.error('Error loading users:', err.message);
     res.render('pages/findFriends', {
-      email: req.session.user.email,
+      user: req.session.user,
       users: [],
       error: true,
       message: 'Something went wrong while loading users.'
@@ -315,6 +314,7 @@ app.post('/users/unfollow', async (req, res) => {
   } catch (err) {
     console.error('Error unfollowing user:', err.message);
     res.render('pages/findFriends', {
+      user: req.session.user,
       users: [],
       error: true,
       message: 'Something went wrong while trying to unfollow this user.'
@@ -360,6 +360,7 @@ app.get('/notifications', async (req, res) => {
     );
 
     res.render('pages/notifications', {
+      user: req.session.user,
       followRequests
     });
 
@@ -537,7 +538,7 @@ const posts = [
 // Display the main page
 app.get('/social', (req, res) => {
   const initialPosts = posts.slice(0, 5); // Load the first 5 posts
-  res.render('pages/social', { layout: 'main', posts: initialPosts });
+  res.render('pages/social', { layout: 'main', user: req.session.user, posts: initialPosts });
 });
 
 // Load paginated posts
@@ -599,9 +600,7 @@ app.get('/profile', (req, res) => {
   const isOwnProfile = loggedInUsername === profileUsername;
 
   res.render('pages/profile', {
-    username: req.session.user.username,
-    bio: req.session.user.bio,
-    profile_icon: req.session.user.profile_icon,
+    user: req.session.user,
     isOwnProfile: isOwnProfile
   });
 });
