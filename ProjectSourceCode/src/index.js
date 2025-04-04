@@ -88,11 +88,34 @@ Handlebars.registerHelper('json', function (context) {
 // *****************************************************
 
 const user = {
-  username: undefined,
-  password: undefined
+    username: undefined,
+    password: undefined
 };
 
-// TODO - Include your API routes here
+// OMDB API Routes
+app.get('/api/movies/search', movieController.searchMovies);
+app.get('/api/movies/details/:imdbId', movieController.getMovieDetails);
+app.post('/api/movies/watchlist', movieController.addToWatchlist);
+app.post('/api/movies/watched', movieController.markAsWatched);
+app.post('/api/movies/review', movieController.addReview);
+app.get('/api/movies/reviews/:imdbId', movieController.getMovieReviews);
+app.get('/api/movies/new', movieController.getNewMovies);
+
+// Page Routes
+app.get('/movies/details/:imdbId', (req, res) => {
+  res.render('pages/movie-details', { 
+    imdbId: req.params.imdbId,
+    user: req.session.user 
+  });
+});
+
+app.get('/explore', (req, res) => {
+  res.render('pages/explore', { 
+    user: req.session.user,
+    title: 'Explore Movies - MovieMates'
+  });
+});
+
 app.get('/', (req, res) => {
   res.redirect('/login'); //this will call the /anotherRoute route in the API
 });
@@ -108,24 +131,23 @@ app.post('/login', async (req, res) => {
   //get the user from the usernmae
   const getUser = `SELECT * FROM users WHERE users.username = $1`;
   //let response = await db.none(insert, [username, hash]);
-  try {
-    let user = await db.one(getUser, username);
-    const match = await bcrypt.compare(req.body.password, user.password);
-    if (!match) {
-      res.render('pages/login', { layout: 'main', message: 'Incorrect username or password.' });
-    } else {
-      console.log('user logged in');
-      req.session.user = user;
-      req.session.save();
-      res.redirect('/findFriends');
-    }
-  } catch (err) {
-    req.session.Message = 'An error occurred';
-    res.redirect('/register');
+  try{
+      let user = await db.one(getUser, username);
+      const match = await bcrypt.compare(req.body.password, user.password);
+      if (!match){
+          res.render('pages/login', {layout: 'main' , message: 'Incorrect username or password.'});
+      }else{
+          console.log('user logged in');
+          req.session.user = user;
+          req.session.save();
+          res.redirect('/findFriends');
+      }
+  }catch (err){
+      req.session.Message = 'An error occurred';
+      res.redirect('/register');
 
   };
 });
-
 
 app.get('/register', (req, res) => {
   //do something
@@ -134,8 +156,8 @@ app.get('/register', (req, res) => {
 
 // Register
 app.post('/register', async (req, res) => {
-  //hash the password using bcrypt library
-  const hash = await bcrypt.hash(req.body.password, 10);
+    //hash the password using bcrypt library
+    const hash = await bcrypt.hash(req.body.password, 10);
 
   const first_name = req.body.first_name;
   const last_name = req.body.last_name;
@@ -204,7 +226,7 @@ app.get('/findFriends', async (req, res) => {
       WHERE u.id != $1
       ORDER BY u.username ASC
       `,
-      [userId]
+    [userId]
     );
 
     res.render('pages/findFriends', {
@@ -223,7 +245,7 @@ app.get('/findFriends', async (req, res) => {
     });
   }
 });
-
+//Allowing the user to follow others
 app.post('/users/follow', async (req, res) => {
   const requesterId = req.session.user.id;
   const receiverId = parseInt(req.body.following_id);
@@ -244,7 +266,6 @@ app.post('/users/follow', async (req, res) => {
     res.status(500).send('Internal server error');
   }
 });
-
 
 // Allowing Users to unfollow
 app.post('/users/unfollow', async (req, res) => {
@@ -311,9 +332,6 @@ app.post('/users/cancel-request', async (req, res) => {
   }
 });
 
-
-
-
 // *****************************************************
 // <!--Notifications -->
 // *****************************************************
@@ -351,8 +369,8 @@ app.get('/notifications', async (req, res) => {
 //To log out
 app.get('/logout', (req, res) => {
   console.log("succesfully logged out");
-  req.session.destroy(function (err) {
-    res.render('pages/login', { message: 'Logged out Successfully' });
+  req.session.destroy(function(err) {
+    res.render('pages/login', {message : 'Logged out Successfully'});
   });
 });
 
@@ -506,9 +524,9 @@ const posts = [
 ];
 
 // Display the main page
-app.get('/social', (req, res) => {
+app.get('/social', (req, res) => {  
   const initialPosts = posts.slice(0, 5); // Load the first 5 posts
-  res.render('pages/social', { layout: 'main', posts: initialPosts, email: req.session.user.email });
+  res.render('pages/social', { layout:'main', posts: initialPosts });
 });
 
 // Load paginated posts
@@ -527,25 +545,25 @@ app.post('/add-to-watchlist', async (req, res) => {
 
   if (!title || !picture || !whereToWatch) {
     res.render('pages/social', { layout: 'main', message: 'Incomplete movie information.', status: 400 });
-    return;
+    return; 
   }
 
   db.tx(async insert => {
     // Remove the course from the student's list of courses.
     await insert.query('INSERT INTO watchlist (title, picture, whereToWatch) VALUES ($1, $2, $3)', [title, picture, whereToWatch]);
   }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully added ${title} to your watchlist.` });
-  }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to add movie to watchlist.' });
-  });
-
+      res.render('pages/social', {layout: 'main', success: true, message: `Successfully added ${title} to your watchlist.`});
+    }).catch(err => {
+      res.render('pages/social', {layout: 'main', error: true, message: 'Failed to add movie to watchlist.'});
+    }); 
+  
 });
 
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
 
   if (!title) {
-    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400 });
+    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400});
     return;
   }
 
@@ -553,10 +571,10 @@ app.post('/remove-from-watchlist', async (req, res) => {
     // Remove the course from the student's list of courses.
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
-  }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
-  });
+      res.render('pages/social', {layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.`});
+    }).catch(err => {
+      res.render('pages/social', {layout: 'main', error: true, message: 'Failed to remove movie from watchlist.'});
+    });  
 });
 
 // *****************************************************
