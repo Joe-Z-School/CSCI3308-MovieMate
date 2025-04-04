@@ -34,7 +34,7 @@ exports.getNewMovies = async (req, res) => {
   }
 };
 
-// search movies from OMDB API
+// Update searchMovies to format data for the new frontend
 exports.searchMovies = async (req, res) => {
   try {
     const { query, year, type, page = 1 } = req.query;
@@ -44,13 +44,30 @@ exports.searchMovies = async (req, res) => {
     }
     
     const filters = { y: year, type: type };
-    const results = await omdbApi.searchMovies(query, filters, page);
+    const apiResults = await omdbApi.searchMovies(query, filters, page);
     
-    if (!results.success) {
-      return res.status(404).json(results);
+    console.log('OMDB API response:', apiResults); // Debug log
+    
+    if (!apiResults.success) {
+      return res.status(404).json(apiResults);
     }
     
-    return res.json(results);
+    // Format the results to match frontend expectations
+    const formattedResults = {
+      success: true,
+      results: apiResults.results.map(movie => ({
+        id: movie.imdbID,
+        title: movie.Title,
+        year: movie.Year,
+        poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
+        rating: movie.imdbRating || 'N/A'
+      })),
+      totalResults: parseInt(apiResults.totalResults) || apiResults.results.length
+    };
+    
+    console.log('Formatted results:', formattedResults); // Debug log
+    
+    return res.json(formattedResults);
   } catch (error) {
     console.error('Error in searchMovies controller:', error);
     return res.status(500).json({ success: false, error: 'Internal server error' });
@@ -289,6 +306,150 @@ exports.getMovieReviews = async (req, res) => {
     console.error('Error getting movie reviews:', error);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
+};
+
+// Filter movies (when no specific search query is provided)
+exports.filterMovies = async (req, res) => {
+  try {
+    const { genres, year, type, director, actor, minRating, page = 1 } = req.query;
+    
+    // If no filters are provided, return trending movies
+    if (!genres && !year && !type && !director && !actor && !minRating) {
+      return exports.getTrendingMovies(req, res);
+    }
+    
+    // Build a search query based on available filters
+    let searchQuery = '';
+    let filters = {};
+    
+    // For genre filtering, we'll use the first genre as search term
+    if (genres) {
+      const genreArray = genres.split(',');
+      searchQuery = genreArray[0]; // Use first genre as search term
+    } else if (director) {
+      searchQuery = director;
+    } else if (actor) {
+      searchQuery = actor;
+    } else {
+      // Default search term if none provided
+      searchQuery = 'movie';
+    }
+    
+    // Add other filters
+    if (year) {
+      filters.y = year;
+    }
+    
+    if (type) {
+      filters.type = type;
+    }
+    
+    // Use the existing search function
+    const results = await omdbApi.searchMovies(searchQuery, filters, page);
+    
+    // If a minimum rating filter is applied, we need to fetch details for each movie
+    if (minRating && results.success) {
+      const minRatingValue = parseFloat(minRating);
+      
+      // Fetch details for each movie to get ratings
+      const detailPromises = results.results.map(movie => 
+        omdbApi.getMovieDetails(movie.imdbID)
+      );
+      
+      const detailResults = await Promise.all(detailPromises);
+      
+      // Filter movies by rating
+      const filteredMovies = detailResults
+        .filter(result => result.success && result.movie.imdbRating && 
+                parseFloat(result.movie.imdbRating) >= minRatingValue)
+        .map(result => result.movie);
+      
+      return res.json({
+        success: true,
+        results: filteredMovies,
+        totalResults: filteredMovies.length,
+        page: parseInt(page)
+      });
+    }
+    
+    return res.json(results);
+  } catch (error) {
+    console.error('Error filtering movies:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+// Get trending movies based on type (popular, latest, recommended)
+exports.getTrendingMovies = async (req, res) => {
+  try {
+    const { type = 'popular' } = req.query;
+    
+    let movieIds = [];
+    
+    // Different lists based on trending type
+    if (type === 'popular') {
+      movieIds = [
+        'tt1745960', // Top Gun: Maverick
+        'tt12593682', // Bullet Train
+        'tt6443346', // Black Adam
+        'tt9114286', // Black Panther: Wakanda Forever
+        'tt1630029'  // Avatar: The Way of Water
+      ];
+    } else if (type === 'latest') {
+      movieIds = [
+        'tt15239678', // Dune: Part Two
+        'tt11304740', // Deadpool & Wolverine
+        'tt17024450', // A Quiet Place: Day One
+        'tt1517268', // Twisters
+        'tt22687790'  // Inside Out 2
+      ];
+    } else if (type === 'recommended') {
+      movieIds = [
+        'tt1375666', // Inception
+        'tt0816692', // Interstellar
+        'tt0468569', // The Dark Knight
+        'tt0109830', // Forrest Gump
+        'tt0111161'  // The Shawshank Redemption
+      ];
+    }
+    
+    // Get details for each movie
+    const moviePromises = movieIds.map(imdbId => omdbApi.getMovieDetails(imdbId));
+    const results = await Promise.all(moviePromises);
+    
+    // Filter out any failures and extract the movie data
+    const movies = results
+      .filter(result => result.success)
+      .map(result => {
+        const movie = result.movie;
+        // Format the data to match the frontend expectations
+        return {
+          id: movie.imdbID,
+          title: movie.Title,
+          year: movie.Year,
+          rating: movie.imdbRating || '7.5', // Default if no rating
+          poster: movie.Poster
+        };
+      });
+    
+    return res.json({ 
+      success: true, 
+      results: movies,
+      totalResults: movies.length
+    });
+  } catch (error) {
+    console.error('Error fetching trending movies:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+// Simple placeholder image generator
+exports.getPlaceholderImage = (req, res) => {
+  const width = req.params.width || 300;
+  const height = req.params.height || 450;
+  
+  // Redirect to a placeholder image service
+  res.redirect(`https://via.placeholder.com/${width}x${height}/808080/ffffff?text=Movie+Poster`);
 };
 
 module.exports = exports;
