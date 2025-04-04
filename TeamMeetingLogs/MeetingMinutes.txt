@@ -1,0 +1,129 @@
+
+Minutes of the Meeting Log File
+
+Week 1: March 21st
+    - Lizze:
+        - Created Wireframe
+        - Created the Case Diagram
+        - Created the index.js file with inital dependencies
+        - Added the initial login and register page rendering routes
+        - Setup main.hbs with initial partials
+
+    - Maeve:
+        - Created the register page
+        - Created the register forum html code
+
+    - Neha:
+        - Created and logged the Project Details information
+        - Created the preliminary Database creation
+        - Created and showed the Database ER Diagram
+
+    - Ella:
+        - Created the login page
+        - Added the POST route to index.js for the login page
+
+    - Conner:
+        - Added API key fetching
+        - Created starter API service class
+
+    - Joe:
+        - Created Github repository with file structure
+        - Created README file
+        - Created package.json file
+        - Created docker-compose file
+
+    - Additionals:
+        - AJ mentions how because the complexity of our design is not very high, we will be graded more heavily on the aesthetics and functionality of the application.
+
+------------------------------------------------------------------------------
+
+Week 2: April 4th
+    - Lizze:
+        - what have you done since the last meeting?
+            - 
+            - 
+            - 
+            - 
+
+        - what are you planning to do until the next meeting?
+            - 
+            - 
+            
+        - what are the challenges you are facing?
+            - 
+
+    - Maeve:
+        - what have you done since the last meeting?
+            - 
+            - 
+            - 
+            - 
+
+        - what are you planning to do until the next meeting?
+            - 
+            - 
+            
+        - what are the challenges you are facing?
+            - 
+
+    - Neha:
+        - what have you done since the last meeting?
+            - 
+            - 
+            - 
+            - 
+
+        - what are you planning to do until the next meeting?
+            - 
+            - 
+            
+        - what are the challenges you are facing?
+            - 
+
+    - Ella:
+        - what have you done since the last meeting?
+            - 
+            - 
+            - 
+            - 
+
+        - what are you planning to do until the next meeting?
+            - 
+            - 
+            
+        - what are the challenges you are facing?
+            - 
+
+    - Conner:
+        - what have you done since the last meeting?
+            - 
+            - 
+            - 
+            - 
+
+        - what are you planning to do until the next meeting?
+            - 
+            - 
+            
+        - what are the challenges you are facing?
+            - 
+
+    - Joe:
+        - what have you done since the last meeting?
+            - 
+            - 
+            - 
+            - 
+
+        - what are you planning to do until the next meeting?
+            - 
+            - 
+            
+        - what are the challenges you are facing?
+            - 
+
+    - Additionals:
+        - 
+
+------------------------------------------------------------------------------
+
