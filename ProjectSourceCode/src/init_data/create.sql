@@ -15,7 +15,9 @@ CREATE TABLE users (
   bio VARCHAR(150),
   created_at TIMESTAMP,
   followers_count INTEGER ,
-  following_count INTEGER
+  following_count INTEGER,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50)
 );
 
 CREATE TABLE movies (
