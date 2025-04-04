@@ -188,6 +188,7 @@ app.get('/findFriends', async (req, res) => {
 
     res.render('pages/findFriends', {
       email: req.session.user.email,
+      profile_icon: req.session.user.profile_icon,
       users
     });
 
