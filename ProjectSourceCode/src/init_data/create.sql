@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS movies_to_users;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS movies;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS messages;
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -15,7 +16,9 @@ CREATE TABLE users (
   bio VARCHAR(150),
   created_at TIMESTAMP,
   followers_count INTEGER ,
-  following_count INTEGER
+  following_count INTEGER,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50)
 );
 
 CREATE TABLE movies (
@@ -71,4 +74,24 @@ CREATE TABLE posts (
   liked VARCHAR(50),
   created_at TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE follow_requests (
+  id SERIAL PRIMARY KEY,
+  requester_id INTEGER NOT NULL,
+  receiver_id INTEGER NOT NULL,
+  status TEXT DEFAULT 'pending', -- could be 'pending', 'approved', 'rejected'
+  requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    sender_id INT REFERENCES users(id),
+    recipient_id INT REFERENCES users(id),
+    content TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE
 );

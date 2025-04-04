@@ -238,3 +238,26 @@ body {
 .post-action:hover {
     color: #5F4B8B;
 }
+
+.navbar-logo {
+    height: 50px; 
+    width: auto;
+}
+.navbar-light {
+    background-color: #f8f9fa; 
+}
+
+.nav-link {
+    font-weight: 500;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #5F4B8B;
+}
+
+/* Navbar toggler style for mobile */
+.navbar-toggler-icon {
+    background-color: #5F4B8B;
+}

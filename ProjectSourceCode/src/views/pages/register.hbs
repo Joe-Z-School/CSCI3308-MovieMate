@@ -13,6 +13,20 @@
         padding-top: 20px;
         padding-bottom: 20px;
     }
+
+     .icon-row img {
+        margin: 2px;
+        cursor: pointer;
+        border-radius: 50%; 
+        border: 2px solid transparent;  
+        transition: border 0.3s ease, box-shadow 0.3s ease; 
+        object-fit: cover;  
+    }
+
+    .icon-row img.selected {
+        border: 3px solid #5F4B8B; 
+    }
+
 </style>
 {{> title}}
 <div class="page-container">
@@ -20,6 +34,16 @@
         <div class="form-container">
             <h2>Register</h2>
             <form action="/register" method="POST">
+                <div>
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" class="form-control" required>
+                </div>
+
+                <div>
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" required>
+                </div>
+
                 <div>
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" class="form-control" required>
@@ -38,13 +62,16 @@
                 <div>
                     <label for="profile_icon">Select Profile Icon:</label>
                     <div class="product-container">
-                        <div class="color-options">
-                            <span class="color-option" style="background-color: red;" data-value="red"></span>
-                            <span class="color-option" style="background-color: yellow;" data-value="yellow"></span>
-                            <span class="color-option" style="background-color: green;" data-value="green"></span>
-                            <span class="color-option" style="background-color: blue;" data-value="blue"></span>
+                         <div class="icon-row">
+                            <img src="../../resources/img/Profile_pic_option_1.png" width="60" height="60" alt="profile_icon" data-image="Profile_pic_option_1.png">
+                            <img src="../../resources/img/profile_pic_option_2.png" width="60" height="60" alt="profile_icon" data-image="Profile_pic_option_2.png">
+                            <img src="../../resources/img/profile_pic_option_3.png" width="60" height="60" alt="profile_icon" data-image="Profile_pic_option_3.png">
+                            <img src="../../resources/img/profile_pic_option_4.png" width="60" height="60" alt="profile_icon" data-image="Profile_pic_option_4.png">
+                            <img src="../../resources/img/profile_pic_option_5.png" width="60" height="60" alt="profile_icon" data-image="Profile_pic_option_5.png">
+                            <img src="../../resources/img/profile_pic_option_6.png" width="60" height="60" alt="profile_icon" data-image="Profile_pic_option_6.png">
                         </div>
                     </div>
+
                     <!-- Hidden input field to store selected profile icon -->
                     <input type="hidden" id="profile_icon" name="profile_icon">
                 </div>
@@ -64,17 +91,21 @@
 </div>
 
 <script>
-    const colorOptions = document.querySelectorAll('.color-option');
-    const profileIconInput = document.getElementById('profile_icon');
+    document.addEventListener('DOMContentLoaded', function() {
+    const profileIcons = document.querySelectorAll('.icon-row img'); 
+    const profileIconInput = document.getElementById('profile_icon'); 
 
-    colorOptions.forEach(option => {
-        option.addEventListener('click', function () {
-            colorOptions.forEach(opt => opt.classList.remove('selected'));
+    profileIcons.forEach(icon => {
+        icon.addEventListener('click', function() {
+            profileIcons.forEach(icon => icon.classList.remove('selected'));
+            
             this.classList.add('selected');
+            
+            const selectedIcon = this.getAttribute('data-image');
+            profileIconInput.value = selectedIcon;
 
-            // Set the value of the hidden input field
-            const selectedColor = this.getAttribute('data-value');
-            profileIconInput.value = selectedColor;
+            console.log('Selected Icon:', selectedIcon); 
         });
     });
+});
 </script>
