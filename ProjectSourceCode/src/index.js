@@ -12,6 +12,16 @@ const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
 const bcrypt = require('bcryptjs'); //  To hash passwords
 const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
+const movieController = require('./controllers/movieController'); // To handle movie-related API requests
+
+
+// *****************************************************
+// <!-- Socket.IO Server Creation -->
+// *****************************************************
+const { Server } = require('socket.io'); // To enable real-time communication between the server and the client
+const http = require('http'); // To create an HTTP server
+const server = http.createServer(app);
+const io = new Server(server); // To create a Socket.IO server
 
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
@@ -591,6 +601,42 @@ app.get('/profile', (req, res) => {
     isOwnProfile: isOwnProfile
   });
 });
+
+// *****************************************************
+// <!-- Messages Page -->
+// *****************************************************
+
+ // Socket.IO dependency
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('send_message', (data) => {
+    io.emit('receive_message', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
+
+app.get('/messaging', auth, async (req, res) => {
+  const { user } = req.session;
+  
+  try{
+    const friends = await db.query(`
+      SELECT u.id, u.username, u.profile_icon, COUNT(m.id) AS unread_count
+        FROM users u
+        LEFT JOIN messages m ON m.sender_id = u.id AND m.recipient_id = $1 AND m.is_read = FALSE
+        WHERE u.id != $1
+        GROUP BY u.id, u.username, u.profile_icon`, [user.id]);
+
+      res.render('pages/messaging', {layout: 'main', friends: friends.rows} );
+  } catch (error) {
+    console.error('Error fetching friends with unread messages:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
