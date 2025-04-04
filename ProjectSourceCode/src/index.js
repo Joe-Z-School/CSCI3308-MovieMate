@@ -169,7 +169,7 @@ app.use(auth);
 
 app.get('/findFriends', async (req, res) => {
   const userId = req.session.user.id;
-  
+
   try {
     const users = await db.any(
       `SELECT 
@@ -389,12 +389,17 @@ app.post('/remove-from-watchlist', async (req, res) => {
 //  <!-- Profile Page --!>
 // *****************************************************
 // Display the main page
+// If you want to use the current route format (no username in URL)
 app.get('/profile', (req, res) => {
-  const profileUsername = req.params.username;
+  // Get username from query parameter, e.g., /profile?username=john
+  const profileUsername = req.query.username || req.session.user.username;
   const loggedInUsername = req.session.user ? req.session.user.username : null;
   const isOwnProfile = loggedInUsername === profileUsername;
+
   res.render('pages/profile', {
-    username: req.session.user.username,
+    username: profileUsername,
+    bio: req.session.user.bio,
+    profile_icon: req.session.user.profile_icon,
     isOwnProfile: isOwnProfile
   });
 });
