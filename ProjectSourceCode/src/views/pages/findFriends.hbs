@@ -24,25 +24,71 @@
             {{#each users}}
             <tr class="user-row">
                 <td>
-                    <!-- <img src="{{profile_icon}}" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%;">-->
-                    <p> filler </p>
+                    <img src="{{profile_icon}}" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%;">
                 </td>
                 <td>{{username}}</td>
                 <td>{{bio}}</td>
-                <td>
-                    <form action="{{#if is_following}}/users/unfollow{{else}}/users/follow{{/if}}" method="POST">
-                        <input type="hidden" name="following_id" value="{{id}}">
-                        {{#if is_following}}
-                        <button type="submit" class="btn btn-outline-danger">Unfollow</button>
-                    {{else}}
-                        <button type="submit" class="btn btn-primary">Follow</button>
-                    {{/if}}
+           <td>
+            {{#if is_following}}
+              <button type="button" class="btn btn-outline-danger" onclick="showUnfollowModal('{{id}}', '{{username}}')">Unfollow</button>
+            {{else if is_requested}}
+               <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')"> Requested</button>
+          {{else}}
+            <form action="/users/follow" method="POST">
+            <input type="hidden" name="following_id" value="{{id}}">
+            <button type="submit" class="btn btn-primary">Follow</button>
             </form>
-           </td>
+          {{/if}}
+          </td>
+
          </tr>
        {{/each}}
      </tbody>
    </table>
+   <!-- Unfollow Confirmation Modal -->
+<div class="modal fade" id="unfollowModal" tabindex="-1" aria-labelledby="unfollowModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title" id="unfollowModalLabel">Confirm Unfollow</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to unfollow <strong id="unfollowUsername"></strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form id="unfollowForm" method="POST" action="/users/unfollow">
+          <input type="hidden" name="following_id" id="unfollowUserId">
+          <button type="submit" class="btn btn-danger">Unfollow</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Follow Request Modal -->
+<div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cancelRequestModalLabel">Cancel Follow Request</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to cancel your follow request to <strong id="cancelRequestUsername"></strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nevermind</button>
+        <form id="cancelRequestForm" method="POST" action="/users/cancel-request">
+          <input type="hidden" name="receiver_id" id="cancelRequestUserId">
+          <button type="submit" class="btn btn-warning">Cancel Request</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
  </div>
 
  <script>
@@ -56,9 +102,25 @@
        row.style.display = username.includes(input) ? '' : 'none';
      });
    }
+
+   
+  function showUnfollowModal(userId, username) {
+    document.getElementById('unfollowUserId').value = userId;
+    document.getElementById('unfollowUsername').textContent = username;
+
+    const modal = new bootstrap.Modal(document.getElementById('unfollowModal'));
+    modal.show();
+  }
+
+  function showCancelRequestModal(userId, username) {
+  document.getElementById('cancelRequestUserId').value = userId;
+  document.getElementById('cancelRequestUsername').textContent = username;
+
+  const modal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
+  modal.show();
+}
+
  </script>
 </body>
 </html>
-
-
 
