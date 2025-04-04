@@ -224,7 +224,7 @@ app.get('/findFriends', async (req, res) => {
         u.profile_icon,
         u.bio,
         u.first_name, 
-        u.last_name
+        u.last_name,
         CASE 
           WHEN f.following_user_id IS NOT NULL THEN TRUE
           ELSE FALSE
