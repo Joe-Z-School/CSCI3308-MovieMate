@@ -244,18 +244,34 @@ body {
 
 .container-explore {
     display: flex;
-    height: 100vh; 
+    min-height: 100vh; 
 }
 
 .left-column-explore {
     width: 250px;
     padding: 25px;
-    background-color: #4a3a6d;
-    height: 100%; 
+    background-color: #5F4B8B;
     box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .main-content-explore {
     flex-grow: 1;
     padding: 20px;
+}
+
+
+.btn-outline-search-feature {
+    outline-color: #fff;
+    border-radius: 10px;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #fff;
+    background-color: transparent;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-outline-search-feature:focus {
+    background-color: #33294a; 
+    color: #fff; 
 }

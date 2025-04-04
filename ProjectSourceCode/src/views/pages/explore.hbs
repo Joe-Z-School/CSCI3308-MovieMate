@@ -6,43 +6,111 @@
 <div class="container-explore">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
         <div class="left-column-explore">
-            <h2 style="color: #5F4B8B;">Filter By</h2>
+            <h2 style="color: #fff;">Filter By</h2>
+
+            {{!-- Either we have a way to filter by newest, or the page automatically filters by newest 
+                movies when you open it up --}}
+            <br>
+            <h5 style="color: #fff;">Newest</h5>
+            <br>
+
+            <h5 style="color: #fff;">Genre</h5>
+
+            {{!-- when each button is clicked it will have the specific genre associated w it 
+                can use onClick() function for specific filtering purposes --}}
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Action</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Comedy</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Drama</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Fantasy</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Horror</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Mystery</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Romance</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Sci-fi</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Thriller</p>
+            </div>
+            <br>
+
+            <div style="display: flex; align-items: center;">
+                <button type="button" class="btn-outline-search-feature"> </button>
+                <p style="color: #fff; margin-left: 10px; margin-top: 0; margin-bottom: 0;">Western</p>
+            </div>
+
         </div>
 
-        <div class="main-content-explore">
-            <h1>Explore Top-Rated Movies</h1>
-        </div>
-</div> 
-    {{!-- 
-    <div id="movie-container" class="row">
-        {{#each posts}}
-        <div class="row row-cols-1 row-cols-md-1 g-4">
-            <div class="card h-100">
-                <p class="card-text">~USER~ {{user}}</p>
-                <img src="{{cover}}" class="card-img-top" alt="{{title}}">
-                <div class="card-body">
-                    <h5 class="card-title text-center">Movie Title: {{title}}</h5>
-                    <p class="card-text">Review: {{review}}</p>
-                    <p class="card-text">Description: {{description}}</p>
-                    <p class="card-text">Where To Watch: {{whereToWatch}}</p>
-                    <button class="btn heart-button" data-post='{{json this}}' data-bs-toggle="tooltip"
-                        data-bs-title="Like Post">
-                        <i class="bi bi-heart"></i>
-                    </button>
-                    <button class="btn add-button" id="add-button-{{@index}}" data-title="{{title}}"
-                        data-cover="{{cover}}" data-where="{{whereToWatch}}" data-bs-toggle="tooltip"
-                        data-bs-title="Add to WatchList">
-                        <i class="bi bi-plus-circle" id="add-icon-{{@index}}"></i>
-                    </button>
+    <div class="main-content-explore">
+        <h1>Explore Top-Rated Movies</h1>
+
+        {{!-- here are some sample filler cards- this will be the basic layout, can then be implemented with the API --}}
+
+         <div id="movie-container" class="row">
+            {{#each posts}}
+            <div class="row row-cols-1 row-cols-md-1 g-4">
+                <div class="card h-100">
+                    <img src="{{cover}}" class="card-img-top" alt="{{title}}">
+                    <div class="card-body">
+                        <h4 class="card-title text-center">{{title}}</h4>
+                        <button class="btn add-button" id="add-button-{{@index}}" data-title="{{title}}"
+                            data-cover="{{cover}}" data-where="{{whereToWatch}}" data-bs-toggle="tooltip"
+                            data-bs-title="Add to WatchList">
+                            <i class="bi bi-plus-circle" id="add-icon-{{@index}}"></i> Add to watchlist
+                        </button>
+                        <p class="card-text">Genre: {{genre}}</p>
+                        <p class="card-text">Rating: {{rating}}</p>
+                        <p class="card-text">Description: {{description}}</p>
+                        <p class="card-text">Where To Watch: {{whereToWatch}}</p>
+                    </div>
                 </div>
             </div>
-        </div>
-        {{/each}}
+            {{/each}}
 
+        </div>
+        <br>
+        <div id="loading" class="text-center mt-4" style="display: none;">
+            <p>Loading more posts...</p>
+        </div>
+        <br>
     </div>
-    <br>
-    <div id="loading" class="text-center mt-4" style="display: none;">
-        <p>Loading more posts...</p>
-    </div>
-    <br>
-</div> --}}
+</div>
