@@ -1,64 +1,71 @@
 const axios = require('axios');
-const config = require('../config/apiConfig');
-const apiKey = process.env.OMDB_API_KEY;
+const OMDB_API_KEY = process.env.OMDB_API_KEY;
 
-// caching implementation
+// Caching implementation
 const movieCache = {};
 const searchCache = {};
 const CACHE_DURATION = 48 * 60 * 60 * 1000; // 48 hour cache duration
 
 class OmdbApiService {
   constructor() {
-    this.apiKey = config.omdbApiKey;
-    this.baseUrl = config.omdbBaseUrl;
+    this.apiKey = OMDB_API_KEY;
+    this.baseUrl = 'http://www.omdbapi.com/';
     
-    // configure axios instance
+    // Configure axios instance
     this.client = axios.create({
       baseURL: this.baseUrl,
       params: {
         apikey: this.apiKey
       },
-      timeout: config.requestTimeout || 5000
+      timeout: 5000
     });
   }
-  
+
+  // Search for movies
   async searchMovies(query, filters = {}, page = 1) {
+    // Create a cache key based on the query and filters
     const cacheKey = `${query}-${JSON.stringify(filters)}-${page}`;
     
-    // check cache first
+    // Check cache first
     if (searchCache[cacheKey] && searchCache[cacheKey].timestamp > Date.now() - CACHE_DURATION) {
       console.log('Returning cached search results');
       return searchCache[cacheKey].data;
     }
     
     try {
-      // build necessary parameters for the request
+      // Build the query parameters
       const params = {
         s: query,
         page: page
       };
       
-      // add any filters (year, type, etc.)
-      Object.keys(filters).forEach(key => {
+      // Add any additional filters
+      for (const key in filters) {
         if (filters[key]) {
           params[key] = filters[key];
         }
-      });
-      
-      const response = await this.client.get('', { params });
-      
-      if (response.data.Response === 'False') {
-        return { success: false, error: response.data.Error || 'No results found' };
       }
       
-      // store in cache
+      // Make the API request
+      const response = await this.client.get('', { params });
+      const data = response.data;
+      
+      // Handle error responses from OMDB
+      if (data.Response === 'False') {
+        return { 
+          success: false, 
+          error: data.Error || 'No results found' 
+        };
+      }
+      
+      // Format the results
       const result = {
         success: true,
-        results: response.data.Search,
-        totalResults: parseInt(response.data.totalResults, 10),
-        page: page
+        results: data.Search || [],
+        totalResults: data.totalResults
       };
       
+      // Store in cache
       searchCache[cacheKey] = {
         timestamp: Date.now(),
         data: result
@@ -67,12 +74,16 @@ class OmdbApiService {
       return result;
     } catch (error) {
       console.error('Error searching movies:', error.message);
-      return { success: false, error: 'Failed to search movies' };
+      return { 
+        success: false, 
+        error: 'Error searching for movies' 
+      };
     }
   }
-  
+
+  // Get movie details by IMDb ID
   async getMovieDetails(imdbId) {
-    // check cache first
+    // Check cache first
     if (movieCache[imdbId] && movieCache[imdbId].timestamp > Date.now() - CACHE_DURATION) {
       console.log('Returning cached movie details');
       return movieCache[imdbId].data;
@@ -90,7 +101,7 @@ class OmdbApiService {
         return { success: false, error: response.data.Error || 'Movie not found' };
       }
       
-      // store in cache
+      // Store in cache
       const result = { success: true, movie: response.data };
       
       movieCache[imdbId] = {
