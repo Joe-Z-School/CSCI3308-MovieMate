@@ -111,6 +111,11 @@ app.post('/api/movies/review', movieController.addReview);
 app.get('/api/movies/reviews/:imdbId', movieController.getMovieReviews);
 app.get('/api/movies/new', movieController.getNewMovies);
 
+// New routes for the enhanced explore page
+app.get('/api/movies/filter', movieController.filterMovies);
+app.get('/api/movies/trending', movieController.getTrendingMovies);
+app.get('/api/placeholder/:width/:height', movieController.getPlaceholderImage);
+
 // Page Routes
 app.get('/movies/details/:imdbId', (req, res) => {
   res.render('pages/movie-details', {
@@ -124,6 +129,7 @@ app.get('/explore', (req, res) => {
     user: req.session.user,
     title: 'Explore Movies - MovieMates'
   });
+
 });
 
 app.get('/', (req, res) => {
