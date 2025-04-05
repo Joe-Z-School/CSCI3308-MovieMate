@@ -7,48 +7,50 @@
 
 <div class="container-fluid">
   <!-- Friends List Section -->
-  <div class="col-md-2 col-sm-12 friends-list">
-    <h5>Friends List</h5>
-    <div class="friends-list-content">
-        <!-- Favorites -->
-        <h6 class="px-3 mt-3">Favorites</h6>
-        <ul class="list-group list-group-flush" id="favorites">
-          {{#each favorites}}
-          <li class="list-group-item">
-            {{this.name}} <span class="badge bg-warning">{{this.status}}</span>
-          </li>
-          {{/each}}
-        </ul>
+<div class="col-md-2 col-sm-12 friends-list">
+  <h5>Friends List</h5>
+  <div class="friends-list-content">
+    <!-- Favorites -->
+    <h6 class="px-3 mt-3">Favorites</h6>
+    <ul class="list-group list-group-flush" id="favorites">
+      {{#each favorites}}
+      <li class="list-group-item friend" data-user-id="{{this.id}}" data-user="{{this.name}}">
+        {{this.name}} <span class="badge bg-warning">{{this.status}}</span>
+      </li>
+      {{/each}}
+    </ul>
 
-        <!-- Unread Messages -->
-        <h6 class="px-3 mt-3">Unread Messages</h6>
-        <ul class="list-group list-group-flush" id="unread">
-          {{#each unreadMessages}}
-          <li class="list-group-item">
-            {{this.name}} <span class="badge bg-danger">Unread</span>
-          </li>
-          {{/each}}
-        </ul>
+    <!-- Unread Messages -->
+    <h6 class="px-3 mt-3">Unread Messages</h6>
+    <ul class="list-group list-group-flush" id="unread">
+      {{#each unreadMessages}}
+      <li class="list-group-item friend" data-user-id="{{this.id}}" data-user="{{this.name}}">
+        {{this.name}} <span class="badge bg-danger">Unread</span>
+      </li>
+      {{/each}}
+    </ul>
 
-        <!-- Online Friends -->
-        <h6 class="px-3 mt-3">Online Friends</h6>
-        <ul class="list-group list-group-flush" id="online">
-          {{#each onlineFriends}}
-          <li class="list-group-item">
-            {{this.name}} <span class="badge bg-success">Online</span>
-          </li>
-          {{/each}}
-        </ul>
+    <!-- Online Friends -->
+    <h6 class="px-3 mt-3">Online Friends</h6>
+    <ul class="list-group list-group-flush" id="online">
+      {{#each onlineFriends}}
+      <li class="list-group-item friend" data-user-id="{{this.id}}" data-user="{{this.name}}">
+        {{this.name}} <span class="badge bg-success">Online</span>
+      </li>
+      {{/each}}
+    </ul>
 
-        <!-- All Friends -->
-        <h6 class="px-3 mt-3">All Friends</h6>
-        <ul class="list-group list-group-flush" id="all-friends">
-          {{#each allFriends}}
-          <li class="list-group-item">{{this.name}}</li>
-          {{/each}}
-        </ul>
-      </div>
-    </div>
+    <!-- All Friends -->
+    <h6 class="px-3 mt-3">All Friends</h6>
+    <ul class="list-group list-group-flush" id="all-friends">
+      {{#each allFriends}}
+      <li class="list-group-item friend" data-user-id="{{this.id}}" data-user="{{this.name}}">
+        {{this.name}}
+      </li>
+      {{/each}}
+    </ul>
+  </div>
+</div>
 
     <!-- Chat Area Section -->
     <div class="col-md-10 col-sm-12 chat-area">
@@ -84,3 +86,7 @@
     </div>
   </div>
 </div>
+
+<script>
+  const yourUserId = {{activeUser.id}}; // Pass the current user's ID to the client
+</script>
