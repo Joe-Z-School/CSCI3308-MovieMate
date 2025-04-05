@@ -1,45 +1,81 @@
-const socket = io();
+console.log('Script loaded!'); // Check if messagingScript.js is running
 
-// Elements
-const friendLinks = document.querySelectorAll('.list-group-item');
-const messageList = document.getElementById('message-list');
-const messageInput = document.getElementById('message-input');
-const sendButton = document.getElementById('send-button');
+const socket = io(); // Connect to the server
 
-// Dynamic User ID (assumes it's passed to the page)
-const currentUserId = document.getElementById('messagePage').dataset.userId;
+const messageInput = document.getElementById("message-input");
+const sendBtn = document.getElementById("send-btn");
+const emojiBtn = document.getElementById('emoji-btn');
+const fileInput = document.getElementById("file-input"); 
+const chatMessages = document.getElementById("chat-messages");
 
-// Select friend to start chat
-if (friendLinks.length === 0) {
-    console.warn('No friends available to chat with.');
-} else {
-    friendLinks.forEach(link => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
+// Join a private room (example room name: "room1")
+const room = "room1"; // Replace with a dynamic room ID for each conversation
+socket.emit('join-room', room);
 
-            const friendId = link.dataset.friendId;
-            fetch(`/messages/${friendId}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Failed to fetch messages');
-                    return res.json();
-                })
-                .then(data => {
-                    messageList.innerHTML = '';
-                    data.forEach(message => {
-                        addMessageToChat(message, message.sender_id === currentUserId);
-                    });
-                })
-                .catch(error => console.error('Error fetching messages:', error));
+// Handle sending a private message
+sendBtn.addEventListener('click', () => {
+  const message = messageInput.value.trim();
+  if (message) {
+    const user = "You"; // Replace with the actual username
+    socket.emit('private-message', { room, message, user });
+    appendMessage({ message, user }); // Add the message to your chat UI
+    messageInput.value = ""; // Clear the input field
+  }
+});
 
-            // Clear unread badge
-            const badge = link.querySelector('.badge');
-            if (badge) badge.remove();
-        });
-    });
+// Handle receiving a private message
+socket.on('private-message', (data) => {
+  appendMessage(data);
+});
+
+// Function to display messages in the chat
+function appendMessage({ message, user }) {
+  const msgElement = document.createElement('div');
+  msgElement.textContent = `${user}: ${message}`;
+  chatMessages.appendChild(msgElement);
+  chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the latest message
 }
 
-// Add messages to chat
-function addMessageToChat(message, isSender) {
-    // Add message to chat area
-    
-}
+  // Handle Emojis
+  emojiBtn.addEventListener("click", () => {
+    alert("Emoji picker to be implemented!");
+  });
+
+  // File Upload
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    alert(`Selected file: ${file.name}`);
+  });
+
+
+  const emojiIcons = [
+    'bi-emoji-smile',
+    'bi-emoji-grin',
+    'bi-emoji-sunglasses',
+    'bi-emoji-surprise',
+    'bi-emoji-tear',
+    'bi-emoji-wink',
+    'bi-emoji-neutral'
+  ];
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    const emojiBtn = document.getElementById('emoji-btn');
+    if (emojiBtn) {
+      emojiBtn.addEventListener('mouseenter', () => {
+        const randomIndex = Math.floor(Math.random() * emojiIcons.length);
+        const iconElement = emojiBtn.querySelector('i');
+        if (iconElement) {
+          console.log(`Changing icon to: ${emojiIcons[randomIndex]}`);
+          iconElement.className = `bi ${emojiIcons[randomIndex]}`;
+        }
+      });
+    } else {
+      console.error('emojiBtn is null or not found.');
+    }
+  });
+  
+  
+  
+  
+
+  
