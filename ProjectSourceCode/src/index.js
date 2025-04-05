@@ -616,50 +616,92 @@ app.get('/profile', (req, res) => {
 // *****************************************************
 
 app.get('/messaging', (req, res) => {
+  const activeUser = {
+    id: req.session.user.id, // Example: Fetch the logged-in user's ID from the session
+    name: req.session.user.name 
+  };
+
   res.render('pages/messaging', {
-    activeUser: { name: 'John Doe' },
+    activeUser,
     favorites: [
-      { name: 'Alice', status: 'Favorite' },
-      { name: 'Bob', status: 'Favorite' }
+      { name: 'Alice', id: 1, status: 'Favorite' },
+      { name: 'Bob', id: 2, status: 'Favorite' }
     ],
     unreadMessages: [
-      { name: 'Charlie' },
-      { name: 'Diana' }
+      { name: 'Charlie', id: 3 },
+      { name: 'Diana', id: 4 }
     ],
     onlineFriends: [
-      { name: 'Eve' },
-      { name: 'Frank' }
+      { name: 'Eve', id: 5 },
+      { name: 'Frank', id: 6 }
     ],
     allFriends: [
-      { name: 'Grace' },
-      { name: 'Hank' },
-      { name: 'Ivy' }
+      { name: 'Grace', id: 7 },
+      { name: 'Hank', id: 8 },
+      { name: 'Ivy', id: 9 }
     ]
   });
 });
 
+
 // Handle Socket.IO connections
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log(`User connected: ${socket.id}`);
 
-  // Handle joining a private room
-  socket.on('join-room', (room) => {
-    socket.join(room);
-    console.log(`User ${socket.id} joined room: ${room}`);
+  socket.on('join-room', async ({ senderId, recipientId }) => {
+    socket.join(`user-${senderId}`);
+    socket.join(`user-${recipientId}`);
+  
+    try {
+      const query = `
+        SELECT sender_id, recipient_id, content, timestamp
+        FROM messages
+        WHERE (sender_id = $1 AND recipient_id = $2)
+           OR (sender_id = $2 AND recipient_id = $1)
+        ORDER BY timestamp ASC
+      `;
+      const result = await db.query(query, [senderId, recipientId]);
+  
+      // Send messages to the client
+      socket.emit('load-messages', result);
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+    }
   });
+   
 
-  // Handle sending a private message
-  socket.on('private-message', ({ room, message, user }) => {
-    io.to(room).emit('private-message', { message, user });
+  socket.on('private-message', async ({ senderId, recipientId, content }) => {
+    try {
+      const query = `
+        INSERT INTO messages (sender_id, recipient_id, content, is_read)
+        VALUES ($1, $2, $3, false)
+      `;
+      await db.query(query, [senderId, recipientId, content]);
+  
+      // Broadcast the message to the recipient
+      io.to(`user-${recipientId}`).emit('private-message', { senderId, content });
+    } catch (error) {
+      console.error('Failed to save message:', error);
+    }
+  });
+  
+  socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
+    try {
+      const query = `
+        UPDATE messages
+        SET is_read = true
+        WHERE recipient_id = $1 AND sender_id = $2
+      `;
+      await db.query(query, [recipientId, senderId]);
+    } catch (error) {
+      console.error('Failed to mark messages as read:', error);
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log('A user disconnected:', socket.id);
+    console.log(`User disconnected: ${socket.id}`);
   });
 });
-
-
-
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
