@@ -18,10 +18,10 @@ const movieController = require('./controllers/movieController'); // To handle m
 // *****************************************************
 // <!-- Socket.IO Server Creation -->
 // *****************************************************
-const { Server } = require('socket.io'); // To enable real-time communication between the server and the client
-const http = require('http'); // To create an HTTP server
-const server = http.createServer(app);
-const io = new Server(server); // To create a Socket.IO server
+const http = require('http');
+const { Server } = require('socket.io');
+const server = http.createServer(app); // Create an HTTP server
+const io = new Server(server); // Attach Socket.IO to the server
 
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
@@ -615,41 +615,57 @@ app.get('/profile', (req, res) => {
 // <!-- Messages Page -->
 // *****************************************************
 
-// Socket.IO dependency
-io.on('connection', (socket) => {
-  console.log('A user connected');
+app.get('/messaging', (req, res) => {
+  res.render('pages/messaging', {
+    activeUser: { name: 'John Doe' },
+    favorites: [
+      { name: 'Alice', status: 'Favorite' },
+      { name: 'Bob', status: 'Favorite' }
+    ],
+    unreadMessages: [
+      { name: 'Charlie' },
+      { name: 'Diana' }
+    ],
+    onlineFriends: [
+      { name: 'Eve' },
+      { name: 'Frank' }
+    ],
+    allFriends: [
+      { name: 'Grace' },
+      { name: 'Hank' },
+      { name: 'Ivy' }
+    ]
+  });
+});
 
-  socket.on('send_message', (data) => {
-    io.emit('receive_message', data);
+// Handle Socket.IO connections
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // Handle joining a private room
+  socket.on('join-room', (room) => {
+    socket.join(room);
+    console.log(`User ${socket.id} joined room: ${room}`);
+  });
+
+  // Handle sending a private message
+  socket.on('private-message', ({ room, message, user }) => {
+    io.to(room).emit('private-message', { message, user });
   });
 
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
+    console.log('A user disconnected:', socket.id);
   });
 });
 
-app.get('/messaging', auth, async (req, res) => {
-  const { user } = req.session;
 
-  try {
-    const friends = await db.query(`
-      SELECT u.id, u.username, u.profile_icon, COUNT(m.id) AS unread_count
-        FROM users u
-        LEFT JOIN messages m ON m.sender_id = u.id AND m.recipient_id = $1 AND m.is_read = FALSE
-        WHERE u.id != $1
-        GROUP BY u.id, u.username, u.profile_icon`, [user.id]);
-
-    res.render('pages/messaging', { layout: 'main', friends: friends.rows });
-  } catch (error) {
-    console.error('Error fetching friends with unread messages:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
 
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-app.listen(3000);
-console.log('Server is listening on port 3000');
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
+});
