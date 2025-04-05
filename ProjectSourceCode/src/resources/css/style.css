@@ -256,8 +256,9 @@ body {
 }
 
 /* Navbar styles */
+
 .navbar-light {
-    background-color: #f8f9fa; 
+    background-color: #f8f9fa;
 }
 
 .nav-link {
@@ -301,6 +302,14 @@ body {
 .navbar-toggler-icon {
     background-color: #5F4B8B;
 }
+
+
+.profile-img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 3px solid #5F4B8B;
+    object-fit: cover;
 
 /* Profile Page Specific Styles */
 .profile-container {
@@ -370,4 +379,3 @@ body {
 
 .btn-edit:hover {
     background-color: #4a3a6d;
-}
