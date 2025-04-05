@@ -1,0 +1,164 @@
+
+/* Add Top Spacing for Content Below Navbar */
+.container-fluid {
+    margin-top: 80px; /* Adjust this value to match your navbar height */
+    height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: row; /* Keep the layout in a row */
+  }
+  
+  /* Optional: Sticky Navbar to Prevent Overlaps */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 1020; /* Ensure it stays on top of other elements */
+  }
+  
+  /* General Reset */
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #121212; /* Dark mode background */
+    color: #e0e0e0; /* Light text color for readability */
+  }
+  
+  /* Sidebar Styling */
+  .friends-list {
+    background-color: #1a1a1a; /* Slightly lighter dark background */
+    border-radius: 8px;
+    padding: 10px;
+    height: calc(100vh - 80px); /* Maintain a clean look */
+    overflow-y: auto;
+  }
+  
+  .friends-list h6 {
+    color: #d1c4e9; /* Purple accent for section headings */
+    font-weight: bold;
+  }
+  
+  /* List Group Styling */
+  .list-group-item {
+    background-color: transparent;
+    color: #e0e0e0;
+    border: none;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .list-group-item:hover {
+    background-color: #4527a0; /* Purple hover effect */
+    cursor: pointer;
+    transform: scale(1.05);
+  }
+  
+  /* Chat Area Styling */
+  .chat-area {
+    display: flex;
+    flex-direction: column; /* Stacks header, messages, and input vertically */
+    height: calc(100vh - 80px); /* Adjust height to account for navbar */
+  }
+  
+  .chat-header {
+    background-color: #1a1a1a; /* Darker background for header */
+    border-bottom: 2px solid #512da8; /* Purple accent border */
+    padding: 15px;
+    color: #d1c4e9; /* Purple accent for text */
+    flex-shrink: 0;
+  }
+  
+  .chat-body {
+    flex-grow: 1; /* Allows the chat body to grow and fill available space */
+    overflow-y: auto; /* Enables scrolling for long conversations */
+    background-color: #1c1c1c; /* Dark mode background */
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: inset 0px 0px 10px #000000;
+  }
+  
+  .chat-footer {
+    background-color: #1a1a1a;
+    border-top: 2px solid #512da8; /* Purple accent border */
+    flex-shrink: 0;
+    padding: 10px;
+  }
+  
+  #message-input {
+    background-color: #2a2a2a !important;
+    color: #e0e0e0 !important;
+    border: 2px solid #512da8; /* Purple accent border */
+  }
+  
+  /* Style for Placeholder Text */
+  #message-input::placeholder {
+    color: #d1c4e9; /* Light purple for readability */
+    opacity: 1; /* Ensure full visibility */
+    font-style: italic; /* Optional: adds a subtle stylistic touch */
+  }
+  
+  
+  button {
+    padding: 5px 10px;
+    font-size: 9px;
+    height: 50px;
+    color: #e0e0e0 !important;
+    background-color: #512da8 !important; /* Purple button background */
+    border: none !important;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  button:hover {
+    background-color: #673ab7 !important; /* Slightly lighter purple on hover */
+    color: #121212 !important; /* Dark text on hover */
+  }
+  
+  /* Hide File Input */
+  input[type="file"] {
+    display: none; /* Completely hides the file input */
+  }
+  
+  /* Style Label as Button */
+  label[for="file-input"] {
+    display: inline-block;
+    padding: 8px 10px; /* Adjust padding for button size */
+    font-size: 20px;
+    height: 50px;
+    color: #e0e0e0; /* Light text color for dark mode */
+    background-color: #512da8; /* Purple background */
+    border: none;
+    border-radius: 4px; /* Rounded corners for button */
+    cursor: pointer; /* Pointer to indicate clickability */
+    transition: all 0.3s ease-in-out;
+  }
+  
+  label[for="file-input"]:hover {
+    background-color: #673ab7; /* Slightly lighter purple on hover */
+    color: #121212;
+  }
+  
+  
+  /* Typing Status Styling */
+  #typing-status {
+    color: #d1c4e9; /* Purple accent for typing status */
+    font-style: italic;
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
