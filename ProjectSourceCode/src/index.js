@@ -352,10 +352,12 @@ app.post('/users/cancel-request', async (req, res) => {
 // *****************************************************
 // <!--Notifications -->
 // *****************************************************
+
 app.get('/notifications', async (req, res) => {
   const userId = req.session.user.id;
 
   try {
+    // Get incoming follow requests
     const followRequests = await db.any(
       `SELECT fr.id AS request_id, u.username, u.profile_icon AS profile_pic, fr.requested_at
        FROM follow_requests fr
@@ -365,17 +367,29 @@ app.get('/notifications', async (req, res) => {
       [userId]
     );
 
+    // Get general notifications for the logged-in user
+    const generalNotifications = await db.any(
+      `SELECT n.id, n.message, u.username AS sender_username, u.profile_icon, n.created_at
+       FROM notifications n
+       JOIN users u ON u.id = n.sender_id
+       WHERE n.recipient_id = $1
+       ORDER BY n.created_at DESC`,
+      [userId]
+    );
+
     res.render('pages/notifications', {
       user: req.session.user,
-      followRequests
+      followRequests,
+      generalNotifications
     });
 
   } catch (err) {
-    console.error('Error loading follow requests:', err.message);
+    console.error('Error loading notifications:', err.message);
     res.render('pages/notifications', {
       followRequests: [],
+      generalNotifications: [],
       error: true,
-      message: 'Something went wrong while loading requests.'
+      message: 'Something went wrong while loading notifications.'
     });
   }
 });
@@ -422,6 +436,12 @@ app.post('/follow-request/approve/:id', async (req, res) => {
         `UPDATE users SET followers_count = followers_count + 1 WHERE id = $1`,
         [request.receiver_id]
       );
+      // 👇 Create notification for requester
+      await t.none(
+        `INSERT INTO notifications (recipient_id, sender_id, message)
+         VALUES ($1, $2, $3)`,
+        [request.requester_id, request.receiver_id, 'accepted your follow request']
+      );
     });
 
     res.redirect('/notifications#requests'); // Redirect back to notifications after approval
@@ -446,6 +466,24 @@ app.post('/follow-request/decline/:id', async (req, res) => {
     res.status(500).send('Something went wrong.');
   }
 });
+
+//dismissing notifications:
+app.post('/notifications/dismiss/:id', async (req, res) => {
+  const notifId = parseInt(req.params.id);
+  const userId = req.session.user.id;
+
+  try {
+    await db.none(
+      `DELETE FROM notifications WHERE id = $1 AND recipient_id = $2`,
+      [notifId, userId]
+    );
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Failed to dismiss notification:', err.message);
+    res.status(500).send('Error dismissing notification');
+  }
+});
+
 
 // *****************************************************
 // <!-- Data base info to add for testing-->
@@ -515,6 +553,50 @@ app.get('/dev/create-friends', async (req, res) => {
     res.status(500).send('Failed to create test friendships.');
   }
 });
+
+
+// Temporary dev route to insert test notifications
+// Visit: http://localhost:3000/dev/create-notifications
+app.get('/dev/create-notifications', async (req, res) => {
+  try {
+    const notifications = [
+      {
+        recipient_id: 11,
+        sender_id: 2,
+        message: 'max_power accepted your follow request.'
+      },
+      {
+        recipient_id: 11,
+        sender_id: 3,
+        message: 'sara_sky commented on your post.'
+      },
+      {
+        recipient_id: 11,
+        sender_id: 5,
+        message: 'jessie_writer started following you.'
+      },
+      {
+        recipient_id: 11,
+        sender_id: null,
+        message: '🎉 Welcome to MovieMate!'
+      }
+    ];
+
+    for (const notif of notifications) {
+      await db.none(
+        `INSERT INTO notifications (recipient_id, sender_id, message, created_at, is_read)
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP, FALSE)`,
+        [notif.recipient_id, notif.sender_id, notif.message]
+      );
+    }
+
+    res.send('Test notifications created successfully.');
+  } catch (err) {
+    console.error('Error inserting notifications:', err);
+    res.status(500).send('Failed to create notifications.');
+  }
+});
+
 
 
 

@@ -6,6 +6,8 @@ DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS movies;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS notifications;
+
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -94,4 +96,15 @@ CREATE TABLE messages (
     content TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_read BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE notifications (
+  id SERIAL PRIMARY KEY,
+  recipient_id INTEGER NOT NULL, -- who receives the notification
+  sender_id INTEGER,             -- who caused it (optional)
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_read BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
 );
