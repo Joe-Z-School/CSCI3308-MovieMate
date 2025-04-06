@@ -8,14 +8,9 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  username VARCHAR(50) UNIQUE,
+  username VARCHAR(50),
   password VARCHAR(255) NOT NULL,
-  email VARCHAR(200),
-  profile_icon VARCHAR(100),
-  bio VARCHAR(150),
-  created_at TIMESTAMP,
-  followers_count INTEGER DEFAULT 0,
-  following_count INTEGER DEFAULT 0
+  email VARCHAR(200)
 );
 
 CREATE TABLE movies (

@@ -26,7 +26,7 @@ const hbs = handlebars.create({
 
 // database configuration
 const dbConfig = {
-  host: 'db', // the database server
+  host: "projectsourcecode-db-1", // the database server
   port: 5432, // the database port
   database: process.env.POSTGRES_DB, // the database name
   user: process.env.POSTGRES_USER, // the user account to connect with
@@ -88,12 +88,13 @@ const user = {
     username: undefined,
     password: undefined
 };
-
+/*
 // TODO - Include your API routes here
 app.get('/', (req, res) => {
     res.redirect('/login'); //this will call the /anotherRoute route in the API
   });
-  
+ */
+/*  COMMENTED OUT FOR LAB11 TESTING
   app.get('/login', (req, res) => {
     //do something
     res.render('pages/login');
@@ -122,13 +123,16 @@ app.get('/', (req, res) => {
 
     };
 });
- 
+*/
 
+ 
+/*
   app.get('/register', (req, res) => {
     //do something
     res.render('pages/register');
   });
-
+*/
+  /* COMMENTED OUT FOR LAB11 TESTING
 // Register
 app.post('/register', async (req, res) => {
     //hash the password using bcrypt library
@@ -154,6 +158,9 @@ app.post('/register', async (req, res) => {
         res.redirect('/register');
     };
 });
+
+*/
+
 
 /*
 // Authentication Middleware.
@@ -349,8 +356,47 @@ app.post('/remove-from-watchlist', async (req, res) => {
 // *****************************************************
 // <!-- Lab 11 : Testing-->
 // *****************************************************
+
+
 app.get('/welcome', (req, res) => {
   res.json({status: 'success', message: 'Welcome!'});
+});
+
+app.post('/register', async (req, res) => {
+  try {
+      const { username, password, email } = req.body;
+
+      // Input Validation
+      if (
+          !username || typeof username !== 'string' ||
+          !password || typeof password !== 'string' ||
+          !email || typeof email !== 'string'
+      ) {
+          return res.status(400).json({ status: 400, message: 'Invalid input' });
+      }
+
+      // Secure Password Hashing
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Database Insert
+      const insert = `INSERT INTO users (username, password, email) VALUES( $1, $2, $3)`;
+      await db.none(insert, [username, hashedPassword, email]);
+
+      // Success Response
+      res.status(200).json({ status: 200, message: 'Success' });
+  } catch (err) {
+      console.error('Error during /register execution:', err.message); 
+      res.status(500).json({ status: 500, message: 'Server error.' });
+  }
+});
+
+// Still getting a 200 status no matter what
+app.get('/test', async (req, res) => {
+  res.redirect('/login');
+});
+
+app.get('/login', (req, res) => {
+  res.send('Login Page');
 });
 
 // *****************************************************

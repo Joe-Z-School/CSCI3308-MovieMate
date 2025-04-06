@@ -1,0 +1,12 @@
+REQUIREMENTS:
+Create 1 document per team, within the milestones folder in the project directory, that describes how, at least, 3 features within your finished product will be tested.
+    1. The test plans should include specific test cases (user acceptance test cases) that describe the data and the user activity that will be executed in order to verify proper functionality of the feature.
+    2. The test plans should include a description of the test data that will be used to test the feature.
+    3. The test plans should include a description of the test environment ( localhost / cloud ) that will be used to test the feature.
+    4. The test plans should include a description of the test results that will be used to test the feature.
+    5. The test plan should include information about the user acceptance testers.
+    6. The actual test results based on observations after executing the tests. Your team will include these results in the final project report. 
+
+
+Feature 1: 
+    1. 
