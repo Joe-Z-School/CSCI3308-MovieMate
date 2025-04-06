@@ -7,6 +7,11 @@ services:
     volumes:
       - csci3308-moviemate:/var/lib/postgresql/data
       - ./src/init_data:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     image: node:lts
@@ -16,7 +21,8 @@ services:
     environment:
       - NODE_ENV=development
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - '3000:3000'
     volumes:
