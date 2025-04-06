@@ -80,3 +80,64 @@ describe('Testing Render', () => {
       });
   });
 });
+
+// ********************** PART C **************************************
+
+describe('/load-more API Integration', () => {
+  it('Positive: should return paginated posts for page 1', done => {
+    chai
+      .request(server)
+      .get('/load-more?page=1')
+      .end((err, res) => {
+        if (err) return done(err);
+        
+        expect(res).to.have.status(200);
+        expect(res.body).to.have.property('posts').that.is.an('array').with.lengthOf(5);
+        expect(res.body.posts[0]).to.have.property('title'); 
+        expect(res.body.posts[0]).to.have.property('user');
+        done();
+      });
+  });
+
+  it('Positive: should return the next batch of posts for page 2', done => {
+    chai
+      .request(server)
+      .get('/load-more?page=2')
+      .end((err, res) => {
+        if (err) return done(err);
+
+        expect(res).to.have.status(200);
+        expect(res.body).to.have.property('posts').that.is.an('array').with.lengthOf(5);
+        done();
+      });
+  });
+
+  // Negative test case for out-of-range pages
+  it('Negative: should return an empty array when the page exceeds the total number of posts', done => {
+    chai
+      .request(server)
+      .get('/load-more?page=100') // Page 100 exceeds the bounds of the amount of posts
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res).to.have.status(200);
+
+        // Expecting an empty array of posts
+        expect(res.body).to.have.property('posts').that.is.an('array').that.is.empty; 
+        done();
+      });
+  });
+
+  // Negative test case for an invalid page number
+  it('Negative: should return an error for an invalid page number', done => {
+    chai
+      .request(server)
+      .get('/load-more?page=-1') // Invalid page number
+      .end((err, res) => {
+        if (err) return done(err);
+        expect(res).to.have.status(400); // Expect a 400 error
+        expect(res.body).to.have.property('message').that.equals('Invalid page number');
+        done();
+      });
+  });
+});
+
