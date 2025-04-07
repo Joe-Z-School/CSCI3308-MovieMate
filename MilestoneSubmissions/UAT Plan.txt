@@ -8,5 +8,101 @@ Create 1 document per team, within the milestones folder in the project director
     6. The actual test results based on observations after executing the tests. Your team will include these results in the final project report. 
 
 
-Feature 1: 
-    1. 
+Feature 1: Account Registration
+    1. UAT Tests
+        Test 1: The user enters valid information for all fields of the registration page including First Name, Last Name, Username, Password, Email, Profile Icon Pick, and Bio.
+                Once submitted, the account should be created and the user is redirected to the FindFriends page.
+        Test 2: The user tries to create and account with an already in use user name.
+                The result should be a message to the user informing them the username is already taken, and the registration fails.
+        Test 3: The user leaves any or all of the required fields blank: Username, Password, Email, First Name, Last Name.
+                Resulting in a message to the user telling them and indicating which fields are required to create the account with the initial creation failing.
+        Test 4: User inputs an invalid email string.
+                Result: The registration fails and the user receives a message stating a valid email address is required.
+        Test 5: The user enters text values longer than what is supported by the database. Example: A username longer than 50 characters.
+                Result: Registration fails with the user getting a message explaining how the input text is too long and the max is _.
+        Test 6: All correct data is entered into account creation.
+                Result: Verify user is added to users table and hidden fields are populated. (id, created_at, follwers_count, following_count)
+
+    2. The test data will be:
+        1. Valid and invalid usernames
+        2. Valid and invalid emails
+        3. Text of varying length
+        4. Timestamps to check created_at field
+    
+    3. Test Environment: Local Host using docker containers.
+
+    4. Test Results:
+        1. Pass - A test case should be documented as a pass if the described result matches the output from the application.
+        2. Fail - A test case should be considered a fail if the output from the application does not match what was the expected outcome documented.
+        3. Error Logs should be produced at time of errors.
+        4. Database confirmation should be visible upon a successful registration and insert of a new user in the users table.
+
+    5. User Accpetance Testers:
+        1. Tech Savy testers will be used to test edge cases.
+        2. Non-Tech savy testers will be used to test everyday use cases and ease of account creation.
+
+
+
+
+Feature 2: Managing User Watch List
+    1. UAT Tests
+        Test 1: User clicks a button to add movie to Watch List.
+                Result: Users watch list is updated to display movie information while the user recieves a confirmation message that the movie was added.
+        Test 2: User clicks a button to remove a movie from their Watch List.
+                Result: Users watch list is updated to no longer display that specific movie and the user recieves a confirmation message that the movie was removed.
+        Test 3: User tries to add an already existing movie to their Watch List.
+                Result: Watch List add movie fails and informs the user the selected movie already exists on their watch list.
+        Test 4: User adds multiple movies back to back to their Watch List.
+                Result: All selected movies should be added to their Watch List.
+        Test 5: A movie is added to a users Watch List.
+                Result: The database is consistant and correctly stores the movie information to the database.
+
+    2. Test Data:
+        1. Movie titles
+        2. Movie Poster Image
+        3. Where-To-Watch location
+
+    3. Test Environment: Local Host using docker containers.
+
+    4. Test Results:
+        1. Pass - A test case should be documented as a pass if the described result matches the output from the application.
+        2. Fail - A test case should be considered a fail if the output from the application does not match what was the expected outcome documented.
+        3. Error Logs should be produced at time of errors.
+        4. Database confirmation should be visible upon a successful addition, insert, and removal of a movie in the watch_list table.
+
+    5. User Accpetance Testers:
+        1. Tech Savy testers will be used to test edge cases.
+        2. Non-Tech savy testers will be used to test everyday use cases and ease of adding/removing movies to their Watch List.
+
+
+
+
+Feature 3: Creating A Post
+    1. UAT Tests
+        Test 1: User enters valid info for the title and body of the post forum.
+                Result: Post is successfully created and displayed on Profile.
+        Test 2: User leaves title or body field empty.
+                Result: Post creation fails with message to user indicating required fields.
+        Test 3: User enters more than 100 characters for title.
+                Result: Post creation fails with message to user indicating title text is too long.
+        Test 4: User enters a SQL injection into a field.
+                Result: Post creation fails with input discarded without entering database.
+        Test 5: Users session expires before submitting post.
+                Result: user is prompted to sign in again.
+
+    2. Test Data:
+        1. Valid and Invalid titles
+        2. Valid and Invalid content for the body
+        3. SQL injection inputs
+    
+    3. Test Environment: Local Host using docker containers.
+
+    4. Test Results:
+        1. Pass - A test case should be documented as a pass if the described result matches the output from the application.
+        2. Fail - A test case should be considered a fail if the output from the application does not match what was the expected outcome documented.
+        3. Error Logs should be produced at time of errors.
+        4. Database confirmation should be visible upon a successful post and insert of a new post in the posts table.
+
+    5. User Accpetance Testers:
+        1. Tech Savy testers will be used to test edge cases.
+        2. Non-Tech savy testers will be used to test everyday use cases and ease of post creation.
