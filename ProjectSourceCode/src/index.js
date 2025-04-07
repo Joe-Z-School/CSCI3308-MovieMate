@@ -13,6 +13,10 @@ const session = require('express-session'); // To set the session object. To sto
 const bcrypt = require('bcryptjs'); //  To hash passwords
 const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
 
+process.on('uncaughtException', function (err) {
+  console.log(err);
+}); 
+
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
 // *****************************************************
@@ -26,7 +30,7 @@ const hbs = handlebars.create({
 
 // database configuration
 const dbConfig = {
-  host: "projectsourcecode-db-1", // the database server
+  host: "db", // the database server
   port: 5432, // the database port
   database: process.env.POSTGRES_DB, // the database name
   user: process.env.POSTGRES_USER, // the user account to connect with
@@ -42,7 +46,7 @@ db.connect()
     obj.done(); // success, release the connection;
   })
   .catch(error => {
-    console.log('ERROR:', error.message || error);
+    console.log('DATABASE ERROR:', error.message || error);
   });
 
 // *****************************************************
@@ -298,6 +302,7 @@ const posts = [
   { id: '15', user: 'O', title: 'TestTitle15', review: '1.9', description: 'Test Description for TestTitle15.', cover: 'cover15.jpg', whereToWatch: 'Paramount' }
 ];
 
+
 // Display the main page
 app.get('/social', (req, res) => {  
   const initialPosts = posts.slice(0, 5); // Load the first 5 posts
@@ -308,6 +313,12 @@ app.get('/social', (req, res) => {
 app.get('/load-more', (req, res) => {
   const page = parseInt(req.query.page) || 1; // Default to page 1
   const limit = 5; // Number of posts per batch
+
+  // Do not allow page value to be less than 1 or invalid character
+  if (isNaN(page) || page < 1) {
+    return res.status(400).json({ message: 'Invalid page number' });
+  }
+
   const startIndex = (page - 1) * limit;
   const paginatedPosts = posts.slice(startIndex, startIndex + limit);
 
