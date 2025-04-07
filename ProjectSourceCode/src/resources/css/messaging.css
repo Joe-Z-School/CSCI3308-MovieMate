@@ -149,6 +149,16 @@
     font-style: italic;
   }
   
+  .position-relative img {
+    display: inline-block;
+  }
+  
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.4em;
+  }
+  
+
   /* Animations */
   @keyframes fadeIn {
     from {
