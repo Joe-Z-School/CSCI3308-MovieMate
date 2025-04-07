@@ -174,6 +174,7 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
   //hash the password using bcrypt library
   const hash = await bcrypt.hash(req.body.password, 10);
+  console.log('Generated Hash:', hash);
 
   const first_name = req.body.first_name;
   const last_name = req.body.last_name;
@@ -615,33 +616,63 @@ app.get('/profile', (req, res) => {
 // <!-- Messages Page -->
 // *****************************************************
 
-app.get('/messaging', (req, res) => {
-  const activeUser = {
-    id: req.session.user.id, // Example: Fetch the logged-in user's ID from the session
-    name: req.session.user.name 
-  };
+app.get('/messaging', async (req, res) => {
+  try {
+    const activeUser = {
+      id: req.session.user.id, 
+      name: req.session.user.first_name,
+      profileIcon: req.session.user.profile_icon
+    };
 
-  res.render('pages/messaging', {
-    activeUser,
-    favorites: [
-      { name: 'Alice', id: 1, status: 'Favorite' },
-      { name: 'Bob', id: 2, status: 'Favorite' }
-    ],
-    unreadMessages: [
-      { name: 'Charlie', id: 3 },
-      { name: 'Diana', id: 4 }
-    ],
-    onlineFriends: [
-      { name: 'Eve', id: 5 },
-      { name: 'Frank', id: 6 }
-    ],
-    allFriends: [
-      { name: 'Grace', id: 7 },
-      { name: 'Hank', id: 8 },
-      { name: 'Ivy', id: 9 }
-    ]
-  });
+    // Fetch friends marked as 'favorites'
+    const favoritesQuery = `
+      SELECT u.id, u.username AS name, u.profile_icon AS profileIcon
+        FROM friends f
+        JOIN users u ON f.followed_user_id = u.id
+        WHERE f.following_user_id = $1
+          AND u.id IN (SELECT followed_user_id FROM friends WHERE following_user_id = $1)
+    `;
+    const favorites = await db.query(favoritesQuery, [activeUser.id]);
+
+    // Fetch friends with unread messages
+    const unreadMessagesQuery = `
+      SELECT DISTINCT u.id, u.username AS name, u.profile_icon AS profileIcon
+        FROM messages m
+        JOIN users u ON m.sender_id = u.id
+        WHERE m.recipient_id = $1 AND m.is_read = false
+    `;
+    const unreadMessages = await db.query(unreadMessagesQuery, [activeUser.id]);
+
+    // Fetch all friends
+    const allFriendsQuery = `
+      SELECT u.id, u.username AS name, u.profile_icon AS profileIcon
+        FROM friends f
+        JOIN users u ON u.id = f.followed_user_id
+        WHERE f.following_user_id = $1  
+          UNION  
+      SELECT u.id, u.username AS name, u.profile_icon AS profileIcon
+        FROM friends f
+        JOIN users u ON u.id = f.following_user_id
+        WHERE f.followed_user_id = $1;
+    `;
+    const allFriends = await db.query(allFriendsQuery, [activeUser.id]);
+
+    // Render the messaging page
+    res.render('pages/messaging', {
+      activeUser,
+      favorites,
+      unreadMessages,
+      allFriends: allFriends || []
+    });
+
+  } catch (error) {
+    console.error('Error loading messaging page:', error);
+    if (!res.headersSent) {
+      res.status(500).send('Internal Server Error');
+    }
+  }
 });
+
 
 
 // Handle Socket.IO connections
@@ -655,10 +686,10 @@ io.on('connection', (socket) => {
     try {
       const query = `
         SELECT sender_id, recipient_id, content, timestamp
-        FROM messages
-        WHERE (sender_id = $1 AND recipient_id = $2)
-           OR (sender_id = $2 AND recipient_id = $1)
-        ORDER BY timestamp ASC
+          FROM messages
+          WHERE (sender_id = $1 AND recipient_id = $2)
+            OR (sender_id = $2 AND recipient_id = $1)
+          ORDER BY timestamp ASC
       `;
       const result = await db.query(query, [senderId, recipientId]);
   
