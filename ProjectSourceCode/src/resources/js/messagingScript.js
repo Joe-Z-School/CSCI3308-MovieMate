@@ -97,7 +97,32 @@ function appendMessage({ message, user }) {
 
 // Handle Emojis
 emojiBtn.addEventListener("click", () => {
-  alert("Emoji picker to be implemented!");
+  // Check if emoji-picker is already added
+  const existingEmojiPicker = document.querySelector('emoji-picker');
+  if (existingEmojiPicker) {
+    // If it exists, remove it
+    existingEmojiPicker.remove();
+    return; // Exit the function
+  }
+  else{
+    const emojiElement = document.createElement('div');
+    emojiElement.innerHTML = `<emoji-picker></emoji-picker>`;
+    emojiElement.style.position = "absolute";
+    emojiElement.style.bottom = "90px"; // Position from the bottom
+    emojiElement.style.right = "80px"; // Position from the right
+    emojiElement.style.zIndex = "1000"; // Ensure it's on top of other elements
+    emojiElement.style.borderRadius = "10px"; // Rounded corners
+    emojiElement.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)"; // Shadow effect
+    document.body.appendChild(emojiElement);
+  }
+  
+  // Add emoji to the message input
+  const emojiPicker = document.querySelector('emoji-picker');
+  emojiPicker.addEventListener('emoji-click', (event) => {
+    const emoji = event.detail.unicode;
+    messageInput.value += emoji; // Append emoji to the message input
+  });
+
 });
 
 // File Upload
