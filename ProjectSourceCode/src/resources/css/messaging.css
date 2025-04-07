@@ -1,3 +1,10 @@
+/* global colors matching explorer page colors */
+:root{
+  --darkBackground: #121212;
+  --lighterBackground: #1a1a1a;
+  --lightPurpleAccent: #9683C3;
+  --darkPurpleAccent: #5F4B8B;
+}
 
 /* Add Top Spacing for Content Below Navbar */
 .container-fluid {
@@ -19,13 +26,13 @@
     margin: 0;
     padding: 0;
     font-family: 'Arial', sans-serif;
-    background-color: #121212; /* Dark mode background */
+    background-color: var(--darkBackground); /* Dark mode background */
     color: #e0e0e0; /* Light text color for readability */
   }
   
   /* Sidebar Styling */
   .friends-list {
-    background-color: #1a1a1a; /* Slightly lighter dark background */
+    background-color: var(--lighterBackground); /* Slightly lighter dark background */
     border-radius: 8px;
     padding: 10px;
     height: calc(100vh - 80px); /* Maintain a clean look */
@@ -59,8 +66,8 @@
   }
   
   .chat-header {
-    background-color: #1a1a1a; /* Darker background for header */
-    border-bottom: 2px solid #512da8; /* Purple accent border */
+    background-color: var(--lighterBackground); /* Darker background for header */
+    border-bottom: 2px solid var(--darkPurpleAccent); /* Purple accent border */
     padding: 15px;
     color: #d1c4e9; /* Purple accent for text */
     flex-shrink: 0;
@@ -76,8 +83,8 @@
   }
   
   .chat-footer {
-    background-color: #1a1a1a;
-    border-top: 2px solid #512da8; /* Purple accent border */
+    background-color: var(--lighterBackground);
+    border-top: 2px solid var(--darkPurpleAccent); /* Purple accent border */
     flex-shrink: 0;
     padding: 10px;
   }
@@ -85,7 +92,7 @@
   #message-input {
     background-color: #2a2a2a !important;
     color: #e0e0e0 !important;
-    border: 2px solid #512da8; /* Purple accent border */
+    border: 2px solid var(--darkPurpleAccent); /* Purple accent border */
   }
   
   /* Style for Placeholder Text */
@@ -101,14 +108,14 @@
     font-size: 9px;
     height: 50px;
     color: #e0e0e0 !important;
-    background-color: #512da8 !important; /* Purple button background */
+    background-color: var(--darkPurpleAccent) !important; /* Purple button background */
     border: none !important;
     transition: all 0.3s ease-in-out;
   }
   
   button:hover {
-    background-color: #673ab7 !important; /* Slightly lighter purple on hover */
-    color: #121212 !important; /* Dark text on hover */
+    background-color: var(--lightPurpleAccent) !important; /* Slightly lighter purple on hover */
+    color: var(--darkBackground) !important; /* Dark text on hover */
   }
   
   /* Hide File Input */
@@ -116,14 +123,14 @@
     display: none; /* Completely hides the file input */
   }
   
-  /* Style Label as Button */
+  /* Style File Upload label as Button */
   label[for="file-input"] {
     display: inline-block;
-    padding: 8px 10px; /* Adjust padding for button size */
+    padding: 12px 10px; /* Adjust padding for button size */
     font-size: 20px;
     height: 50px;
     color: #e0e0e0; /* Light text color for dark mode */
-    background-color: #512da8; /* Purple background */
+    background-color: var(--darkPurpleAccent); /* Purple background */
     border: none;
     border-radius: 4px; /* Rounded corners for button */
     cursor: pointer; /* Pointer to indicate clickability */
@@ -131,8 +138,8 @@
   }
   
   label[for="file-input"]:hover {
-    background-color: #673ab7; /* Slightly lighter purple on hover */
-    color: #121212;
+    background-color: var(--lightPurpleAccent); /* Slightly lighter purple on hover */
+    color: var(--darkBackground);
   }
   
   
