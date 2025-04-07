@@ -16,14 +16,14 @@ let friendName = null;
 friendsList.forEach(friend => {
   friend.addEventListener('click', () => {
     // Set friendId and friendName when a friend is clicked
-    friendId = friend.getAttribute('data-user-id'); // Get the friend's unique ID
+    friendId = friend.getAttribute('data-user-id'); // Get the friend's ID
     friendName = friend.getAttribute('data-user'); // Get the friend's name
     console.log(`Opening chat room with: ${friendName} (ID: ${friendId})`);
 
     // Emit join-room event to the server
     socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
 
-    // Update the chat header
+    // Update the chat header with the friend's name
     const chatHeader = document.getElementById('chat-user-name');
     chatHeader.textContent = `Chatting with: ${friendName}`;
 
@@ -33,36 +33,123 @@ friendsList.forEach(friend => {
   });
 });
 
+function updateFriendsList(friends) {
+  const unreadList = document.getElementById("unread");
+  const favoritesList = document.getElementById("favorites");
+  unreadList.innerHTML = "";
+  favoritesList.innerHTML = "";
+
+  friends.forEach(friend => {
+    const listItem = document.createElement("li");
+    listItem.className = "list-group-item friend d-flex align-items-center";
+    listItem.setAttribute("data-user-id", friend.id);
+    listItem.setAttribute("data-user", friend.name);
+
+    const profileContainer = document.createElement("div");
+    profileContainer.className = "position-relative me-2";
+
+    const profileImage = document.createElement("img");
+    profileImage.src = friend.profileIcon;
+    profileImage.className = "rounded-circle";
+    profileImage.alt = "Profile Icon";
+    profileImage.width = 40;
+    profileImage.height = 40;
+    profileContainer.appendChild(profileImage);
+
+    if (friend.isUnread) {
+      const unreadBadge = document.createElement("span");
+      unreadBadge.className = "badge bg-danger position-absolute top-0 end-0";
+      profileContainer.appendChild(unreadBadge);
+      unreadList.appendChild(listItem);
+    }
+
+    if (friend.isFavorite) {
+      const favoriteBadge = document.createElement("i");
+      favoriteBadge.className = "bi bi-star-fill text-warning position-absolute top-0 start-0";
+      profileContainer.appendChild(favoriteBadge);
+      favoritesList.appendChild(listItem);
+    }
+
+    listItem.appendChild(profileContainer);
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "ms-2";
+    nameSpan.textContent = friend.name;
+    listItem.appendChild(nameSpan);
+
+    const dropdownContainer = document.createElement("div");
+    dropdownContainer.className = "dropdown ms-auto";
+
+    const dropdownButton = document.createElement("button");
+    dropdownButton.className = "btn btn-secondary btn-sm dropdown-toggle";
+    dropdownButton.setAttribute("type", "button");
+    dropdownButton.setAttribute("data-bs-toggle", "dropdown");
+    dropdownButton.textContent = "Actions";
+    dropdownContainer.appendChild(dropdownButton);
+
+    const dropdownMenu = document.createElement("ul");
+    dropdownMenu.className = "dropdown-menu";
+
+    const viewProfile = document.createElement("li");
+    viewProfile.innerHTML = `<a class="dropdown-item" href="#">View Profile</a>`;
+    dropdownMenu.appendChild(viewProfile);
+
+    const addRemoveFavorites = document.createElement("li");
+    addRemoveFavorites.innerHTML = friend.isFavorite ?
+      `<a class="dropdown-item" href="#">Remove from Favorites</a>` :
+      `<a class="dropdown-item" href="#">Add to Favorites</a>`;
+    dropdownMenu.appendChild(addRemoveFavorites);
+
+    const blockUser = document.createElement("li");
+    blockUser.innerHTML = `<a class="dropdown-item text-danger" href="#">Block User</a>`;
+    dropdownMenu.appendChild(blockUser);
+
+    dropdownContainer.appendChild(dropdownMenu);
+    listItem.appendChild(dropdownContainer);
+  });
+}
+
+
 // Emit mark-messages-read when joining a room (now friendId will always be defined dynamically)
 socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId });
 
-// Handle sending a private message
+// Send a private message using send button
 sendBtn.addEventListener('click', () => {
     const message = messageInput.value.trim();
     if (message) {
       // Emit message to the server
       socket.emit('private-message', { senderId: yourUserId, recipientId: friendId, content: message });
-      messageInput.value = ""; // Clear the input field
+      messageInput.value = ""; // Clear the input area
     } else {
       console.error('Message content cannot be empty.');
     }
   });
   
-  
-  
+// Send messages with Enter and adding new lines with Shift+Enter
+messageInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault(); // Prevent default newline behavior
+    sendBtn.click(); // Trigger send button click event
+  } else if (event.key === "Enter" && event.shiftKey) {
+    // Allow Shift+Enter to create a new line
+    messageInput.value += "\n"; // Add a newline to the input field
+    event.preventDefault(); // Prevent the default behavior of Enter
+  }
+});
 
-// Handle receiving a private message
+
+// Receive a private message
 socket.on('private-message', ({ senderId, content }) => {
-    const user = senderId === yourUserId ? 'You' : friendName; // Determine the sender
+    const user = senderId === yourUserId ? 'You' : friendName; // Define sender
     if (content && user) {
-      appendMessage({ message: content, user }); // Add the message to the chat UI
+      appendMessage({ message: content, user }); // Add the message to the chat box
     } else {
       console.error('Message or user is undefined:', { content, user });
     }
   });
   
 
-// Handle loading messages for the selected room
+// Load messages for the selected friend
 socket.on('load-messages', (messages) => {
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = ""; // Clear previous messages
@@ -95,14 +182,14 @@ function appendMessage({ message, user }) {
   }
   
 
-// Handle Emojis
+// Send Emojis
 emojiBtn.addEventListener("click", () => {
   // Check if emoji-picker is already added
   const existingEmojiPicker = document.querySelector('emoji-picker');
   if (existingEmojiPicker) {
     // If it exists, remove it
     existingEmojiPicker.remove();
-    return; // Exit the function
+    return;
   }
   else{
     const emojiElement = document.createElement('div');
@@ -156,4 +243,12 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     console.error('emojiBtn is null or not found.');
   }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize all tooltips on the page
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  const tooltipList = tooltipTriggerList.map(tooltipTriggerEl => {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
 });
