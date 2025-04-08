@@ -18,20 +18,25 @@ friendsList.forEach(friend => {
     // Set friendId and friendName when a friend is clicked
     friendId = friend.getAttribute('data-user-id'); // Get the friend's ID
     friendName = friend.getAttribute('data-user'); // Get the friend's name
+    const friendProfileIcon = friend.querySelector('img').getAttribute('src'); // Get the profile icon URL
     console.log(`Opening chat room with: ${friendName} (ID: ${friendId})`);
 
     // Emit join-room event to the server
     socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
 
-    // Update the chat header with the friend's name
-    const chatHeader = document.getElementById('chat-user-name');
-    chatHeader.textContent = `Chatting with: ${friendName}`;
+    // Update the chat header with the friend's profile icon, name, and dropdown
+    const chatHeaderIcon = document.getElementById('chat-profile-icon');
+    const chatHeaderName = document.getElementById('chat-user-name');
+
+    chatHeaderIcon.src = friendProfileIcon; // Set the profile picture
+    chatHeaderName.textContent = friendName; // Set the friend's name
 
     // Clear the chat messages (messages will reload via load-messages)
     const chatMessages = document.getElementById('chat-messages');
     chatMessages.innerHTML = "";
   });
 });
+
 
 function updateFriendsList(friends) {
   const unreadList = document.getElementById("unread");
@@ -61,13 +66,6 @@ function updateFriendsList(friends) {
       unreadBadge.className = "badge bg-danger position-absolute top-0 end-0";
       profileContainer.appendChild(unreadBadge);
       unreadList.appendChild(listItem);
-    }
-
-    if (friend.isFavorite) {
-      const favoriteBadge = document.createElement("i");
-      favoriteBadge.className = "bi bi-star-fill text-warning position-absolute top-0 start-0";
-      profileContainer.appendChild(favoriteBadge);
-      favoritesList.appendChild(listItem);
     }
 
     listItem.appendChild(profileContainer);
@@ -108,6 +106,7 @@ function updateFriendsList(friends) {
     listItem.appendChild(dropdownContainer);
   });
 }
+
 
 
 // Emit mark-messages-read when joining a room (now friendId will always be defined dynamically)
@@ -252,3 +251,40 @@ document.addEventListener("DOMContentLoaded", () => {
     return new bootstrap.Tooltip(tooltipTriggerEl);
   });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Set default chat header message and hide dropdown
+  const chatHeader = document.getElementById('chat-user-name');
+  const chatProfileIcon = document.getElementById('chat-profile-icon');
+  const chatDropdown = document.getElementById('chat-dropdown');
+
+  chatHeader.textContent = 'Select A Friend To Start Chatting'; // Default message
+  chatProfileIcon.style.display = 'none'; // Hide profile icon by default
+  chatDropdown.style.display = 'none'; // Hide dropdown by default
+});
+
+friendsList.forEach(friend => {
+  friend.addEventListener('click', () => {
+    // Set friendId, friendName, and profileIcon
+    friendId = friend.getAttribute('data-user-id');
+    friendName = friend.getAttribute('data-user');
+    const friendProfileIcon = friend.querySelector('img').getAttribute('src');
+
+    // Update the chat header with friend's profile icon and name
+    const chatHeader = document.getElementById('chat-user-name');
+    const chatProfileIcon = document.getElementById('chat-profile-icon');
+    const chatDropdown = document.getElementById('chat-dropdown');
+
+    chatHeader.textContent = friendName; // Display friend's name
+    chatProfileIcon.src = friendProfileIcon; // Set friend's profile picture
+    chatProfileIcon.style.display = 'block'; // Make profile icon visible
+    chatDropdown.style.display = 'block'; // Make dropdown visible
+
+    // Clear chat messages for the selected friend
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.innerHTML = "";
+  });
+});
+
+
+
