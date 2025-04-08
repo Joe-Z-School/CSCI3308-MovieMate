@@ -8,7 +8,7 @@
 
 /* Add Top Spacing for Content Below Navbar */
 .container-fluid {
-    margin-top: 80px; /* Adjust this value to match your navbar height */
+    margin-top: 50px; /* Adjust this value to match your navbar height */
     height: 100vh; /* Full viewport height */
     display: flex;
     flex-direction: row; /* Keep the layout in a row */
@@ -35,9 +35,47 @@
     background-color: var(--lighterBackground); /* Slightly lighter dark background */
     border-radius: 8px;
     padding: 10px;
-    height: calc(100vh - 80px); /* Maintain a clean look */
+    height: calc(95vh - 60px); /* Maintain a clean look */
     overflow-y: auto;
   }
+
+  .friend {
+    height: 80px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .friend-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .friend-name {
+    font-weight: bold;
+    font-size: 1rem; /* Slightly larger font for names */
+  }
+  
+  .recent-message {
+    font-size: 0.85rem;
+    color: #b0b0b0;
+  }
+  
+  .extra-info {
+    text-align: right;
+  }
+  
+  .extra-info small {
+    display: block;
+    font-size: 0.75rem; /* Subtle timestamp */
+    color: #b0b0b0;
+  }
+  
+  .unread-badge {
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+  }
+
   
   .friends-list h6 {
     color: #d1c4e9; /* Purple accent for section headings */
@@ -62,7 +100,7 @@
   .chat-area {
     display: flex;
     flex-direction: column; /* Stacks header, messages, and input vertically */
-    height: calc(100vh - 80px); /* Adjust height to account for navbar */
+    height: calc(95vh - 60px); /* Adjust height to account for navbar */
   }
   
   .chat-header {
@@ -80,13 +118,15 @@
     border-radius: 8px;
     padding: 10px;
     box-shadow: inset 0px 0px 10px #000000;
+    z-index: 1000;
+    overflow: visible;
   }
   
   .chat-footer {
     background-color: var(--lighterBackground);
     border-top: 2px solid var(--darkPurpleAccent); /* Purple accent border */
     flex-shrink: 0;
-    padding: 10px;
+    padding: 20px;
   }
   
   #message-input {
