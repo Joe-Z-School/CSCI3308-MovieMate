@@ -199,6 +199,61 @@ app.post('/register', async (req, res) => {
   };
 });
 
+// Development route for messaging tests
+app.get('/dev/register', async (req, res) => {
+  //hash the password using bcrypt library
+  
+    const accounts = [
+      { first_name: 'joe1',
+        last_name: 'joe1',
+        username: 'joe1',
+        email: 'joe1@email.com',
+        profile_icon: 'Profile_pic_option_1.png',
+        bio: 'joe1'
+      },
+      { first_name: 'joe2',
+        last_name: 'joe2',
+        username: 'joe2',
+        email: 'joe2@email.com',
+        profile_icon: 'profile_pic_option_6.png',
+        bio: 'joe2'
+      },
+      { first_name: 'joe3',
+        last_name: 'joe3',
+        username: 'joe3',
+        email: 'joe3@email.com',
+        profile_icon: 'profile_pic_option_2.png',
+        bio: 'joe3'
+      },
+      { first_name: 'joe4',
+        last_name: 'joe4',
+        username: 'joe4',
+        email: 'joe4@email.com',
+        profile_icon: 'profile_pic_option_5.png',
+        bio: 'joe4'
+      },
+    ]
+    // Generate a timestamp for when this request is made
+    const created_at = new Date().toISOString();
+    const hash = await bcrypt.hash('joe', 10);
+    try{
+    //creating insert
+    for (const sets of accounts) {
+      await db.tx(async t => {
+        await t.none(`
+          INSERT INTO users (username, password, email, profile_icon, bio, created_at, first_name, last_name) 
+          VALUES( $1, $2, $3, $4, $5, $6, $7, $8)
+          `, [sets.username, hash, sets.email, sets.profile_icon, sets.bio, created_at, sets.first_name, sets.last_name]);
+      });
+    }
+    console.log('data successfully added');
+    res.redirect('/dev/create-friends');
+  } catch (err) {
+    req.session.Message = 'An error occurred';
+    res.send('Error adding data');
+  };
+});
+
 // Authentication Middleware.
 const auth = (req, res, next) => {
   if (!req.session.user) {
@@ -487,6 +542,12 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 3 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
+      { follower_id: 11, followed_id: 12 }, // joe1 → joe2
+      { follower_id: 12, followed_id: 11 }, // joe2 → joe1
+      { follower_id: 11, followed_id: 13 }, // joe1 → joe3
+      { follower_id: 13, followed_id: 11 }, // joe3 → joe1
+      { follower_id: 11, followed_id: 14 }, // joe1 → joe4
+      { follower_id: 14, followed_id: 11 }, // joe4 → joe1
     ];
 
     for (const pair of friends) {
@@ -621,12 +682,12 @@ app.get('/messaging', async (req, res) => {
     const activeUser = {
       id: req.session.user.id, 
       name: req.session.user.first_name,
-      profileIcon: req.session.user.profile_icon
+      profile_icon: req.session.user.profile_icon
     };
 
     // Fetch friends marked as 'favorites'
     const favoritesQuery = `
-      SELECT u.id, u.username AS name, u.profile_icon AS profileIcon
+      SELECT u.id, u.username AS name, u.profile_icon
         FROM friends f
         JOIN users u ON f.followed_user_id = u.id
         WHERE f.following_user_id = $1
@@ -636,7 +697,7 @@ app.get('/messaging', async (req, res) => {
 
     // Fetch friends with unread messages
     const unreadMessagesQuery = `
-      SELECT DISTINCT u.id, u.username AS name, u.profile_icon AS profileIcon
+      SELECT DISTINCT u.id, u.username AS name, u.profile_icon
         FROM messages m
         JOIN users u ON m.sender_id = u.id
         WHERE m.recipient_id = $1 AND m.is_read = false
@@ -645,12 +706,12 @@ app.get('/messaging', async (req, res) => {
 
     // Fetch all friends
     const allFriendsQuery = `
-      SELECT u.id, u.username AS name, u.profile_icon AS profileIcon
+      SELECT u.id, u.username AS name, u.profile_icon
         FROM friends f
         JOIN users u ON u.id = f.followed_user_id
         WHERE f.following_user_id = $1  
           UNION  
-      SELECT u.id, u.username AS name, u.profile_icon AS profileIcon
+      SELECT u.id, u.username AS name, u.profile_icon
         FROM friends f
         JOIN users u ON u.id = f.following_user_id
         WHERE f.followed_user_id = $1;

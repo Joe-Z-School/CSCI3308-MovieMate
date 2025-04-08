@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 friendsList.forEach(friend => {
   friend.addEventListener('click', () => {
-    // Set friendId, friendName, and profileIcon
+    // Set friendId, friendName, and profile icon
     friendId = friend.getAttribute('data-user-id');
     friendName = friend.getAttribute('data-user');
     const friendProfileIcon = friend.querySelector('img').getAttribute('src');
@@ -276,7 +276,7 @@ friendsList.forEach(friend => {
     const chatDropdown = document.getElementById('chat-dropdown');
 
     chatHeader.textContent = friendName; // Display friend's name
-    chatProfileIcon.src = friendProfileIcon; // Set friend's profile picture
+    chatProfileIcon.src = friendProfileIcon; // Set friend's profile icon
     chatProfileIcon.style.display = 'block'; // Make profile icon visible
     chatDropdown.style.display = 'block'; // Make dropdown visible
 
