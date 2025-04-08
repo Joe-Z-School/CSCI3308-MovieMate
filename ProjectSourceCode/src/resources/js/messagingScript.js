@@ -1,3 +1,4 @@
+import { formatDistanceToNow } from 'https://cdn.jsdelivr.net/npm/date-fns@latest/index.js';
 console.log('Script loaded!'); // Check if messagingScript.js is running
 
 const socket = io(); // Connect to the server
@@ -9,40 +10,45 @@ const fileInput = document.getElementById("file-input");
 const chatMessages = document.getElementById("chat-messages");
 const friendsList = document.querySelectorAll('.friend'); // Select all friends
 
+const friendsContainer = document.getElementById("friends");
+if (!friendsContainer) {
+  console.error("#friends element not found.");
+}
+if (!chatMessages) {
+  console.error("#chat-messages element not found.");
+}
+
+
 // Declare friendId globally
 let friendId = null;
 let friendName = null;
 
 friendsList.forEach(friend => {
   friend.addEventListener('click', () => {
-    // Set friendId and friendName when a friend is clicked
-    friendId = friend.getAttribute('data-user-id'); // Get the friend's ID
-    friendName = friend.getAttribute('data-user'); // Get the friend's name
-    const friendProfileIcon = friend.querySelector('img').getAttribute('src'); // Get the profile icon URL
-    console.log(`Opening chat room with: ${friendName} (ID: ${friendId})`);
+    friendId = friend.getAttribute('data-user-id');
+    friendName = friend.getAttribute('data-user');
+    const friendProfileIcon = friend.querySelector('img').getAttribute('src');
 
-    // Emit join-room event to the server
     socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
 
-    // Update the chat header with the friend's profile icon, name, and dropdown
-    const chatHeaderIcon = document.getElementById('chat-profile-icon');
-    const chatHeaderName = document.getElementById('chat-user-name');
+    // Update chat header with friend's details
+    const chatHeader = document.getElementById('chat-user-name');
+    const chatProfileIcon = document.getElementById('chat-profile-icon');
+    chatHeader.textContent = friendName;
+    chatProfileIcon.src = friendProfileIcon;
+    chatProfileIcon.style.display = 'block';
 
-    chatHeaderIcon.src = friendProfileIcon; // Set the profile picture
-    chatHeaderName.textContent = friendName; // Set the friend's name
-
-    // Clear the chat messages (messages will reload via load-messages)
-    const chatMessages = document.getElementById('chat-messages');
+    // Clear chat messages for the new friend
     chatMessages.innerHTML = "";
+
+    // Emit event to mark messages as read
+    socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId });
   });
 });
 
-
 function updateFriendsList(friends) {
-  const unreadList = document.getElementById("unread");
-  const favoritesList = document.getElementById("favorites");
-  unreadList.innerHTML = "";
-  favoritesList.innerHTML = "";
+  const friendsContainer = document.getElementById("friends");
+  friendsContainer.innerHTML = ""; // Clear previous friends list
 
   friends.forEach(friend => {
     const listItem = document.createElement("li");
@@ -50,62 +56,74 @@ function updateFriendsList(friends) {
     listItem.setAttribute("data-user-id", friend.id);
     listItem.setAttribute("data-user", friend.name);
 
+    // Add profile image
     const profileContainer = document.createElement("div");
-    profileContainer.className = "position-relative me-2";
-
+    profileContainer.className = "position-relative me-3";
     const profileImage = document.createElement("img");
-    profileImage.src = friend.profileIcon;
+    profileImage.src = `/resources/img/${friend.profile_icon}`;
     profileImage.className = "rounded-circle";
     profileImage.alt = "Profile Icon";
-    profileImage.width = 40;
-    profileImage.height = 40;
+    profileImage.width = 50;
+    profileImage.height = 50;
     profileContainer.appendChild(profileImage);
-
-    if (friend.isUnread) {
-      const unreadBadge = document.createElement("span");
-      unreadBadge.className = "badge bg-danger position-absolute top-0 end-0";
-      profileContainer.appendChild(unreadBadge);
-      unreadList.appendChild(listItem);
-    }
-
     listItem.appendChild(profileContainer);
 
-    const nameSpan = document.createElement("span");
-    nameSpan.className = "ms-2";
-    nameSpan.textContent = friend.name;
-    listItem.appendChild(nameSpan);
+    // Add friend info
+    const friendInfo = document.createElement("div");
+    friendInfo.className = "friend-info flex-grow-1";
+    const friendName = document.createElement("div");
+    friendName.className = "friend-name";
+    friendName.textContent = friend.name;
+    const recentMessage = document.createElement("div");
+    recentMessage.className = "recent-message text-muted";
+    recentMessage.textContent = friend.latest_message || "No recent messages";
+    friendInfo.appendChild(friendName);
+    friendInfo.appendChild(recentMessage);
+    listItem.appendChild(friendInfo);
 
-    const dropdownContainer = document.createElement("div");
-    dropdownContainer.className = "dropdown ms-auto";
+    // Add extra info
+    const extraInfo = document.createElement("div");
+    extraInfo.className = "extra-info text-end";
+    const timestamp = document.createElement("small");
+    timestamp.className = "text-muted";
+    timestamp.textContent = friend.last_active || "Not available";
+    const unreadBadge = document.createElement("span");
+    unreadBadge.className = "badge bg-primary unread-badge";
+    unreadBadge.textContent = friend.unread_count || 0;
+    extraInfo.appendChild(timestamp);
+    extraInfo.appendChild(unreadBadge);
+    listItem.appendChild(extraInfo);
 
-    const dropdownButton = document.createElement("button");
-    dropdownButton.className = "btn btn-secondary btn-sm dropdown-toggle";
-    dropdownButton.setAttribute("type", "button");
-    dropdownButton.setAttribute("data-bs-toggle", "dropdown");
-    dropdownButton.textContent = "Actions";
-    dropdownContainer.appendChild(dropdownButton);
+    // Attach the click event listener
+    listItem.addEventListener("click", () => {
+      openChat(friend); // Trigger openChat when clicked
+    });
 
-    const dropdownMenu = document.createElement("ul");
-    dropdownMenu.className = "dropdown-menu";
-
-    const viewProfile = document.createElement("li");
-    viewProfile.innerHTML = `<a class="dropdown-item" href="#">View Profile</a>`;
-    dropdownMenu.appendChild(viewProfile);
-
-    const addRemoveFavorites = document.createElement("li");
-    addRemoveFavorites.innerHTML = friend.isFavorite ?
-      `<a class="dropdown-item" href="#">Remove from Favorites</a>` :
-      `<a class="dropdown-item" href="#">Add to Favorites</a>`;
-    dropdownMenu.appendChild(addRemoveFavorites);
-
-    const blockUser = document.createElement("li");
-    blockUser.innerHTML = `<a class="dropdown-item text-danger" href="#">Block User</a>`;
-    dropdownMenu.appendChild(blockUser);
-
-    dropdownContainer.appendChild(dropdownMenu);
-    listItem.appendChild(dropdownContainer);
+    friendsContainer.appendChild(listItem);
   });
 }
+
+
+function openChat(friend) {
+  console.log('Opening chat with friend:', friend); // Debug friend object
+  friendId = friend.id;
+  friendName = friend.name;
+
+  // Update chat header
+  const chatHeader = document.getElementById("chat-user-name");
+  const chatProfileIcon = document.getElementById("chat-profile-icon");
+  chatHeader.textContent = friendName;
+  chatProfileIcon.src = `/resources/img/${friend.profile_icon}`;
+  chatProfileIcon.style.display = "block";
+
+  // Clear chat messages
+  const chatMessages = document.getElementById('chat-messages');
+  chatMessages.innerHTML = "";
+
+  // Emit 'join-room' event to server
+  socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
+}
+
 
 
 
@@ -114,15 +132,20 @@ socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId 
 
 // Send a private message using send button
 sendBtn.addEventListener('click', () => {
-    const message = messageInput.value.trim();
-    if (message) {
-      // Emit message to the server
-      socket.emit('private-message', { senderId: yourUserId, recipientId: friendId, content: message });
-      messageInput.value = ""; // Clear the input area
-    } else {
-      console.error('Message content cannot be empty.');
-    }
-  });
+  const message = messageInput.value.trim();
+  if (message) {
+    // Emit the message to the server
+    socket.emit('private-message', {
+      senderId: yourUserId, // Ensure yourUserId is defined correctly on the client
+      recipientId: friendId, // Make sure friendId is set when a friend is selected
+      content: message
+    });
+    messageInput.value = ""; // Clear the input field
+  } else {
+    console.error('Message content cannot be empty.');
+  }
+});
+
   
 // Send messages with Enter and adding new lines with Shift+Enter
 messageInput.addEventListener("keydown", (event) => {
@@ -136,50 +159,54 @@ messageInput.addEventListener("keydown", (event) => {
   }
 });
 
-
 // Receive a private message
 socket.on('private-message', ({ senderId, content }) => {
-    const user = senderId === yourUserId ? 'You' : friendName; // Define sender
-    if (content && user) {
-      appendMessage({ message: content, user }); // Add the message to the chat box
-    } else {
-      console.error('Message or user is undefined:', { content, user });
-    }
-  });
-  
+  const user = senderId === yourUserId ? 'You' : friendName; // Define sender
+  if (content && user) {
+    appendMessage({ message: content, user }); // Add the message to the chat box
+  } else {
+    console.error('Message or user is undefined:', { content, user });
+  }
+});
+
 
 // Load messages for the selected friend
 socket.on('load-messages', (messages) => {
-    const chatMessages = document.getElementById('chat-messages');
-    chatMessages.innerHTML = ""; // Clear previous messages
-  
-    messages.forEach(({ sender_id, content, timestamp }) => {
-      const sender = sender_id === yourUserId ? 'You' : friendName; // Replace `friendName` dynamically
-      const msgElement = document.createElement('div');
-      if (!sender_id || !content) {
-        console.error('Sender or content is undefined:', { sender_id, content });
-      }
-      msgElement.textContent = `${sender} (${new Date(timestamp).toLocaleString()}): ${content}`;
-      chatMessages.appendChild(msgElement);
-    });
-  
-    chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the latest message
+  const chatMessages = document.getElementById('chat-messages');
+  chatMessages.innerHTML = ""; // Clear previous messages
+
+  messages.forEach(({ sender_id, content, timestamp }) => {
+    const sender = sender_id === yourUserId ? 'You' : friendName; // Replace `friendName` dynamically
+    const msgElement = document.createElement('div');
+    if (!sender_id || !content) {
+      console.error('Sender or content is undefined:', { sender_id, content });
+    }
+    msgElement.textContent = `${sender} (${new Date(timestamp).toLocaleString()}): ${content}`;
+    chatMessages.appendChild(msgElement);
   });
-  
+
+  chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the latest message
+});
 
 // Function to display messages in the chat
 function appendMessage({ message, user }) {
-    const msgElement = document.createElement('div');
-    if (!message || !user) {
-      console.error('Message or user is undefined:', { message, user });
-    }
-    msgElement.textContent = `${user}: ${message}`;
-    chatMessages.appendChild(msgElement);
-    chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the latest message
-    console.log('Appending message:', { user, message });
-
+  if (!message || !user) {
+    console.error('Message or user is undefined in appendMessage:', { message, user });
+    return;
   }
-  
+  const msgElement = document.createElement('div');
+  msgElement.textContent = `${user}: ${message}`;
+  const chatMessages = document.getElementById('chat-messages');
+  if (!chatMessages) {
+    console.error('chat-messages container not found.');
+    return;
+  }
+  chatMessages.appendChild(msgElement); // Append the message to the chat window
+  chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the latest message
+  console.log('Message appended to chat window:', { user, message });
+}
+
+
 
 // Send Emojis
 emojiBtn.addEventListener("click", () => {
@@ -256,35 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set default chat header message and hide dropdown
   const chatHeader = document.getElementById('chat-user-name');
   const chatProfileIcon = document.getElementById('chat-profile-icon');
-  const chatDropdown = document.getElementById('chat-dropdown');
 
   chatHeader.textContent = 'Select A Friend To Start Chatting'; // Default message
   chatProfileIcon.style.display = 'none'; // Hide profile icon by default
-  chatDropdown.style.display = 'none'; // Hide dropdown by default
 });
-
-friendsList.forEach(friend => {
-  friend.addEventListener('click', () => {
-    // Set friendId, friendName, and profile icon
-    friendId = friend.getAttribute('data-user-id');
-    friendName = friend.getAttribute('data-user');
-    const friendProfileIcon = friend.querySelector('img').getAttribute('src');
-
-    // Update the chat header with friend's profile icon and name
-    const chatHeader = document.getElementById('chat-user-name');
-    const chatProfileIcon = document.getElementById('chat-profile-icon');
-    const chatDropdown = document.getElementById('chat-dropdown');
-
-    chatHeader.textContent = friendName; // Display friend's name
-    chatProfileIcon.src = friendProfileIcon; // Set friend's profile icon
-    chatProfileIcon.style.display = 'block'; // Make profile icon visible
-    chatDropdown.style.display = 'block'; // Make dropdown visible
-
-    // Clear chat messages for the selected friend
-    const chatMessages = document.getElementById('chat-messages');
-    chatMessages.innerHTML = "";
-  });
-});
-
-
 
