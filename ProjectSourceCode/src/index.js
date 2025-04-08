@@ -56,6 +56,7 @@ db.connect()
     console.log('ERROR:', error.message || error);
   });
 
+
 // *****************************************************
 // <!-- Section 3 : App Settings -->
 // *****************************************************
@@ -545,9 +546,6 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 12 }, // joe1 → joe2
       { follower_id: 12, followed_id: 11 }, // joe2 → joe1
       { follower_id: 11, followed_id: 13 }, // joe1 → joe3
-      { follower_id: 13, followed_id: 11 }, // joe3 → joe1
-      { follower_id: 11, followed_id: 14 }, // joe1 → joe4
-      { follower_id: 14, followed_id: 11 }, // joe4 → joe1
     ];
 
     for (const pair of friends) {
@@ -677,69 +675,60 @@ app.get('/profile', (req, res) => {
 // <!-- Messages Page -->
 // *****************************************************
 
+const { formatDistanceToNow } = require('date-fns');
+
 app.get('/messaging', async (req, res) => {
   try {
     const activeUser = {
-      id: req.session.user.id, 
-      name: req.session.user.first_name,
-      profile_icon: req.session.user.profile_icon
+      id: req.session.user?.id,
+      name: req.session.user?.first_name,
+      profile_icon: req.session.user?.profile_icon,
     };
 
-    // Fetch friends marked as 'favorites'
-    const favoritesQuery = `
-      SELECT u.id, u.username AS name, u.profile_icon
-        FROM friends f
-        JOIN users u ON f.followed_user_id = u.id
-        WHERE f.following_user_id = $1
-          AND u.id IN (SELECT followed_user_id FROM friends WHERE following_user_id = $1)
-    `;
-    const favorites = await db.query(favoritesQuery, [activeUser.id]);
+    if (!activeUser.id) {
+      console.error('Active User not found in session.');
+      return res.status(400).send('User session is invalid.');
+    }
 
-    // Fetch friends with unread messages
-    const unreadMessagesQuery = `
-      SELECT DISTINCT u.id, u.username AS name, u.profile_icon
-        FROM messages m
-        JOIN users u ON m.sender_id = u.id
-        WHERE m.recipient_id = $1 AND m.is_read = false
-    `;
-    const unreadMessages = await db.query(unreadMessagesQuery, [activeUser.id]);
-
-    // Fetch all friends
     const allFriendsQuery = `
-      SELECT u.id, u.username AS name, u.profile_icon
+      SELECT DISTINCT ON (u.id)
+             u.id, u.username AS name, u.profile_icon,
+             f.latest_message,
+             f.last_active,
+             f.unread_count
         FROM friends f
-        JOIN users u ON u.id = f.followed_user_id
-        WHERE f.following_user_id = $1  
-          UNION  
-      SELECT u.id, u.username AS name, u.profile_icon
-        FROM friends f
-        JOIN users u ON u.id = f.following_user_id
-        WHERE f.followed_user_id = $1;
+        JOIN users u ON (
+             (u.id = f.followed_user_id AND f.following_user_id = $1)
+          OR (u.id = f.following_user_id AND f.followed_user_id = $1)
+        )
+       WHERE u.id != $1;
     `;
     const allFriends = await db.query(allFriendsQuery, [activeUser.id]);
 
-    // Render the messaging page
+    // Format last_active for each friend
+    const formattedFriends = allFriends.map(friend => ({
+      ...friend,
+      last_active: friend.last_active
+        ? formatDistanceToNow(new Date(friend.last_active), { addSuffix: true })
+        : "Not available"
+    }));
+
     res.render('pages/messaging', {
       activeUser,
-      favorites,
-      unreadMessages,
-      allFriends: allFriends || []
+      allFriends: formattedFriends,
     });
-
   } catch (error) {
-    console.error('Error loading messaging page:', error);
-    if (!res.headersSent) {
-      res.status(500).send('Internal Server Error');
-    }
+    console.error('Error loading messaging page:', error.message);
+    res.status(500).send('Internal Server Error');
   }
 });
 
 
 
-// Handle Socket.IO connections
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
+  // Join room for the current user
   socket.on('join-room', async ({ senderId, recipientId }) => {
     socket.join(`user-${senderId}`);
     socket.join(`user-${recipientId}`);
@@ -760,40 +749,73 @@ io.on('connection', (socket) => {
       console.error('Failed to load messages:', error);
     }
   });
-   
 
+  // Handle private messages
   socket.on('private-message', async ({ senderId, recipientId, content }) => {
     try {
+      console.log('Private message event received:', { senderId, recipientId, content }); // Debug incoming data
+  
+      // Save the message in the database
       const query = `
-        INSERT INTO messages (sender_id, recipient_id, content, is_read)
-        VALUES ($1, $2, $3, false)
+        INSERT INTO messages (sender_id, recipient_id, content, is_read, timestamp)
+        VALUES ($1, $2, $3, false, NOW());
       `;
       await db.query(query, [senderId, recipientId, content]);
   
-      // Broadcast the message to the recipient
+      // Update metadata for friends (latest message, unread count, last active)
+      const updateMetadataQuery = `
+        UPDATE friends
+        SET latest_message = $1,
+            last_active = NOW(),
+            unread_count = CASE 
+              WHEN following_user_id = $2 AND followed_user_id = $3 THEN unread_count + 1
+              ELSE unread_count
+            END
+        WHERE (following_user_id = $2 AND followed_user_id = $3)
+           OR (following_user_id = $3 AND followed_user_id = $2);
+      `;
+      await db.query(updateMetadataQuery, [content, senderId, recipientId]);
+  
+      // Broadcast message to recipient
       io.to(`user-${recipientId}`).emit('private-message', { senderId, content });
+      console.log(`Broadcasting message to recipient room user-${recipientId}:`, { senderId, content });
     } catch (error) {
-      console.error('Failed to save message:', error);
+      console.error('Failed to save or broadcast message:', error);
     }
   });
   
+
+  // Mark messages as read
   socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
     try {
       const query = `
         UPDATE messages
         SET is_read = true
-        WHERE recipient_id = $1 AND sender_id = $2
+        WHERE recipient_id = $1 AND sender_id = $2;
       `;
-      await db.query(query, [recipientId, senderId]);
+      await db.query(query, [recipientId, senderId]);  
+
+      const resetUnreadCountQuery = `
+        UPDATE friends
+        SET unread_count = 0
+        WHERE following_user_id = $2 AND followed_user_id = $1;
+      `;
+      await db.query(resetUnreadCountQuery, [recipientId, senderId]);  
+
+      socket.emit('update-unread-count', { senderId, recipientId, unreadCount: 0 });
+      console.log(`Unread count reset for senderId: ${senderId}, recipientId: ${recipientId}`);
     } catch (error) {
       console.error('Failed to mark messages as read:', error);
     }
   });
 
+  // User disconnect handler
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
   });
 });
+
+
 
 // *****************************************************
 // <!-- Section 5 : Start Server-->
