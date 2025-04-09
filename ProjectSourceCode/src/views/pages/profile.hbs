@@ -16,7 +16,7 @@
             <h1 class="profile-name">{{user.first_name}}</h1>
             <p class="profile-username">@{{user.username}}</p>
             {{#if isOwnProfile}}
-            <a href="/profile/edit"><button class="btn-edit">Edit Profile</button></a>
+            <button id="openEditModal" class="btn-edit">Edit Profile</button>
             {{else}}
             <button class="btn-follow">Follow</button>
             {{/if}}
@@ -29,12 +29,16 @@
             <div class="stat-label">Posts</div>
         </div>
         <div class="stat-item">
-            <div class="stat-value">{{user.followers}}</div>
-            <div class="stat-label">Followers</div>
+            <a href="/profile/followers?userId={{user.id}}" style="text-decoration: none; color: inherit;">
+                <div class="stat-value">{{user.followers}}</div>
+                <div class="stat-label" id="followers">Followers</div>
+            </a>
         </div>
         <div class="stat-item">
-            <div class="stat-value">{{user.following}}</div>
-            <div class="stat-label">Following</div>
+            <a href="/profile/following?userId={{user.id}}" style="text-decoration: none; color: inherit;">
+                <div class="stat-value">{{user.following}}</div>
+                <div class="stat-label" id="following">Following</div>
+            </a>
         </div>
     </div>
 
@@ -65,3 +69,35 @@
         {{/unless}}
     </div>
 </div>
+{{#if isOwnProfile}}
+{{> edit-profile-modal}}
+{{/if}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('editProfileModal');
+        const openBtn = document.getElementById('openEditModal');
+        const closeBtn = document.querySelector('.close-modal');
+
+        // Modal open/close functionality
+        if (openBtn) {
+            openBtn.addEventListener('click', () => modal.style.display = 'block');
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => modal.style.display = 'none');
+        }
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+
+        // Icon selection styling
+        document.querySelectorAll('.icon-option input').forEach(radio => {
+            radio.addEventListener('change', function () {
+                document.querySelectorAll('.icon-option').forEach(opt => {
+                    opt.classList.toggle('selected', opt.contains(this));
+                });
+            });
+        });
+    });
+</script>

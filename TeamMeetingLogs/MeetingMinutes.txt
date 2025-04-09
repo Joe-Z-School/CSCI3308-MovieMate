@@ -40,90 +40,85 @@ Week 1: March 21st
 Week 2: April 4th
     - Lizze:
         - what have you done since the last meeting?
-            - 
-            - 
-            - 
-            - 
+            - Friends and followers feature
+            - Finding new friends, follow, unfollow code
+            - Notifications for requests
+            - Active followed and following counts
 
         - what are you planning to do until the next meeting?
-            - 
-            - 
+            - Notifications page
+            - Collecting likes and comments
             
         - what are the challenges you are facing?
-            - 
+            - None
 
     - Maeve:
         - what have you done since the last meeting?
-            - 
-            - 
-            - 
-            - 
+            - Profile icons
+            - Added first name and last name to database and user creation
+            - Find Friends page update
 
         - what are you planning to do until the next meeting?
-            - 
-            - 
+            - Visual design and layout of pages
             
         - what are the challenges you are facing?
-            - 
+            - None
 
     - Neha:
         - what have you done since the last meeting?
-            - 
-            - 
-            - 
-            - 
+            - Uniform layouts
+            - Profile page
+            - Edit Profile/Follow button feature
+            - Standardized on CSS styles
 
         - what are you planning to do until the next meeting?
-            - 
-            - 
+            - Profile Page
+            - WatchList
+            - Watched List
+            - Visit friends pages
             
         - what are the challenges you are facing?
-            - 
+            - None
 
     - Ella:
         - what have you done since the last meeting?
-            - 
-            - 
-            - 
-            - 
+            - Logo creation
+            - Navbar dynamic
+            - Create posts creation code
 
         - what are you planning to do until the next meeting?
-            - 
-            - 
+            - Create user posts from movie data to share with friends
             
         - what are the challenges you are facing?
-            - 
+            - Implementing the posting feature
 
     - Conner:
         - what have you done since the last meeting?
-            - 
-            - 
-            - 
-            - 
+            - API integration into explorer page
+            - API backend loading of data 
 
         - what are you planning to do until the next meeting?
-            - 
-            - 
+            - Pages detailing selected movie
             
         - what are the challenges you are facing?
-            - 
+            - None
 
     - Joe:
         - what have you done since the last meeting?
-            - 
-            - 
-            - 
-            - 
+            - Social Page layout and feature with pagination
+            - Responsive buttons
+            - Messaging page start
+            - Websockets
 
         - what are you planning to do until the next meeting?
-            - 
-            - 
+            - Work on websockets for messaging feature
+            - Messaging page layout
             
         - what are the challenges you are facing?
-            - 
+            - None
 
     - Additionals:
-        - 
+        - None
 
 ------------------------------------------------------------------------------
 
