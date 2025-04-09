@@ -22,7 +22,8 @@
                     <p class="card-text">Review: {{review}}</p>
                     <p class="card-text">Description: {{description}}</p>
                     <p class="card-text">Where To Watch: {{whereToWatch}}</p>
-                    <button class="btn heart-button" data-post='{{json this}}' data-bs-toggle="tooltip"
+                    <!--<i class="bi {{#if liked}}bi-heart-fill{{else}}bi-heart{{/if}}"></i> -->
+                    <button class="btn heart-button" data-post-id="{{id}}" data-bs-toggle="tooltip"
                         data-bs-title="Like Post">
                         <i class="bi bi-heart"></i>
                     </button>
@@ -32,9 +33,16 @@
                         <i class="bi bi-plus-circle" id="add-icon-{{@index}}"></i>
                     </button>
                 </div>
+                <form class="comment-form mt-2" data-post-id="{{id}}">
+                    <input type="text" class="form-control comment-input" placeholder="Add a comment..." required>
+                    <button type="submit" class="btn btn-sm btn-primary mt-1">Comment</button>
+                </form>
             </div>
+            
         </div>
+        
         {{/each}}
+        
 
     </div>
     <br>
@@ -43,3 +51,74 @@
     </div>
     <br>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".heart-button").forEach(button => {
+    button.addEventListener("click", async (event) => {
+      const postId = button.getAttribute("data-post-id");
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/like`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          const icon = button.querySelector("i");
+          if (data.action === "liked") {
+            icon.classList.remove("bi-heart");
+            icon.classList.add("bi-heart-fill");
+            console.log("Post liked");
+          } else if (data.action === "unliked") {
+            icon.classList.remove("bi-heart-fill");
+            icon.classList.add("bi-heart");
+            console.log("Post unliked");
+          }
+        } else {
+          console.error("Failed to like/unlike post.");
+        }
+      } catch (err) {
+        console.error("Error toggling like:", err);
+      }
+    });
+  });
+
+  //Allowing comments to be made on the posts
+  document.querySelectorAll(".comment-form").forEach(form => {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const postId = form.getAttribute("data-post-id");
+    const input = form.querySelector(".comment-input");
+    const comment = input.value.trim();
+
+    if (!comment) return;
+
+    try {
+      const res = await fetch(`/api/posts/${postId}/comment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment })
+      });
+
+      if (res.ok) {
+        input.value = ""; // Clear input
+        console.log("Comment added");
+        // Optionally append new comment to DOM
+      } else {
+        console.error("Failed to comment");
+      }
+    } catch (err) {
+      console.error("Comment error:", err);
+    }
+  });
+});
+
+});
+
+
+</script>

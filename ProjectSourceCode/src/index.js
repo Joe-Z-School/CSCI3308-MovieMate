@@ -486,6 +486,81 @@ app.post('/notifications/dismiss/:id', async (req, res) => {
 
 
 // *****************************************************
+// <!-- Post like and comments-->
+// *****************************************************
+// POST /api/posts/:id/like
+//allows the user to like and unlike a post
+app.post("/api/posts/:id/like", async (req, res) => {
+  const userId = req.session.user?.id;
+  const postId = req.params.id;
+
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    const existing = await db.oneOrNone(
+      "SELECT * FROM post_likes WHERE user_id = $1 AND post_id = $2",
+      [userId, postId]
+    );
+
+    if (existing) {
+      // Unlike
+      await db.none(
+        "DELETE FROM post_likes WHERE user_id = $1 AND post_id = $2",
+        [userId, postId]
+      );
+      await db.none(
+        "UPDATE posts SET like_count = GREATEST(like_count - 1, 0) WHERE id = $1",
+        [postId]
+      );
+      return res.status(200).json({ action: "unliked" });
+    } else {
+      // Like
+      await db.none(
+        "INSERT INTO post_likes (user_id, post_id) VALUES ($1, $2)",
+        [userId, postId]
+      );
+      await db.none(
+        "UPDATE posts SET like_count = like_count + 1 WHERE id = $1",
+        [postId]
+      );
+      return res.status(200).json({ action: "liked" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+app.post("/api/posts/:id/comment", async (req, res) => {
+  const userId = req.session.user?.id;
+  const postId = req.params.id;
+  const { comment } = req.body;
+
+  if (!userId || !comment) return res.status(400).json({ error: "Bad request" });
+
+  try {
+    await db.none(
+      "INSERT INTO post_comments (user_id, post_id, comment) VALUES ($1, $2, $3)",
+      [userId, postId, comment]
+    );
+
+    await db.none(
+      "UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1",
+      [postId]
+    );
+
+    res.status(200).json({ message: "Comment added" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
+
+// *****************************************************
 // <!-- Data base info to add for testing-->
 // *****************************************************
 /* Temporary way to add request data and to add friend data for your user account*/
@@ -604,6 +679,7 @@ app.get('/dev/create-notifications', async (req, res) => {
 // <!-- Friends Posts -->
 // *****************************************************
 
+
 // Sample data
 const posts = [
   { id: '1', user: 'A', title: 'Inception', review: '4', description: 'A mind-bending thriller by Nolan.', cover: 'cover1.jpg', whereToWatch: 'Netflix' },
@@ -623,6 +699,7 @@ const posts = [
   { id: '15', user: 'O', title: 'TestTitle15', review: '1.9', description: 'Test Description for TestTitle15.', cover: 'cover15.jpg', whereToWatch: 'Paramount' }
 ];
 
+
 // Display the main page
 app.get('/social', (req, res) => {
   const initialPosts = posts.slice(0, 5); // Load the first 5 posts
@@ -638,6 +715,75 @@ app.get('/load-more', (req, res) => {
 
   res.json({ posts: paginatedPosts });
 });
+
+/*
+app.get('/social', async (req, res) => {
+  const userId = req.session.user?.id;
+
+  try {
+    const posts = await db.any(`
+      SELECT 
+        posts.id, 
+        posts.title, 
+        posts.body, 
+        posts.cover, 
+        posts.where_to_watch, 
+        posts.review, 
+        posts.like_count, 
+        posts.comment_count,
+        users.username AS user,
+        EXISTS (
+          SELECT 1 FROM post_likes 
+          WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
+        ) AS liked
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      ORDER BY posts.created_at DESC
+      LIMIT 5
+    `, [userId || 0]);
+
+    res.render('pages/social', { layout: 'main', user: req.session.user, posts });
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.get('/load-more', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 5;
+  const offset = (page - 1) * limit;
+  const userId = req.session.user?.id;
+
+  try {
+    const posts = await db.any(`
+      SELECT 
+        posts.id, 
+        posts.title, 
+        posts.body, 
+        posts.cover, 
+        posts.where_to_watch, 
+        posts.review, 
+        posts.like_count, 
+        posts.comment_count,
+        users.username AS user,
+        EXISTS (
+          SELECT 1 FROM post_likes 
+          WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
+        ) AS liked
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      ORDER BY posts.created_at DESC
+      LIMIT $2 OFFSET $3
+    `, [userId || 0, limit, offset]);
+
+    res.json({ posts });
+  } catch (err) {
+    console.error("Error loading more posts:", err);
+    res.status(500).json({ error: "Failed to load posts" });
+  }
+});
+*/
 
 // Temporary in-memory storage for the watchlist
 app.post('/add-to-watchlist', async (req, res) => {
