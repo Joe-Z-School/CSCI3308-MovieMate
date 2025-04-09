@@ -1,3 +1,4 @@
+<header>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <!-- Logo on the left side -->
@@ -26,21 +27,22 @@
                     </li>
                 </ul>
 
-            <!-- Profile and Logout section aligned -->
-            <ul class="navbar-nav ms-auto d-flex align-items-center">
-                <li class="nav-item">
-                    {{#if user}}
-                    <!-- Profile icon -->
-                    <a class="nav-link" href="/profile">
-                        <img src="../../resources/img/{{user.profile_icon}}" alt="Profile" class="profile-img">
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <!-- Logout button -->
-                    <a class="nav-link" href="/logout">Logout</a>
-                </li>
-                {{/if}}
-            </ul>
+                <!-- Profile and Logout section aligned -->
+                <ul class="navbar-nav ms-auto d-flex align-items-center">
+                    <li class="nav-item">
+                        {{#if user}}
+                        <!-- Profile icon -->
+                        <a class="nav-link" href="/profile">
+                            <img src="../../resources/img/{{user.profile_icon}}" alt="{{user.profile_icon}}"
+                                class="profile-img">
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <!-- Logout button -->
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                    {{/if}}
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>

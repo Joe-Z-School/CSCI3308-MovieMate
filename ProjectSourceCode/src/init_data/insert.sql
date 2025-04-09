@@ -1,5 +1,5 @@
 INSERT INTO users (username, password, email, profile_icon, bio, followers_count, following_count, created_at, first_name, last_name) VALUES
-('liz_ruff', 'password123', 'lizzie@example.com', 'Profile_pic_option_1.png', 'Runner. Coder. Coffee fan.', 3, 2, CURRENT_TIMESTAMP, 'Lizzie', 'Ruff'),
+('liz_ruff', 'password123', 'lizzie@example.com', 'profile_pic_option_1.png', 'Runner. Coder. Coffee fan.', 3, 2, CURRENT_TIMESTAMP, 'Lizzie', 'Ruff'),
 ('max_power', 'supersecure', 'max@example.com', 'profile_pic_option_2.png', 'Tech nerd & gym rat.', 1, 3, CURRENT_TIMESTAMP, 'Max', 'Power'),
 ('sara_sky', 'ilovecats', 'sara@example.com', 'profile_pic_option_3.png', 'Plant mom & movie buff.', 2, 1, CURRENT_TIMESTAMP, 'Sara', 'Sky'),
 ('code_matt', 'hashbrown1', 'matt@example.com', 'profile_pic_option_4.png', 'JavaScript evangelist.', 0, 2, CURRENT_TIMESTAMP, 'Matt', 'Smith'),
