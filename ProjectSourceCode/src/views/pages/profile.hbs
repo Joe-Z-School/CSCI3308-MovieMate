@@ -1,4 +1,3 @@
-
 <style>
     body {
         display: flex;
@@ -11,29 +10,30 @@
 {{> nav}}
 <div class="profile-container">
     <div class="profile-header">
-        <img src="../../resources/img/{{profile_icon}}" alt="Profile Picture" class="profile-pic">
+        <img src="../../resources/img/{{user.profile_icon}}" alt="Profile Picture" class="profile-pic">
+
         <div class="profile-info">
-            <h1 class="profile-name">{{username}}</h1>
-            <p class="profile-username">@{{username}}</p>
+            <h1 class="profile-name">{{user.first_name}}</h1>
+            <p class="profile-username">@{{user.username}}</p>
             {{#if isOwnProfile}}
-            <button class="btn-edit">Edit Profile</button>
+            <a href="/profile/edit"><button class="btn-edit">Edit Profile</button></a>
             {{else}}
-            <button class="btn-edit">Follow</button>
+            <button class="btn-follow">Follow</button>
             {{/if}}
         </div>
     </div>
 
     <div class="profile-stats">
         <div class="stat-item">
-            {{!-- <div class="stat-value">{{#}}</div> --}}
+            <div class="stat-value">{{posts.length}}</div>
             <div class="stat-label">Posts</div>
         </div>
         <div class="stat-item">
-            {{!-- <div class="stat-value">{{#}}</div> --}}
+            <div class="stat-value">{{user.followers}}</div>
             <div class="stat-label">Followers</div>
         </div>
         <div class="stat-item">
-            {{!-- <div class="stat-value">{{#}}</div> --}}
+            <div class="stat-value">{{user.following}}</div>
             <div class="stat-label">Following</div>
         </div>
     </div>
@@ -47,7 +47,7 @@
         {{#each posts}}
         <div class="post">
             <div class="post-header">
-                <div class="post-author">{{../user.username}}</div>
+                <div class="post-author">{{../username}}</div>
                 <div class="post-date">{{this.date}}</div>
             </div>
             <div class="post-content">

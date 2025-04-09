@@ -32,7 +32,7 @@ const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
   partialsDir: __dirname + '/views/partials',
-  
+
 });
 
 // database configuration
@@ -118,17 +118,18 @@ app.get('/api/placeholder/:width/:height', movieController.getPlaceholderImage);
 
 // Page Routes
 app.get('/movies/details/:imdbId', (req, res) => {
-res.render('pages/movie-details', { 
-  imdbId: req.params.imdbId,
-  user: req.session.user 
-});
+  res.render('pages/movie-details', {
+    imdbId: req.params.imdbId,
+    user: req.session.user
+  });
 });
 
 app.get('/explore', (req, res) => {
-res.render('pages/explore', { 
-  user: req.session.user,
-  title: 'Explore Movies - MovieMates'
-});
+  res.render('pages/explore', {
+    user: req.session.user,
+    title: 'Explore Movies - MovieMates'
+  });
+
 });
 
 app.get('/', (req, res) => {
@@ -146,20 +147,20 @@ app.post('/login', async (req, res) => {
   //get the user from the usernmae
   const getUser = `SELECT * FROM users WHERE users.username = $1`;
   //let response = await db.none(insert, [username, hash]);
-  try{
-      let user = await db.one(getUser, username);
-      const match = await bcrypt.compare(req.body.password, user.password);
-      if (!match){
-          res.render('pages/login', {layout: 'main' , message: 'Incorrect username or password.'});
-      }else{
-          console.log('user logged in');
-          req.session.user = user;
-          req.session.save();
-          res.redirect('/findFriends');
-      }
-  }catch (err){
-      req.session.Message = 'An error occurred';
-      res.redirect('/register');
+  try {
+    let user = await db.one(getUser, username);
+    const match = await bcrypt.compare(req.body.password, user.password);
+    if (!match) {
+      res.render('pages/login', { layout: 'main', message: 'Incorrect username or password.' });
+    } else {
+      console.log('user logged in');
+      req.session.user = user;
+      req.session.save();
+      res.redirect('/findFriends');
+    }
+  } catch (err) {
+    req.session.Message = 'An error occurred';
+    res.redirect('/register');
 
   };
 });
@@ -171,8 +172,8 @@ app.get('/register', (req, res) => {
 
 // Register
 app.post('/register', async (req, res) => {
-    //hash the password using bcrypt library
-    const hash = await bcrypt.hash(req.body.password, 10);
+  //hash the password using bcrypt library
+  const hash = await bcrypt.hash(req.body.password, 10);
 
   const first_name = req.body.first_name;
   const last_name = req.body.last_name;
@@ -215,16 +216,17 @@ app.use(auth);
 app.get('/findFriends', async (req, res) => {
   const userId = req.session.user.id;
 
+
   try {
     const users = await db.any(
-     `
+      `
       SELECT 
         u.id,
         u.username,
         u.profile_icon,
         u.bio,
         u.first_name, 
-        u.last_name
+        u.last_name,
         CASE 
           WHEN f.following_user_id IS NOT NULL THEN TRUE
           ELSE FALSE
@@ -241,19 +243,18 @@ app.get('/findFriends', async (req, res) => {
       WHERE u.id != $1
       ORDER BY u.username ASC
       `,
-    [userId]
+      [userId]
     );
 
     res.render('pages/findFriends', {
-      email: req.session.user.email,
-      profile_icon: req.session.user.profile_icon,
+      user: req.session.user,
       users
     });
 
   } catch (err) {
     console.error('Error loading users:', err.message);
     res.render('pages/findFriends', {
-      email: req.session.user.email,
+      user: req.session.user,
       users: [],
       error: true,
       message: 'Something went wrong while loading users.'
@@ -319,6 +320,7 @@ app.post('/users/unfollow', async (req, res) => {
   } catch (err) {
     console.error('Error unfollowing user:', err.message);
     res.render('pages/findFriends', {
+      user: req.session.user,
       users: [],
       error: true,
       message: 'Something went wrong while trying to unfollow this user.'
@@ -364,6 +366,7 @@ app.get('/notifications', async (req, res) => {
     );
 
     res.render('pages/notifications', {
+      user: req.session.user,
       followRequests
     });
 
@@ -384,8 +387,8 @@ app.get('/notifications', async (req, res) => {
 //To log out
 app.get('/logout', (req, res) => {
   console.log("succesfully logged out");
-  req.session.destroy(function(err) {
-    res.render('pages/login', {message : 'Logged out Successfully'});
+  req.session.destroy(function (err) {
+    res.render('pages/login', { message: 'Logged out Successfully' });
   });
 });
 
@@ -539,9 +542,9 @@ const posts = [
 ];
 
 // Display the main page
-app.get('/social', (req, res) => {  
+app.get('/social', (req, res) => {
   const initialPosts = posts.slice(0, 5); // Load the first 5 posts
-  res.render('pages/social', { layout:'main', posts: initialPosts });
+  res.render('pages/social', { layout: 'main', user: req.session.user, posts: initialPosts });
 });
 
 // Load paginated posts
@@ -560,25 +563,25 @@ app.post('/add-to-watchlist', async (req, res) => {
 
   if (!title || !picture || !whereToWatch) {
     res.render('pages/social', { layout: 'main', message: 'Incomplete movie information.', status: 400 });
-    return; 
+    return;
   }
 
   db.tx(async insert => {
     // Remove the course from the student's list of courses.
     await insert.query('INSERT INTO watchlist (title, picture, whereToWatch) VALUES ($1, $2, $3)', [title, picture, whereToWatch]);
   }).then(social => {
-      res.render('pages/social', {layout: 'main', success: true, message: `Successfully added ${title} to your watchlist.`});
-    }).catch(err => {
-      res.render('pages/social', {layout: 'main', error: true, message: 'Failed to add movie to watchlist.'});
-    }); 
-  
+    res.render('pages/social', { layout: 'main', success: true, message: `Successfully added ${title} to your watchlist.` });
+  }).catch(err => {
+    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to add movie to watchlist.' });
+  });
+
 });
 
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
 
   if (!title) {
-    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400});
+    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400 });
     return;
   }
 
@@ -586,23 +589,24 @@ app.post('/remove-from-watchlist', async (req, res) => {
     // Remove the course from the student's list of courses.
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
-      res.render('pages/social', {layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.`});
-    }).catch(err => {
-      res.render('pages/social', {layout: 'main', error: true, message: 'Failed to remove movie from watchlist.'});
-    });  
+    res.render('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
+  }).catch(err => {
+    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
+  });
 });
 
 // *****************************************************
 //  <!-- Profile Page --!>
 // *****************************************************
 // Display the main page
+// If you want to use the current route format (no username in URL)
 app.get('/profile', (req, res) => {
-  const profileUsername = req.params.username;
+  const profileUsername = req.query.username || req.session.user.username;
   const loggedInUsername = req.session.user ? req.session.user.username : null;
   const isOwnProfile = loggedInUsername === profileUsername;
+
   res.render('pages/profile', {
-    username: req.session.user.username,
-    profile_icon: req.session.user.profile_icon,
+    user: req.session.user,
     isOwnProfile: isOwnProfile
   });
 });
@@ -611,7 +615,7 @@ app.get('/profile', (req, res) => {
 // <!-- Messages Page -->
 // *****************************************************
 
- // Socket.IO dependency
+// Socket.IO dependency
 io.on('connection', (socket) => {
   console.log('A user connected');
 
@@ -626,8 +630,8 @@ io.on('connection', (socket) => {
 
 app.get('/messaging', auth, async (req, res) => {
   const { user } = req.session;
-  
-  try{
+
+  try {
     const friends = await db.query(`
       SELECT u.id, u.username, u.profile_icon, COUNT(m.id) AS unread_count
         FROM users u
@@ -635,7 +639,7 @@ app.get('/messaging', auth, async (req, res) => {
         WHERE u.id != $1
         GROUP BY u.id, u.username, u.profile_icon`, [user.id]);
 
-      res.render('pages/messaging', {layout: 'main', friends: friends.rows} );
+    res.render('pages/messaging', { layout: 'main', friends: friends.rows });
   } catch (error) {
     console.error('Error fetching friends with unread messages:', error);
     res.status(500).send('Internal Server Error');
