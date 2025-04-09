@@ -15,7 +15,7 @@
       <!-- Friends List -->       
       <ul class="list-group list-group-flush" id="friends">
         {{#each allFriends}}
-          <li class="list-group-item friend d-flex align-items-center" data-user-id="{{this.id}}" data-user="{{this.name}}">
+          <li class="list-group-item friend d-flex align-items-center" data-user-id="{{this.id}}" data-user="{{this.name}}" data-user-unreadCount="{{this.unread_count}}">
             <div class="position-relative me-3">
               <img src="/resources/img/{{this.profile_icon}}" class="rounded-circle" alt="Profile Icon" width="50" height="50">
             </div>
