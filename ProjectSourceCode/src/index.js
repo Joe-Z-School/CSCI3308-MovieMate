@@ -723,10 +723,39 @@ app.get('/messaging', async (req, res) => {
   }
 });
 
-
-
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
+
+  // Fetch friends list for a user
+  socket.on('get-friends-list', async ({ userId }) => {
+    try {
+      const query = `
+        SELECT f.followed_user_id AS id, u.username AS name, u.profile_icon, 
+               f.latest_message, f.unread_count, f.last_active
+          FROM friends f
+          JOIN users u ON u.id = f.followed_user_id
+          WHERE f.following_user_id = $1
+      `;
+  
+      const result = await db.query(query, [userId]);
+      console.log('Query Result:', result); // Log the results
+  
+      const friendsList = result;
+  
+      if (!friendsList || friendsList.length === 0) {
+        console.error('No friends found for user:', userId);
+        socket.emit('friends-list-updated', []); // Send empty array if no friends found
+        return;
+      }
+  
+      // Send the updated friends list to the client
+      socket.emit('friends-list-updated', friendsList);
+      console.log('Sending updated friends list to client:', friendsList);
+    } catch (error) {
+      console.error('Failed to fetch friends list:', error);
+      socket.emit('friends-list-updated', []); // Send empty array if error
+    }
+  });  
 
   // Join room for the current user
   socket.on('join-room', async ({ senderId, recipientId }) => {
@@ -751,63 +780,69 @@ io.on('connection', (socket) => {
   });
 
   // Handle private messages
-  socket.on('private-message', async ({ senderId, recipientId, content }) => {
-    try {
-      console.log('Private message event received:', { senderId, recipientId, content }); // Debug incoming data
-  
-      // Save the message in the database
-      const query = `
-        INSERT INTO messages (sender_id, recipient_id, content, is_read, timestamp)
-        VALUES ($1, $2, $3, false, NOW());
-      `;
-      await db.query(query, [senderId, recipientId, content]);
-  
-      // Update metadata for friends (latest message, unread count, last active)
-      const updateMetadataQuery = `
-        UPDATE friends
-        SET latest_message = $1,
-            last_active = NOW(),
-            unread_count = CASE 
-              WHEN following_user_id = $2 AND followed_user_id = $3 THEN unread_count + 1
-              ELSE unread_count
-            END
-        WHERE (following_user_id = $2 AND followed_user_id = $3)
-           OR (following_user_id = $3 AND followed_user_id = $2);
-      `;
-      await db.query(updateMetadataQuery, [content, senderId, recipientId]);
-  
-      // Broadcast message to recipient
-      io.to(`user-${recipientId}`).emit('private-message', { senderId, content });
-      console.log(`Broadcasting message to recipient room user-${recipientId}:`, { senderId, content });
-    } catch (error) {
-      console.error('Failed to save or broadcast message:', error);
-    }
-  });
-  
+socket.on('private-message', async ({ senderId, recipientId, content }) => {
+  try {
+    console.log('Private message event received:', { senderId, recipientId, content }); // Debug incoming data
 
-  // Mark messages as read
-  socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
-    try {
-      const query = `
-        UPDATE messages
-        SET is_read = true
-        WHERE recipient_id = $1 AND sender_id = $2;
-      `;
-      await db.query(query, [recipientId, senderId]);  
+    // Save the message in the database
+    const query = `
+      INSERT INTO messages (sender_id, recipient_id, content, is_read, timestamp)
+      VALUES ($1, $2, $3, false, NOW());
+    `;
+    await db.query(query, [senderId, recipientId, content]);
 
-      const resetUnreadCountQuery = `
-        UPDATE friends
-        SET unread_count = 0
-        WHERE following_user_id = $2 AND followed_user_id = $1;
-      `;
-      await db.query(resetUnreadCountQuery, [recipientId, senderId]);  
+    // Update metadata for friends (latest message, unread count, last active)
+    const updateMetadataQuery = `
+      UPDATE friends
+      SET latest_message = $1,
+          last_active = NOW(),
+          unread_count = CASE 
+            WHEN (following_user_id = $2 AND followed_user_id = $3) THEN unread_count
+            WHEN (following_user_id = $3 AND followed_user_id = $2) THEN unread_count + 1
+            ELSE unread_count
+          END
+      WHERE (following_user_id = $2 AND followed_user_id = $3)
+         OR (following_user_id = $3 AND followed_user_id = $2);
+    `;
+    await db.query(updateMetadataQuery, [content, senderId, recipientId]);
 
-      socket.emit('update-unread-count', { senderId, recipientId, unreadCount: 0 });
-      console.log(`Unread count reset for senderId: ${senderId}, recipientId: ${recipientId}`);
-    } catch (error) {
-      console.error('Failed to mark messages as read:', error);
-    }
-  });
+    // Broadcast message to recipient
+    io.to(`user-${recipientId}`).emit('private-message', { senderId, content });
+    console.log(`Broadcasting message to recipient room user-${recipientId}:`, { senderId, content });
+
+    // Retrieve the current unread count for the recipient
+    const getCount = await db.query('SELECT unread_count FROM friends WHERE (following_user_id = $1 AND followed_user_id = $2) OR (following_user_id = $2 AND followed_user_id = $1)', [senderId, recipientId]);
+    console.log('Current count of unread messages for recipient:', getCount.rows[0].unread_count); // Debugging line
+  } catch (error) {
+    console.error('Failed to save or broadcast message:', error);
+  }
+});
+
+// Mark messages as read
+socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
+  try {
+    const query = `
+      UPDATE messages
+      SET is_read = true
+      WHERE recipient_id = $1 AND sender_id = $2;
+    `;
+    await db.query(query, [recipientId, senderId]);
+
+    // Reset unread count
+    const resetUnreadCountQuery = `
+      UPDATE friends
+      SET unread_count = 0
+      WHERE following_user_id = $2 AND followed_user_id = $1;
+    `;
+    await db.query(resetUnreadCountQuery, [recipientId, senderId]);
+
+    // Update unread count to 0
+    socket.emit('update-unread-count', { senderId, recipientId, unreadCount: 0 });
+    console.log(`Unread count reset for senderId: ${senderId}, recipientId: ${recipientId}`);
+  } catch (error) {
+    console.error('Failed to mark messages as read:', error);
+  }
+});
 
   // User disconnect handler
   socket.on('disconnect', () => {
