@@ -385,3 +385,24 @@ body {
 .btn-edit:hover {
     background-color: #4a3a6d;
 }
+
+footer {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    background-color: #f8f9fa;
+    color: #5F4B8B;
+    padding: 10px 0;
+    text-align: center;
+    z-index: 1000;
+ }
+ 
+ 
+ .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+ }
+ 
+ 
+ 
