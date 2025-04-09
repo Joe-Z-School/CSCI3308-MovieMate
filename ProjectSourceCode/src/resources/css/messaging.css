@@ -2,7 +2,7 @@
 :root{
   --darkBackground: #121212;
   --lighterBackground: #1a1a1a;
-  --lightPurpleAccent: #9683C3;
+  --lightPurpleAccent: #E9E8F7;
   --darkPurpleAccent: #5F4B8B;
 }
 
@@ -56,9 +56,13 @@
     font-size: 1rem; /* Slightly larger font for names */
   }
   
+  .text-muted {
+    color: var(--lightPurpleAccent); /* Muted text color for less important info */
+  }
+
   .recent-message {
     font-size: 0.85rem;
-    color: #b0b0b0;
+    color: var(--lightPurpleAccent) !important;
   }
   
   .extra-info {
@@ -68,7 +72,7 @@
   .extra-info small {
     display: block;
     font-size: 0.75rem; /* Subtle timestamp */
-    color: #b0b0b0;
+    color: var(--lightPurpleAccent) !important;
   }
   
   .unread-badge {
@@ -182,13 +186,6 @@
     color: var(--darkBackground);
   }
   
-  
-  /* Typing Status Styling */
-  #typing-status {
-    color: #d1c4e9; /* Purple accent for typing status */
-    font-style: italic;
-  }
-  
   .position-relative img {
     display: inline-block;
   }
@@ -196,6 +193,11 @@
   .badge {
     font-size: 0.75rem;
     padding: 0.4em;
+  }
+
+  .badge.unread-badge{
+    color: var(--lightPurpleAccent) !important; 
+    background-color: var(--darkPurpleAccent) !important;
   }
   
 
