@@ -6,36 +6,37 @@
   --darkPurpleAccent: #5F4B8B;
 }
 
-/* Add Top Spacing for Content Below Navbar */
+/* Spacing for Navbar */
 .container-fluid {
-    margin-top: 50px; /* Adjust this value to match your navbar height */
-    height: 100vh; /* Full viewport height */
+    margin-top: 60px; /* Navbar height */
+    margin-bottom: 60px;
+    height: calc(100vh - 120px); /* Full viewport height */
     display: flex;
-    flex-direction: row; /* Keep the layout in a row */
+    flex-direction: row; 
   }
   
-  /* Optional: Sticky Navbar to Prevent Overlaps */
+  /* Sticky Navbar to Prevent Overlap */
   header {
     position: sticky;
     top: 0;
-    z-index: 1020; /* Ensure it stays on top of other elements */
+    z-index: 1020;
   }
   
-  /* General Reset */
+  /* Reset */
   body {
     margin: 0;
     padding: 0;
     font-family: 'Arial', sans-serif;
-    background-color: var(--darkBackground); /* Dark mode background */
-    color: #e0e0e0; /* Light text color for readability */
+    background-color: var(--darkBackground); /* Dark background */
+    color: #e0e0e0; /* Light text color */
   }
   
-  /* Sidebar Styling */
+  /* Friends Sidebar */
   .friends-list {
     background-color: var(--lighterBackground); /* Slightly lighter dark background */
     border-radius: 8px;
     padding: 10px;
-    height: calc(95vh - 60px); /* Maintain a clean look */
+    height: calc(95vh - 60px);
     overflow-y: auto;
   }
 
@@ -53,11 +54,11 @@
   
   .friend-name {
     font-weight: bold;
-    font-size: 1rem; /* Slightly larger font for names */
+    font-size: 1rem; /* Font size for names */
   }
   
   .text-muted {
-    color: var(--lightPurpleAccent); /* Muted text color for less important info */
+    color: var(--lightPurpleAccent);
   }
 
   .recent-message {
@@ -71,7 +72,7 @@
   
   .extra-info small {
     display: block;
-    font-size: 0.75rem; /* Subtle timestamp */
+    font-size: 0.75rem; /* Small timestamp */
     color: var(--lightPurpleAccent) !important;
   }
   
@@ -82,11 +83,11 @@
 
   
   .friends-list h6 {
-    color: #d1c4e9; /* Purple accent for section headings */
+    color: #d1c4e9; /* Purple accent header text */
     font-weight: bold;
   }
   
-  /* List Group Styling */
+  /* List Group */
   .list-group-item {
     background-color: transparent;
     color: #e0e0e0;
@@ -104,33 +105,33 @@
   .chat-area {
     display: flex;
     flex-direction: column; /* Stacks header, messages, and input vertically */
-    height: calc(95vh - 60px); /* Adjust height to account for navbar */
+    height: 100%; /* Account for navbar */
   }
   
   .chat-header {
-    background-color: var(--lighterBackground); /* Darker background for header */
-    border-bottom: 2px solid var(--darkPurpleAccent); /* Purple accent border */
-    padding: 15px;
-    color: #d1c4e9; /* Purple accent for text */
+    background-color: var(--lighterBackground); /* Darker background header */
+    border-bottom: var(--darkPurpleAccent); /* Purple accent border */
+    color: #d1c4e9; /* Purple accent text */
     flex-shrink: 0;
+    height: 60px; 
   }
   
   .chat-body {
-    flex-grow: 1; /* Allows the chat body to grow and fill available space */
-    overflow-y: auto; /* Enables scrolling for long conversations */
+    flex-grow: 1; /* Chat body to grow and fill */
+    overflow-y: auto; /* Enables scrolling */
     background-color: #1c1c1c; /* Dark mode background */
     border-radius: 8px;
-    padding: 10px;
     box-shadow: inset 0px 0px 10px #000000;
     z-index: 1000;
-    overflow: visible;
+    max-height: calc(100vh - 120px); /* Prevents overflow */
+    padding: 15px;
   }
   
   .chat-footer {
     background-color: var(--lighterBackground);
-    border-top: 2px solid var(--darkPurpleAccent); /* Purple accent border */
+    border-top: var(--darkPurpleAccent); /* Purple accent border */
     flex-shrink: 0;
-    padding: 20px;
+    height: 60px;
   }
   
   #message-input {
@@ -141,9 +142,9 @@
   
   /* Style for Placeholder Text */
   #message-input::placeholder {
-    color: #d1c4e9; /* Light purple for readability */
-    opacity: 1; /* Ensure full visibility */
-    font-style: italic; /* Optional: adds a subtle stylistic touch */
+    color: #d1c4e9; /* Light purple text */
+    opacity: 1;
+    font-style: italic;
   }
   
   
@@ -164,7 +165,7 @@
   
   /* Hide File Input */
   input[type="file"] {
-    display: none; /* Completely hides the file input */
+    display: none; /* Hides the file input */
   }
   
   /* Style File Upload label as Button */
