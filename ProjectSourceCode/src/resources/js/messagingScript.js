@@ -22,29 +22,35 @@ if (!chatMessages) {
 // Declare friendId globally
 let friendId = null;
 let friendName = null;
+let activeFriendId = null;
 
 friendsList.forEach(friend => {
   friend.addEventListener('click', () => {
-    friendId = friend.getAttribute('data-user-id');
-    friendName = friend.getAttribute('data-user');
+    friendId = parseInt(friend.getAttribute('data-user-id'),10); // Get the friend's ID
+    friendName = friend.getAttribute('data-user'); // Get the friend's name
+    activeFriendId = friendId; // Track the active friend
+    console.log(`Friend selected: Friend ID = ${friendId}, Active Friend ID = ${activeFriendId}`);
+
     const friendProfileIcon = friend.querySelector('img').getAttribute('src');
 
+    // Notify the server to join the correct room
     socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
 
-    // Update chat header with friend's details
+    // Update the chat header with friend's details
     const chatHeader = document.getElementById('chat-user-name');
     const chatProfileIcon = document.getElementById('chat-profile-icon');
     chatHeader.textContent = friendName;
     chatProfileIcon.src = friendProfileIcon;
     chatProfileIcon.style.display = 'block';
 
-    // Clear chat messages for the new friend
+    // Clear chat messages for the newly selected friend
     chatMessages.innerHTML = "";
 
     // Emit event to mark messages as read
     socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId });
   });
 });
+
 
 function updateFriendsList(friends) {
   const friendsContainer = document.getElementById("friends");
@@ -105,6 +111,8 @@ function updateFriendsList(friends) {
 
 
 function openChat(friend) {
+
+  // Join the new friend's room
   console.log('Opening chat with friend:', friend); // Debug friend object
   friendId = friend.id;
   friendName = friend.name;
@@ -124,9 +132,6 @@ function openChat(friend) {
   socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
 }
 
-
-
-
 // Emit mark-messages-read when joining a room (now friendId will always be defined dynamically)
 socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId });
 
@@ -134,12 +139,14 @@ socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId 
 sendBtn.addEventListener('click', () => {
   const message = messageInput.value.trim();
   if (message) {
+    appendMessage({ message: message, user: 'You' });
     // Emit the message to the server
     socket.emit('private-message', {
       senderId: yourUserId, // Ensure yourUserId is defined correctly on the client
       recipientId: friendId, // Make sure friendId is set when a friend is selected
       content: message
     });
+
     messageInput.value = ""; // Clear the input field
   } else {
     console.error('Message content cannot be empty.');
@@ -161,13 +168,16 @@ messageInput.addEventListener("keydown", (event) => {
 
 // Receive a private message
 socket.on('private-message', ({ senderId, content }) => {
-  const user = senderId === yourUserId ? 'You' : friendName; // Define sender
-  if (content && user) {
-    appendMessage({ message: content, user }); // Add the message to the chat box
-  } else {
-    console.error('Message or user is undefined:', { content, user });
+  console.log(`Incoming Message: Sender ID = ${senderId}, Active Friend ID = ${activeFriendId}, Content = ${content}`);
+  
+  if (String(senderId) !== String(activeFriendId)) { // Ensure type consistency
+    console.log(`Message from ${senderId} ignored because activeFriendId is ${activeFriendId}.`);
+    return;
   }
+
+  appendMessage({ message: content, user: senderId === yourUserId ? 'You' : friendName });
 });
+
 
 
 // Load messages for the selected friend
@@ -190,6 +200,7 @@ socket.on('load-messages', (messages) => {
 
 // Function to display messages in the chat
 function appendMessage({ message, user }) {
+
   if (!message || !user) {
     console.error('Message or user is undefined in appendMessage:', { message, user });
     return;
