@@ -210,7 +210,7 @@ const auth = (req, res, next) => {
 app.use(auth);
 
 // *****************************************************
-// <!-- User Following/Followes -->
+// <!-- User Following/Followers -->
 // *****************************************************
 app.get('/findFriends', async (req, res) => {
   const userId = req.session.user.id;
