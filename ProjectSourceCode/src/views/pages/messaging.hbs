@@ -25,7 +25,7 @@
             </div>
             <div class="extra-info text-end">
               <small class="text-muted">{{this.last_active}}</small>
-              <span class="badge bg-primary unread-badge">{{this.unread_count}}</span>
+              <span class="badge unread-badge">{{this.unread_count}}</span>
             </div>
           </li>
         {{else}}
@@ -43,19 +43,11 @@
       </div>
       <div class="flex-grow-1">
         <h5 id="chat-user-name">Select A Friend To Start Chatting</h5>
-      </div>
-      <div class="dropdown ms-auto" id="chat-dropdown" style="display: none;">
-        <i class="bi bi-three-dots-vertical" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;"></i>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#">View Profile</a></li>
-          <li><a class="dropdown-item" href="#">Add to Favorites</a></li>
-          <li><a class="dropdown-item text-danger" href="#">Block User</a></li>
-        </ul>
-      </div>
+      </div>     
     </div>
     
     <div class="chat-body" id="chat-messages">
-      <!-- Messages will be dloaded here -->
+      <!-- Messages will be loaded here -->
     </div>
     <div class="chat-footer">
       <div class="d-flex">
