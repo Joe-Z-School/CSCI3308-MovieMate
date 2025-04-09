@@ -280,7 +280,14 @@ exports.addReview = async (req, res) => {
 // get reviews for a movie
 exports.getMovieReviews = async (req, res) => {
   try {
-    const { imdbId } = req.params;
+    const { imdbId } = req.params; 
+    
+    if (!imdbId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'IMDB ID is required to fetch reviews' 
+      });
+    }
     
     // get the movie ID from our database
     const movieResult = await db.query('SELECT id FROM movies WHERE imdb_id = $1', [imdbId]);
@@ -308,7 +315,7 @@ exports.getMovieReviews = async (req, res) => {
   }
 };
 
-// Filter movies (when no specific search query is provided)
+// filter movies (when no specific search query is provided)
 exports.filterMovies = async (req, res) => {
   try {
     const { genres, year, type, director, actor, minRating, page = 1 } = req.query;
@@ -379,14 +386,27 @@ exports.filterMovies = async (req, res) => {
   }
 };
 
-// Get trending movies based on type (popular, latest, recommended)
+// Get movie trailer
+exports.getMovieTrailer = async (req, res) => {
+  try {
+    const { query } = req.params;
+    
+    const result = await omdbApi.getMovieTrailer(query);
+    return res.json(result);
+  } catch (error) {
+    console.error('Error in getMovieTrailer controller:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+// get trending movies based on type (popular, latest, recommended)
 exports.getTrendingMovies = async (req, res) => {
   try {
     const { type = 'popular' } = req.query;
     
     let movieIds = [];
     
-    // Different lists based on trending type
+    // different lists based on trending type
     if (type === 'popular') {
       movieIds = [
         'tt1745960', // Top Gun: Maverick

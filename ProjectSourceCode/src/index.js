@@ -111,14 +111,17 @@ app.post('/api/movies/review', movieController.addReview);
 app.get('/api/movies/reviews/:imdbId', movieController.getMovieReviews);
 app.get('/api/movies/new', movieController.getNewMovies);
 
-// New routes for the enhanced explore page
+// Routes for the enhanced explore page
 app.get('/api/movies/filter', movieController.filterMovies);
 app.get('/api/movies/trending', movieController.getTrendingMovies);
 app.get('/api/placeholder/:width/:height', movieController.getPlaceholderImage);
 
+// Details page
+app.get('/api/movies/trailer/:query', movieController.getMovieTrailer);
+
 // Page Routes
 app.get('/movies/details/:imdbId', (req, res) => {
-  res.render('pages/movie-details', {
+  res.render('pages/movieDetails', {
     imdbId: req.params.imdbId,
     user: req.session.user
   });
@@ -130,6 +133,36 @@ app.get('/explore', (req, res) => {
     title: 'Explore Movies - MovieMates'
   });
 
+});
+
+// YouTube API route
+app.get('/api/movies/trailer/:query', async (req, res) => {
+  try {
+    const { query } = req.params;
+    const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+      params: {
+        part: 'snippet',
+        maxResults: 1,
+        q: `${query} official trailer`,
+        type: 'video',
+        key: process.env.YOUTUBE_API_KEY
+      }
+    });
+    
+    if (response.data.items && response.data.items.length > 0) {
+      const videoId = response.data.items[0].id.videoId;
+      res.json({ 
+        success: true, 
+        videoId: videoId,
+        embedUrl: `https://www.youtube.com/embed/${videoId}`
+      });
+    } else {
+      res.json({ success: false, message: 'No trailer found' });
+    }
+  } catch (error) {
+    console.error('Error fetching trailer:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch trailer' });
+  }
 });
 
 app.get('/', (req, res) => {
