@@ -492,29 +492,32 @@ app.post('/notifications/dismiss/:id', async (req, res) => {
 //allows the user to like and unlike a post
 app.post("/api/posts/:id/like", async (req, res) => {
   const userId = req.session.user?.id;
-  const postId = req.params.id;
+  const postId = parseInt(req.params.id);
 
-  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  if (!userId || isNaN(postId)) {
+    return res.status(400).json({ error: "Bad request" });
+  }
 
   try {
-    const existing = await db.oneOrNone(
+    // Check if user already liked the post
+    const alreadyLiked = await db.oneOrNone(
       "SELECT * FROM post_likes WHERE user_id = $1 AND post_id = $2",
       [userId, postId]
     );
 
-    if (existing) {
-      // Unlike
+    if (alreadyLiked) {
+      // Unlike it
       await db.none(
         "DELETE FROM post_likes WHERE user_id = $1 AND post_id = $2",
         [userId, postId]
       );
       await db.none(
-        "UPDATE posts SET like_count = GREATEST(like_count - 1, 0) WHERE id = $1",
+        "UPDATE posts SET like_count = like_count - 1 WHERE id = $1",
         [postId]
       );
-      return res.status(200).json({ action: "unliked" });
+      return res.json({ action: "unliked" });
     } else {
-      // Like
+      // Like it
       await db.none(
         "INSERT INTO post_likes (user_id, post_id) VALUES ($1, $2)",
         [userId, postId]
@@ -523,40 +526,40 @@ app.post("/api/posts/:id/like", async (req, res) => {
         "UPDATE posts SET like_count = like_count + 1 WHERE id = $1",
         [postId]
       );
-      return res.status(200).json({ action: "liked" });
+      return res.json({ action: "liked" });
     }
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Error in like route:", err);
+    return res.status(500).json({ error: "Something went wrong" });
   }
 });
 
 
-app.post("/api/posts/:id/comment", async (req, res) => {
+
+app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async (req, res) => {
   const userId = req.session.user?.id;
   const postId = req.params.id;
-  const { comment } = req.body;
+  const comment = req.body.comment;
 
-  if (!userId || !comment) return res.status(400).json({ error: "Bad request" });
+  console.log("📥 Incoming comment:", { userId, postId, comment });
+
+  if (!userId || !comment) {
+    return res.status(400).send("Missing user or comment");
+  }
 
   try {
     await db.none(
       "INSERT INTO post_comments (user_id, post_id, comment) VALUES ($1, $2, $3)",
       [userId, postId, comment]
     );
+    await db.none("UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1", [postId]);
 
-    await db.none(
-      "UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1",
-      [postId]
-    );
-
-    res.status(200).json({ message: "Comment added" });
+    res.redirect("/social");
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("💥 Comment DB error:", err);
+    res.status(500).send("Server error");
   }
 });
-
 
 
 
@@ -678,47 +681,10 @@ app.get('/dev/create-notifications', async (req, res) => {
 // *****************************************************
 // <!-- Friends Posts -->
 // *****************************************************
-
-
-// Sample data
-const posts = [
-  { id: '1', user: 'A', title: 'Inception', review: '4', description: 'A mind-bending thriller by Nolan.', cover: 'cover1.jpg', whereToWatch: 'Netflix' },
-  { id: '2', user: 'B', title: 'Interstellar', review: '3.5', description: 'Explores the stars and time.', cover: 'cover2.jpg', whereToWatch: 'Hulu' },
-  { id: '3', user: 'C', title: 'TestTitle3', review: '3', description: 'Test Description for TestTitle3.', cover: 'cover3.jpg', whereToWatch: 'HBO' },
-  { id: '4', user: 'D', title: 'TestTitle4', review: '1.1', description: 'Test Description for TestTitle4.', cover: 'cover4.jpg', whereToWatch: 'Netflix' },
-  { id: '5', user: 'E', title: 'TestTitle5', review: '5', description: 'Test Description for TestTitle5.', cover: 'cover5.jpg', whereToWatch: 'HBO' },
-  { id: '6', user: 'F', title: 'TestTitle6', review: '4.1', description: 'Test Description for TestTitle6.', cover: 'cover6.jpg', whereToWatch: 'Paramount' },
-  { id: '7', user: 'G', title: 'TestTitle7', review: '2.5', description: 'Test Description for TestTitle7.', cover: 'cover7.jpg', whereToWatch: 'Disney' },
-  { id: '8', user: 'H', title: 'TestTitle8', review: '3', description: 'Test Description for TestTitle8.', cover: 'cover8.jpg', whereToWatch: 'Netflix' },
-  { id: '9', user: 'I', title: 'TestTitle9', review: '1', description: 'Test Description for TestTitle9.', cover: 'cover9.jpg', whereToWatch: 'Netflix' },
-  { id: '10', user: 'J', title: 'TestTitle10', review: '1', description: 'Test Description for TestTitle10.', cover: 'cover10.jpg', whereToWatch: 'HBO' },
-  { id: '11', user: 'K', title: 'TestTitle11', review: '4', description: 'Test Description for TestTitle11.', cover: 'cover11.jpg', whereToWatch: 'Hulu' },
-  { id: '12', user: 'L', title: 'TestTitle12', review: '2.1', description: 'Test Description for TestTitle12.', cover: 'cover12.jpg', whereToWatch: 'Hulu' },
-  { id: '13', user: 'M', title: 'TestTitle13', review: '4.8', description: 'Test Description for TestTitle13.', cover: 'cover13.jpg', whereToWatch: 'Disney' },
-  { id: '14', user: 'N', title: 'TestTitle14', review: '2.7', description: 'Test Description for TestTitle14.', cover: 'cover14.jpg', whereToWatch: 'Disney' },
-  { id: '15', user: 'O', title: 'TestTitle15', review: '1.9', description: 'Test Description for TestTitle15.', cover: 'cover15.jpg', whereToWatch: 'Paramount' }
-];
-
-
-// Display the main page
-app.get('/social', (req, res) => {
-  const initialPosts = posts.slice(0, 5); // Load the first 5 posts
-  res.render('pages/social', { layout: 'main', user: req.session.user, posts: initialPosts });
-});
-
-// Load paginated posts
-app.get('/load-more', (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Default to page 1
-  const limit = 5; // Number of posts per batch
-  const startIndex = (page - 1) * limit;
-  const paginatedPosts = posts.slice(startIndex, startIndex + limit);
-
-  res.json({ posts: paginatedPosts });
-});
-
-/*
 app.get('/social', async (req, res) => {
   const userId = req.session.user?.id;
+  const limit = 5;
+  const offset = 0; // first 5 posts
 
   try {
     const posts = await db.any(`
@@ -739,17 +705,19 @@ app.get('/social', async (req, res) => {
       FROM posts
       JOIN users ON posts.user_id = users.id
       ORDER BY posts.created_at DESC
-      LIMIT 5
-    `, [userId || 0]);
+      LIMIT $2 OFFSET $3
+    `, [userId || 0, limit, offset]);
 
     res.render('pages/social', { layout: 'main', user: req.session.user, posts });
   } catch (err) {
-    console.error("Error fetching posts:", err);
+    console.error("Error loading initial posts:", err);
     res.status(500).send("Internal Server Error");
   }
 });
 
+
 app.get('/load-more', async (req, res) => {
+  console.log("GET /load-more body:", req.body); // should be undefined or {}
   const page = parseInt(req.query.page) || 1;
   const limit = 5;
   const offset = (page - 1) * limit;
@@ -775,15 +743,17 @@ app.get('/load-more', async (req, res) => {
       JOIN users ON posts.user_id = users.id
       ORDER BY posts.created_at DESC
       LIMIT $2 OFFSET $3
-    `, [userId || 0, limit, offset]);
+    `, [userId, limit, offset]);
 
-    res.json({ posts });
+    return res.json({ posts });
   } catch (err) {
     console.error("Error loading more posts:", err);
     res.status(500).json({ error: "Failed to load posts" });
   }
 });
-*/
+
+
+
 
 // Temporary in-memory storage for the watchlist
 app.post('/add-to-watchlist', async (req, res) => {
