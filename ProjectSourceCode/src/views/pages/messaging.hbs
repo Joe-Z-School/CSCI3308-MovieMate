@@ -46,6 +46,11 @@
       </div>     
     </div>
     
+    <!-- New Messages Divider (hidden by default) -->
+    <div class="new-messages-divider" style="display: none;">
+        <span>----------------New Messages--------------------</span>
+    </div>
+
     <div class="chat-body" id="chat-messages">
       <!-- Messages will be loaded here -->
     </div>
@@ -72,8 +77,13 @@
 </div>
 </div>
 
-
-
 <script>
-  const yourUserId = {{activeUser.id}}; // Pass the current user's ID to the client
+  // Pass data to messagingScript
+  const yourUserId = {{activeUser.id}};
+  const activeUser = {
+    id: {{activeUser.id}},
+    name: "{{activeUser.name}}",
+    profile_icon: "{{activeUser.profile_icon}}"
+  };
 </script>
+
