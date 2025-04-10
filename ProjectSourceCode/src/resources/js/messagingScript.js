@@ -8,7 +8,6 @@ const sendBtn = document.getElementById("send-btn");
 const emojiBtn = document.getElementById('emoji-btn');
 const fileInput = document.getElementById("file-input"); 
 const chatMessages = document.getElementById("chat-messages");
-const friendsList = document.querySelectorAll('.friend'); // Select all friends
 
 const friendsContainer = document.getElementById("friends");
 if (!friendsContainer) {
@@ -24,33 +23,6 @@ let friendName = null;
 let activeFriendId = null;
 let unreadCount = null;
 
-friendsList.forEach(friend => {
-  friend.addEventListener('click', () => {
-    friendId = parseInt(friend.getAttribute('data-user-id'),10); // Get the friend's ID
-    friendName = friend.getAttribute('data-user'); // Get the friend's name
-    activeFriendId = friendId; // Track the active friend
-    unreadCount = friend.getAttribute('data-user-unreadCount'); // Get the unread count
-    console.log(`Friend selected: Friend ID = ${friendId}, Active Friend ID = ${activeFriendId}`);
-
-    const friendProfileIcon = friend.querySelector('img').getAttribute('src');
-
-    // Notify the server to join the correct room
-    socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
-
-    // Update the chat header with friend's details
-    const chatHeader = document.getElementById('chat-user-name');
-    const chatProfileIcon = document.getElementById('chat-profile-icon');
-    chatHeader.textContent = friendName;
-    chatProfileIcon.src = friendProfileIcon;
-    chatProfileIcon.style.display = 'block';
-
-    // Clear chat messages for the newly selected friend
-    chatMessages.innerHTML = "";
-
-    // Emit event to mark messages as read
-    socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId });
-  });
-});
 
 // Call this function to request the updated friends list from the server
 function updateFriendsList() {
@@ -105,7 +77,9 @@ function updateFriendsListOnUI(friendsList) {
     friendName.textContent = friend.name;
     const recentMessage = document.createElement("div");
     recentMessage.className = "recent-message text-muted";
-    recentMessage.textContent = friend.latest_message || "No recent messages";
+    const rawMessage = friend.latest_message || "No recent messages";
+    recentMessage.textContent = rawMessage.length > 22 ? rawMessage.slice(0, 22) + "..." : rawMessage;
+
     friendInfo.appendChild(friendName);
     friendInfo.appendChild(recentMessage);
     listItem.appendChild(friendInfo);
@@ -141,58 +115,69 @@ function updateFriendsListOnUI(friendsList) {
 
 
 function openChat(friend) {
-  // Join the new friend's room
-  console.log('Opening chat with friend:', friend); // Debug friend object
+  console.log('Opening chat with friend:', friend);
   friendId = friend.id;
   friendName = friend.name;
+  activeFriendId = friend.id;
 
-  // Update chat header
   const chatHeader = document.getElementById("chat-user-name");
   const chatProfileIcon = document.getElementById("chat-profile-icon");
   chatHeader.textContent = friendName;
   chatProfileIcon.src = `/resources/img/${friend.profile_icon}`;
   chatProfileIcon.style.display = "block";
 
-  // Clear chat messages
   const chatMessages = document.getElementById('chat-messages');
   chatMessages.innerHTML = "";
 
   socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
 
-  // Reset the unread count
   socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId });
   const unreadBadge = document.querySelector(`[data-user-id="${friendId}"] .unread-badge`);
   if (unreadBadge) {
-    unreadBadge.textContent = "0"; // Update the unread badge to 0
+    unreadBadge.textContent = "0";
   }
 }
 
+
+
 // Listen for the updated unread count and update the UI accordingly
 socket.on('update-unread-count', ({ senderId, recipientId, unreadCount }) => {
-  // Update the unread count on the UI for the specific friend
-  const unreadBadge = document.querySelector(`[data-user-id="${recipientId}"] .unread-badge`);
+  // Don't update unread count if we're actively chatting with that friend
+  if (activeFriendId === senderId) {
+    console.log('In chat with sender, skipping unread badge update.');
+    return;
+  }
+
+  const unreadBadge = document.querySelector(`[data-user-id="${senderId}"] .unread-badge`);
   if (unreadBadge) {
-    unreadBadge.textContent = unreadCount; // Update the badge with the new unread count
+    unreadBadge.textContent = unreadCount;
   }
 });
+
 
 // Send a private message using send button
 sendBtn.addEventListener('click', () => {
   const message = messageInput.value.trim();
   if (message) {
-    appendMessage({ message: message, user: 'You' });
-    // Emit the message to the server
+    appendMessage({ 
+      message: message, 
+      user: 'You',
+      profileIcon: `/resources/img/${activeUser.profile_icon}`,
+      timestamp: new Date()
+    });
+
     socket.emit('private-message', {
-      senderId: yourUserId, // Ensure yourUserId is defined correctly on the client
-      recipientId: friendId, // Make sure friendId is set when a friend is selected
+      senderId: yourUserId,
+      recipientId: friendId,
       content: message
     });
 
-    messageInput.value = ""; // Clear the input field
+    messageInput.value = "";
   } else {
     console.error('Message content cannot be empty.');
   }
 });
+
 
   
 // Send messages with Enter and adding new lines with Shift+Enter
@@ -233,45 +218,80 @@ socket.on('private-message', ({ senderId, content }) => {
     return;
   }
 
-  appendMessage({ message: content, user: senderId === yourUserId ? 'You' : friendName });
+  appendMessage({
+    message: content,
+    user: senderId === yourUserId ? 'You' : friendName,
+    profileIcon: senderId === yourUserId 
+      ? `/resources/img/${activeUser.profile_icon}` 
+      : `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
+    timestamp: new Date()
+  });
+  
 });
 
 // Load messages for the selected friend
 socket.on('load-messages', (messages) => {
-  const chatMessages = document.getElementById('chat-messages');
-  chatMessages.innerHTML = ""; // Clear previous messages
+  chatMessages.innerHTML = "";
 
   messages.forEach(({ sender_id, content, timestamp }) => {
-    const sender = sender_id === yourUserId ? 'You' : friendName; // Replace `friendName` dynamically
-    const msgElement = document.createElement('div');
-    if (!sender_id || !content) {
-      console.error('Sender or content is undefined:', { sender_id, content });
-    }
-    msgElement.textContent = `${sender} (${new Date(timestamp).toLocaleString()}): ${content}`;
-    chatMessages.appendChild(msgElement);
+    const isUser = sender_id === yourUserId;
+    appendMessage({
+      message: content,
+      user: isUser ? 'You' : friendName,
+      profileIcon: isUser
+        ? `/resources/img/${activeUser.profile_icon}`
+        : `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
+      timestamp
+    });
   });
+  
 
-  chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to the latest message
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 });
 
-// Function to display messages in the chat
-function appendMessage({ message, user }) {
-
+function appendMessage({ message, user, profileIcon = null, timestamp = new Date() }) {
   if (!message || !user) {
     console.error('Message or user is undefined in appendMessage:', { message, user });
     return;
   }
-  const msgElement = document.createElement('div');
-  msgElement.textContent = `${user}: ${message}`;
-  const chatMessages = document.getElementById('chat-messages');
-  if (!chatMessages) {
-    console.error('chat-messages container not found.');
-    return;
-  }
-  chatMessages.appendChild(msgElement); // Append the message to the chat window
-  chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the latest message
-  console.log('Message appended to chat window:', { user, message });
+
+  const msgWrapper = document.createElement('div');
+  msgWrapper.classList.add('chat-message');
+
+  const isSentByUser = user === 'You';
+  msgWrapper.classList.add(isSentByUser ? 'sent' : 'received');
+
+  const profileImg = document.createElement('img');
+  profileImg.src = profileIcon || '/resources/img/default-icon.png'; // fallback image
+  profileImg.alt = 'Profile';
+  profileImg.classList.add('profile-icon');
+
+  const messageContent = document.createElement('div');
+  messageContent.classList.add('message-content');
+
+  const meta = document.createElement('div');
+  meta.classList.add('message-meta');
+
+  const formattedTime = formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+
+  meta.textContent = `${user} • ${formattedTime}`;
+  
+  const bubble = document.createElement('div');
+  bubble.classList.add('chat-bubble');
+  bubble.textContent = message;
+
+  messageContent.appendChild(meta);
+  messageContent.appendChild(bubble);
+
+  msgWrapper.appendChild(profileImg);
+  msgWrapper.appendChild(messageContent);
+
+  chatMessages.appendChild(msgWrapper);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  console.log('Styled message appended:', { user, message });
 }
+
 
 // Send Emojis
 emojiBtn.addEventListener("click", () => {
