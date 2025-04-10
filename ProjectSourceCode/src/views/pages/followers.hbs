@@ -1,23 +1,56 @@
 <style>
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-    }
+  body {
+    display: flex;
+    height: 100vh;
+    margin: 20px;
+    background-color: #000000;
+    flex-direction: column;
+  }
+
+  .cards-container {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 20px; 
+  }
+
+  .card {
+    background-color: rgb(52, 52, 57);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(65, 43, 74, 0.1);
+    width: 250px; 
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center; 
+  }
+
+  .card img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+  }
+
+  .card .name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #e9defa;
+    margin-bottom: 10px;
+  }
+
 </style>
+
 {{> nav}}
-<div class="followers-container">
-    <h1>Followers</h1>
-    <div class="followers-list">
-        {{#each followers}}
-        <div class="follower-item">
-            <img src="../../resources/img/{{this.profile_icon}}" alt="Profile Picture" class="follower-pic">
-            <div class="follower-info">
-                <h3>{{this.first_name}}</h3>
-                <p>@{{this.username}}</p>
-            </div>
-        </div>
-        {{/each}}
+<h1 style="color: #e9defa">Followers</h1>
+<div class="cards-container">
+  {{#each followers}}
+    <div class="card">
+      <img src="../../resources/img/{{this.profile_icon}}" alt="Profile Picture" class="follower-pic">
+      <div class="name">{{this.first_name}} {{this.last_name}}</div>
+      <p style="color: #735aaa">@{{this.username}}</p>
+      <p style="color: #e9defa">{{this.bio}}</p>
     </div>
+  {{/each}}
 </div>

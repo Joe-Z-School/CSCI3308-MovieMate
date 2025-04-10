@@ -667,7 +667,7 @@ app.get('/profile/followers', async (req, res) => {
 
   try {
     const followers = await db.any(`
-          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name
+          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name, u.bio
           FROM friends f
           JOIN users u ON f.following_user_id = u.id
           WHERE f.followed_user_id = $1
@@ -688,7 +688,7 @@ app.get('/profile/following', async (req, res) => {
 
   try {
     const following = await db.any(`
-          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name
+          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name, u.bio
           FROM friends f
           JOIN users u ON f.followed_user_id = u.id
           WHERE f.following_user_id = $1
