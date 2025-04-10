@@ -1,0 +1,23 @@
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+</style>
+{{> nav}}
+<div class="following-container">
+    <h1>Following</h1>
+    <div class="following-list">
+        {{#each following}}
+        <div class="following-item">
+            <img src="../../resources/img/{{this.profile_icon}}" alt="Profile Picture" class="following-pic">
+            <div class="following-info">
+                <h3>{{this.first_name}}</h3>
+                <p>@{{this.username}}</p>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>
