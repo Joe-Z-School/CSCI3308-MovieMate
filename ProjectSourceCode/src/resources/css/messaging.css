@@ -125,6 +125,107 @@
     z-index: 1000;
     max-height: calc(100vh - 120px); /* Prevents overflow */
     padding: 15px;
+    padding-bottom: 15px;
+  }
+
+  .chat-message {
+    display: flex;
+    align-items: flex-start; /* Align items correctly */
+    gap: 8px;
+    margin-bottom: 10px;
+  }  
+  
+  .chat-message .profile-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .chat-message.sent {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end; /* Align profile icon with bottom of bubble */
+    gap: 8px;
+  }
+
+  .chat-message.received {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start; /* Align profile icon with top of bubble */
+    gap: 8px;
+  }
+  .chat-message.received .profile-icon {
+    order: 1; /* Profile icon on the left */
+    align-self: flex-start;
+  }
+  .chat-message.received .message-content {
+    order: 2;
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .chat-message.sent .profile-icon {
+    order: 2; /* Profile icon on the right */
+    align-self: flex-end;
+  }
+
+  .chat-message.sent .message-content {
+    order: 1;
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  
+  .message-content {
+    display: flex;
+    flex-direction: column;
+    max-width: 75%;
+    margin: 0 10px;
+  }
+  
+  .message-meta {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 4px;
+  }
+  
+  .chat-bubble {
+    word-break: break-word;
+    overflow-wrap: break-word; /* Prevent overflow */
+    padding: 10px 14px;
+    background-color: #f1f0f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin: 0;
+    display: inline-block;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Received message bubble specific styles */
+  .received .chat-bubble {
+    background-color: var(--lightPurpleAccent);
+    color: black;
+    border-bottom-left-radius: 0;
+    max-width: 75%; /* Adjust the width */
+    padding: 10px 14px; /* Adjust padding to fit better */
+    white-space: normal; /* Ensures text inside the bubble wraps */
+    word-break: break-word; /* Forces breaking long words */
+    margin-right: 10px; /* Slight margin to separate from profile picture */
+    display: inline-block; /* Ensures bubble shrinks to fit text */
+    overflow-wrap: break-word; /* Makes sure words are wrapped */
+    line-height: 1.3; /* Slightly tighter line-height for better visual fit */
+  }
+  
+  .sent .chat-bubble {
+    background-color: var(--darkPurpleAccent);
+    color: white;
+    border-bottom-right-radius: 0;
   }
   
   .chat-footer {
@@ -132,6 +233,7 @@
     border-top: var(--darkPurpleAccent); /* Purple accent border */
     flex-shrink: 0;
     height: 60px;
+    margin-top: 10px;
   }
   
   #message-input {
@@ -146,6 +248,27 @@
     opacity: 1;
     font-style: italic;
   }
+
+  /* Divider for new unread messages */
+.new-messages-divider {
+  background-color: #2a2a2a; /* Background color for the divider */
+  color: var(--lightPurpleAccent); /* Text color for the divider */
+  font-size: 0.9rem; /* Adjust font size */
+  text-align: center;
+  padding: 10px 0;
+  margin: 10px 0;
+  border-top: 2px solid #444; /* A subtle top border */
+  border-bottom: 2px solid #444; /* A subtle bottom border */
+  position: relative;
+}
+
+.new-messages-divider span {
+  background-color: var(--darkBackground); /* Dark background for the text */
+  padding: 0 15px;
+  position: relative;
+  z-index: 1; /* Ensure text stays above the divider line */
+}
+
   
   
   button {
