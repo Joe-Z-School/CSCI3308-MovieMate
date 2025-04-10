@@ -6,8 +6,6 @@ const movieCache = {};
 const searchCache = {};
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
-const trailerCache = {};
-
 class OmdbApiService {
   constructor() {
     this.apiKey = OMDB_API_KEY;
@@ -115,56 +113,6 @@ class OmdbApiService {
     } catch (error) {
       console.error('Error fetching movie details:', error.message);
       return { success: false, error: 'Failed to fetch movie details' };
-    }
-  }
-
-  // Get movie trailer from YouTube
-  async getMovieTrailer(query) {
-    // Create a cache key
-    const cacheKey = `trailer-${query}`;
-    
-    // Check cache first
-    if (trailerCache[cacheKey] && trailerCache[cacheKey].timestamp > Date.now() - CACHE_DURATION) {
-      console.log('Returning cached trailer results');
-      return trailerCache[cacheKey].data;
-    }
-    
-    try {
-      const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
-        params: {
-          part: 'snippet',
-          maxResults: 1,
-          q: `${query} official trailer`,
-          type: 'video',
-          key: process.env.YOUTUBE_API_KEY
-        }
-      });
-      
-      let result;
-      if (response.data.items && response.data.items.length > 0) {
-        const videoId = response.data.items[0].id.videoId;
-        result = { 
-          success: true, 
-          videoId: videoId,
-          embedUrl: `https://www.youtube.com/embed/${videoId}`
-        };
-      } else {
-        result = { success: false, message: 'No trailer found' };
-      }
-      
-      // Store in cache
-      trailerCache[cacheKey] = {
-        timestamp: Date.now(),
-        data: result
-      };
-      
-      return result;
-    } catch (error) {
-      console.error('Error fetching trailer:', error);
-      return { 
-        success: false, 
-        error: 'Failed to fetch trailer' 
-      };
     }
   }
 }

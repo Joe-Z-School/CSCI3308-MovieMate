@@ -1,4 +1,5 @@
 const omdbApi = require('../api/omdbApi');
+const youtubeApi = require('../api/youtubeApi');
 const db = require('../index').db;
 
 // Get new/trending movies
@@ -390,8 +391,9 @@ exports.filterMovies = async (req, res) => {
 exports.getMovieTrailer = async (req, res) => {
   try {
     const { query } = req.params;
+    const imdbId = req.query.imdbId;
     
-    const result = await omdbApi.getMovieTrailer(query);
+    const result = await youtubeApi.getMovieTrailer(query, imdbId);
     return res.json(result);
   } catch (error) {
     console.error('Error in getMovieTrailer controller:', error);
