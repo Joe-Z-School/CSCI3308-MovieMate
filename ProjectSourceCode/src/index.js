@@ -130,7 +130,6 @@ app.get('/explore', (req, res) => {
     user: req.session.user,
     title: 'Explore Movies - MovieMates'
   });
-
 });
 
 app.get('/', (req, res) => {
@@ -408,10 +407,12 @@ app.post('/users/cancel-request', async (req, res) => {
 // *****************************************************
 // <!--Notifications -->
 // *****************************************************
+
 app.get('/notifications', async (req, res) => {
   const userId = req.session.user.id;
 
   try {
+    // Get incoming follow requests
     const followRequests = await db.any(
       `SELECT fr.id AS request_id, u.username, u.profile_icon AS profile_pic, fr.requested_at
        FROM follow_requests fr
@@ -421,17 +422,29 @@ app.get('/notifications', async (req, res) => {
       [userId]
     );
 
+    // Get general notifications for the logged-in user
+    const generalNotifications = await db.any(
+      `SELECT n.id, n.message, u.username AS sender_username, u.profile_icon, n.created_at
+       FROM notifications n
+       JOIN users u ON u.id = n.sender_id
+       WHERE n.recipient_id = $1
+       ORDER BY n.created_at DESC`,
+      [userId]
+    );
+
     res.render('pages/notifications', {
       user: req.session.user,
-      followRequests
+      followRequests,
+      generalNotifications
     });
 
   } catch (err) {
-    console.error('Error loading follow requests:', err.message);
+    console.error('Error loading notifications:', err.message);
     res.render('pages/notifications', {
       followRequests: [],
+      generalNotifications: [],
       error: true,
-      message: 'Something went wrong while loading requests.'
+      message: 'Something went wrong while loading notifications.'
     });
   }
 });
@@ -478,6 +491,12 @@ app.post('/follow-request/approve/:id', async (req, res) => {
         `UPDATE users SET followers_count = followers_count + 1 WHERE id = $1`,
         [request.receiver_id]
       );
+      // 👇 Create notification for requester
+      await t.none(
+        `INSERT INTO notifications (recipient_id, sender_id, message)
+         VALUES ($1, $2, $3)`,
+        [request.requester_id, request.receiver_id, 'accepted your follow request']
+      );
     });
 
     res.redirect('/notifications#requests'); // Redirect back to notifications after approval
@@ -503,6 +522,138 @@ app.post('/follow-request/decline/:id', async (req, res) => {
   }
 });
 
+//dismissing notifications:
+app.post('/notifications/dismiss/:id', async (req, res) => {
+  const notifId = parseInt(req.params.id);
+  const userId = req.session.user.id;
+
+  try {
+    await db.none(
+      `DELETE FROM notifications WHERE id = $1 AND recipient_id = $2`,
+      [notifId, userId]
+    );
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Failed to dismiss notification:', err.message);
+    res.status(500).send('Error dismissing notification');
+  }
+});
+
+
+// *****************************************************
+// <!-- Post like and comments-->
+// *****************************************************
+// POST /api/posts/:id/like
+//allows the user to like and unlike a post
+app.post("/api/posts/:id/like", async (req, res) => {
+  const userId = req.session.user?.id;
+  const postId = parseInt(req.params.id);
+
+  if (!userId || isNaN(postId)) {
+    return res.status(400).json({ error: "Bad request" });
+  }
+
+  try {
+    // Check if user already liked the post
+    const alreadyLiked = await db.oneOrNone(
+      "SELECT * FROM post_likes WHERE user_id = $1 AND post_id = $2",
+      [userId, postId]
+    );
+
+    if (alreadyLiked) {
+      // Unlike it
+      await db.none(
+        "DELETE FROM post_likes WHERE user_id = $1 AND post_id = $2",
+        [userId, postId]
+      );
+      await db.none(
+        "UPDATE posts SET like_count = like_count - 1 WHERE id = $1",
+        [postId]
+      );
+      // Get updated like count
+      const { like_count } = await db.one(
+        "SELECT like_count FROM posts WHERE id = $1",
+        [postId]
+        );
+        const action = "inliked";
+  
+      return res.json({ action, likeCount: like_count });
+    } else {
+      // Like it
+      await db.none(
+        "INSERT INTO post_likes (user_id, post_id) VALUES ($1, $2)",
+        [userId, postId]
+      );
+      await db.none(
+        "UPDATE posts SET like_count = like_count + 1 WHERE id = $1",
+        [postId]
+      );
+      // 🔔 Create notification if the liker is not the post owner
+        const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
+
+        if (postOwner && postOwner.user_id !== userId) {
+          await db.none(
+            `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
+            VALUES ($1, $2, $3, NOW())`,
+            [userId, postOwner.user_id, 'liked your post']
+          );
+        }
+  
+      
+      // Get updated like count
+      const { like_count } = await db.one(
+      "SELECT like_count FROM posts WHERE id = $1",
+      [postId]
+      );
+      const action = "liked";
+
+    return res.json({ action, likeCount: like_count });
+    }
+  } catch (err) {
+    console.error("Error in like route:", err);
+    return res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+
+
+app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async (req, res) => {
+  const userId = req.session.user?.id;
+  const postId = req.params.id;
+  const comment = req.body.comment;
+
+  console.log("📥 Incoming comment:", { userId, postId, comment });
+
+  if (!userId || !comment) {
+    return res.status(400).send("Missing user or comment");
+  }
+
+  try {
+    await db.none(
+      "INSERT INTO post_comments (user_id, post_id, comment) VALUES ($1, $2, $3)",
+      [userId, postId, comment]
+    );
+    await db.none("UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1", [postId]);
+    // 🔔 Create notification if the commenter is not the post owner
+  const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
+
+  if (postOwner && postOwner.user_id !== userId) {
+    await db.none(
+    `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
+     VALUES ($1, $2, $3, NOW())`,
+    [userId, postOwner.user_id, `commented on your post: "${comment}"`]
+  );
+    }
+
+    res.redirect("/social");
+  } catch (err) {
+    console.error("💥 Comment DB error:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+
+
 // *****************************************************
 // <!-- Data base info to add for testing-->
 // *****************************************************
@@ -513,8 +664,8 @@ app.get('/dev/create-follow-requests', async (req, res) => {
     const requests = [
       { requester_id: 2, receiver_id: 11 },
       { requester_id: 3, receiver_id: 11 },
-      { requester_id: 4, receiver_id: 11 },
-      { requester_id: 5, receiver_id: 11 },
+      { requester_id: 7, receiver_id: 11 },
+      { requester_id: 8, receiver_id: 11 },
       { requester_id: 6, receiver_id: 11 }
     ];
 
@@ -540,6 +691,10 @@ app.get('/dev/create-friends', async (req, res) => {
     const friends = [
       { follower_id: 11, followed_id: 2 }, // YourUser → max_power
       { follower_id: 11, followed_id: 3 }, // Youruser → sara_sky
+      { follower_id: 11, followed_id: 7 }, // YourUser → 
+      { follower_id: 11, followed_id: 8 }, // Youruser → 
+      { follower_id: 11, followed_id: 9 }, // YourUser → max_power
+      { follower_id: 11, followed_id: 10 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
       { follower_id: 11, followed_id: 12 }, // joe1 → joe2
@@ -579,45 +734,225 @@ app.get('/dev/create-friends', async (req, res) => {
 });
 
 
+// Temporary dev route to insert test notifications
+// Visit: http://localhost:3000/dev/create-notifications
+app.get('/dev/create-notifications', async (req, res) => {
+  try {
+    const notifications = [
+      {
+        recipient_id: 11,
+        sender_id: 2,
+        message: 'max_power accepted your follow request.'
+      },
+      {
+        recipient_id: 11,
+        sender_id: 3,
+        message: 'sara_sky commented on your post.'
+      },
+      {
+        recipient_id: 11,
+        sender_id: 5,
+        message: 'jessie_writer started following you.'
+      },
+      {
+        recipient_id: 11,
+        sender_id: null,
+        message: '🎉 Welcome to MovieMate!'
+      }
+    ];
+
+    for (const notif of notifications) {
+      await db.none(
+        `INSERT INTO notifications (recipient_id, sender_id, message, created_at, is_read)
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP, FALSE)`,
+        [notif.recipient_id, notif.sender_id, notif.message]
+      );
+    }
+
+    res.send('Test notifications created successfully.');
+  } catch (err) {
+    console.error('Error inserting notifications:', err);
+    res.status(500).send('Failed to create notifications.');
+  }
+});
+
+// Visit: http://localhost:3000/dev/create-user-posts
+app.get('/dev/create-user-posts', async (req, res) => {
+  try {
+    const postOwnerId = 11; // Must exist in your users table
+
+    // 🔹 Step 1: Create test posts
+    const postIds = [];
+    const testPosts = [
+      {
+        title: "Inception",
+        body: "Test body for Inception",
+        cover: "https://image.tmdb.org/t/p/w500/poster1.jpg",
+        where_to_watch: "Netflix",
+        review: 4.5
+      },
+      {
+        title: "The Matrix",
+        body: "Test body for The Matrix",
+        cover: "https://image.tmdb.org/t/p/w500/poster2.jpg",
+        where_to_watch: "HBO Max",
+        review: 4.8
+      }
+    ];
+
+    for (const post of testPosts) {
+      const inserted = await db.one(
+        `INSERT INTO posts (title, body, user_id, cover, where_to_watch, review, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         RETURNING id`,
+        [post.title, post.body, postOwnerId, post.cover, post.where_to_watch, post.review]
+      );
+      postIds.push(inserted.id);
+    }
+
+    // 🔹 Step 2: Add likes + notifications
+    const likerIds = [2, 3, 4];
+    for (const postId of postIds) {
+      for (const likerId of likerIds) {
+        if (likerId !== postOwnerId) {
+          await db.none(
+            `INSERT INTO post_likes (user_id, post_id) VALUES ($1, $2)
+             ON CONFLICT DO NOTHING`,
+            [likerId, postId]
+          );
+          await db.none(
+            `UPDATE posts SET like_count = like_count + 1 WHERE id = $1`,
+            [postId]
+          );
+          await db.none(
+            `INSERT INTO notifications (recipient_id, sender_id, message)
+             VALUES ($1, $2, $3)`,
+            [postOwnerId, likerId, 'liked your post']
+          );
+        }
+      }
+    }
+
+    // 🔹 Step 3: Add comments + notifications
+    const commenterIds = [3, 5];
+    const sampleComments = ["Nice pick!", "One of my favorites!"];
+    let i = 0;
+
+    for (const postId of postIds) {
+      for (const commenterId of commenterIds) {
+        const commentText = sampleComments[i % sampleComments.length];
+        i++;
+
+        await db.none(
+          `INSERT INTO post_comments (user_id, post_id, comment)
+           VALUES ($1, $2, $3)`,
+          [commenterId, postId, commentText]
+        );
+        await db.none(
+          `UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1`,
+          [postId]
+        );
+        await db.none(
+          `INSERT INTO notifications (recipient_id, sender_id, message)
+           VALUES ($1, $2, $3)`,
+          [postOwnerId, commenterId, `commented on your post: "${commentText}"`]
+        );
+      }
+    }
+
+    res.send(`✅ Created posts, likes, comments, and notifications for user ID ${postOwnerId}`);
+  } catch (err) {
+    console.error("❌ Error creating user posts:", err.message);
+    console.error(err.stack);
+    res.status(500).send("❌ Failed to create test data.");
+  }
+});
+
+
+
+
+
 
 // *****************************************************
 // <!-- Friends Posts -->
 // *****************************************************
+app.get('/social', async (req, res) => {
+  const userId = req.session.user?.id;
+  const limit = 5;
+  const offset = 0; // first 5 posts
 
-// Sample data
-const posts = [
-  { id: '1', user: 'A', title: 'Inception', review: '4', description: 'A mind-bending thriller by Nolan.', cover: 'cover1.jpg', whereToWatch: 'Netflix' },
-  { id: '2', user: 'B', title: 'Interstellar', review: '3.5', description: 'Explores the stars and time.', cover: 'cover2.jpg', whereToWatch: 'Hulu' },
-  { id: '3', user: 'C', title: 'TestTitle3', review: '3', description: 'Test Description for TestTitle3.', cover: 'cover3.jpg', whereToWatch: 'HBO' },
-  { id: '4', user: 'D', title: 'TestTitle4', review: '1.1', description: 'Test Description for TestTitle4.', cover: 'cover4.jpg', whereToWatch: 'Netflix' },
-  { id: '5', user: 'E', title: 'TestTitle5', review: '5', description: 'Test Description for TestTitle5.', cover: 'cover5.jpg', whereToWatch: 'HBO' },
-  { id: '6', user: 'F', title: 'TestTitle6', review: '4.1', description: 'Test Description for TestTitle6.', cover: 'cover6.jpg', whereToWatch: 'Paramount' },
-  { id: '7', user: 'G', title: 'TestTitle7', review: '2.5', description: 'Test Description for TestTitle7.', cover: 'cover7.jpg', whereToWatch: 'Disney' },
-  { id: '8', user: 'H', title: 'TestTitle8', review: '3', description: 'Test Description for TestTitle8.', cover: 'cover8.jpg', whereToWatch: 'Netflix' },
-  { id: '9', user: 'I', title: 'TestTitle9', review: '1', description: 'Test Description for TestTitle9.', cover: 'cover9.jpg', whereToWatch: 'Netflix' },
-  { id: '10', user: 'J', title: 'TestTitle10', review: '1', description: 'Test Description for TestTitle10.', cover: 'cover10.jpg', whereToWatch: 'HBO' },
-  { id: '11', user: 'K', title: 'TestTitle11', review: '4', description: 'Test Description for TestTitle11.', cover: 'cover11.jpg', whereToWatch: 'Hulu' },
-  { id: '12', user: 'L', title: 'TestTitle12', review: '2.1', description: 'Test Description for TestTitle12.', cover: 'cover12.jpg', whereToWatch: 'Hulu' },
-  { id: '13', user: 'M', title: 'TestTitle13', review: '4.8', description: 'Test Description for TestTitle13.', cover: 'cover13.jpg', whereToWatch: 'Disney' },
-  { id: '14', user: 'N', title: 'TestTitle14', review: '2.7', description: 'Test Description for TestTitle14.', cover: 'cover14.jpg', whereToWatch: 'Disney' },
-  { id: '15', user: 'O', title: 'TestTitle15', review: '1.9', description: 'Test Description for TestTitle15.', cover: 'cover15.jpg', whereToWatch: 'Paramount' }
-];
+  try {
+    const posts = await db.any(`
+  SELECT 
+    posts.id, 
+    posts.title, 
+    posts.body, 
+    posts.cover, 
+    posts.where_to_watch, 
+    posts.review, 
+    posts.like_count, 
+    posts.comment_count,
+    users.username AS user,
+    EXISTS (
+      SELECT 1 FROM post_likes 
+      WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
+    ) AS liked
+  FROM posts
+  JOIN users ON posts.user_id = users.id
+  JOIN friends ON friends.followed_user_id = posts.user_id
+  WHERE friends.following_user_id = $1
+  ORDER BY posts.created_at DESC
+  LIMIT $2 OFFSET $3
+`, [userId, limit, offset]);
 
-// Display the main page
-app.get('/social', (req, res) => {
-  const initialPosts = posts.slice(0, 5); // Load the first 5 posts
-  res.render('pages/social', { layout: 'main', user: req.session.user, posts: initialPosts });
+    res.render('pages/social', { layout: 'main', user: req.session.user, posts });
+  } catch (err) {
+    console.error("Error loading initial posts:", err);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
-// Load paginated posts
-app.get('/load-more', (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Default to page 1
-  const limit = 5; // Number of posts per batch
-  const startIndex = (page - 1) * limit;
-  const paginatedPosts = posts.slice(startIndex, startIndex + limit);
 
-  res.json({ posts: paginatedPosts });
+app.get('/load-more', async (req, res) => {
+  console.log("GET /load-more body:", req.body); // should be undefined or {}
+  const page = parseInt(req.query.page) || 1;
+  const limit = 5;
+  const offset = (page - 1) * limit;
+  const userId = req.session.user?.id;
+
+  try {
+    const posts = await db.any(`
+  SELECT 
+    posts.id, 
+    posts.title, 
+    posts.body, 
+    posts.cover, 
+    posts.where_to_watch, 
+    posts.review, 
+    posts.like_count, 
+    posts.comment_count,
+    users.username AS user,
+    EXISTS (
+      SELECT 1 FROM post_likes 
+      WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
+    ) AS liked
+  FROM posts
+  JOIN users ON posts.user_id = users.id
+  JOIN friends ON friends.followed_user_id = posts.user_id
+  WHERE friends.following_user_id = $1
+  ORDER BY posts.created_at DESC
+  LIMIT $2 OFFSET $3
+`, [userId, limit, offset]);
+
+    return res.json({ posts });
+  } catch (err) {
+    console.error("Error loading more posts:", err);
+    res.status(500).json({ error: "Failed to load posts" });
+  }
 });
+
+
+
 
 // Temporary in-memory storage for the watchlist
 app.post('/add-to-watchlist', async (req, res) => {
@@ -660,8 +995,6 @@ app.post('/remove-from-watchlist', async (req, res) => {
 // *****************************************************
 //  <!-- Profile Page --!>
 // *****************************************************
-// Display the main page
-// If you want to use the current route format (no username in URL)
 app.get('/profile', (req, res) => {
   const profileUsername = req.query.username || req.session.user.username;
   const loggedInUsername = req.session.user ? req.session.user.username : null;
@@ -671,6 +1004,102 @@ app.get('/profile', (req, res) => {
     user: req.session.user,
     isOwnProfile: isOwnProfile
   });
+});
+
+app.get('/profile/edit', (req, res) => {
+  const user = req.session.user;
+  res.render('pages/profile-edit', {
+    user: user
+  });
+})
+
+app.post('/profile/edit', async (req, res) => {
+  const userId = req.session.user.id;
+  const { first_name, last_name, email, bio, profile_icon } = req.body;
+  console.log(profile_icon)
+
+  try {
+    // Update database
+    await db.none(
+      `UPDATE users 
+       SET first_name = $1, last_name = $2, email = $3, bio = $4, profile_icon = $5
+       WHERE id = $6`,
+      [first_name, last_name, email, bio, profile_icon, userId]
+    );
+
+    // Create a new object with updated values instead of modifying the existing one
+    const updatedUser = {
+      ...req.session.user,
+      first_name,
+      last_name,
+      email,
+      bio,
+      profile_icon: profile_icon || req.session.user.profile_icon
+    };
+
+    // Update session with the new object
+    req.session.user = updatedUser;
+
+    req.session.save(err => {
+      if (err) {
+        console.error('Error saving session:', err);
+        return res.render('pages/profile-edit', {
+          user: req.session.user,
+          error: 'Failed to update profile. Please try again.'
+        });
+      }
+      res.redirect('/profile');
+    });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.render('pages/profile-edit', {
+      user: req.session.user,
+      error: 'Failed to update profile. Please try again.'
+    });
+  }
+});
+
+// Profile Followers/Following Routes
+app.get('/profile/followers', async (req, res) => {
+  const userId = req.query.userId || req.session.user.id;
+
+  try {
+    const followers = await db.any(`
+          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name, u.bio
+          FROM friends f
+          JOIN users u ON f.following_user_id = u.id
+          WHERE f.followed_user_id = $1
+      `, [userId]);
+
+    res.render('pages/followers', {
+      user: req.session.user,
+      followers
+    });
+  } catch (err) {
+    console.error('Error fetching followers:', err);
+    res.status(500).send('Error loading followers');
+  }
+});
+
+app.get('/profile/following', async (req, res) => {
+  const userId = req.query.userId || req.session.user.id;
+
+  try {
+    const following = await db.any(`
+          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name, u.bio
+          FROM friends f
+          JOIN users u ON f.followed_user_id = u.id
+          WHERE f.following_user_id = $1
+      `, [userId]);
+
+    res.render('pages/following', {
+      user: req.session.user,
+      following
+    });
+  } catch (err) {
+    console.error('Error fetching following:', err);
+    res.status(500).send('Error loading following');
+  }
 });
 
 // *****************************************************
