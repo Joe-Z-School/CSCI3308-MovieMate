@@ -4,7 +4,7 @@ const OMDB_API_KEY = process.env.OMDB_API_KEY;
 // Caching implementation
 const movieCache = {};
 const searchCache = {};
-const CACHE_DURATION = 48 * 60 * 60 * 1000; // 48 hour cache duration
+const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 class OmdbApiService {
   constructor() {
