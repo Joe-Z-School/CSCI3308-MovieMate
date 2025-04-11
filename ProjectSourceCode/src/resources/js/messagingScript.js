@@ -1,7 +1,13 @@
 import { formatDistanceToNow , parseISO } from 'https://cdn.jsdelivr.net/npm/date-fns@latest/index.js';
 console.log('Script loaded!'); // Check if messagingScript.js is running
 
+// Check if yourUserId is defined
+if (typeof yourUserId === 'undefined') {
+  console.error('yourUserId is not defined. Make sure your template injects it into the page before this script runs.');
+}
+
 const socket = io(); // Connect to the server
+socket.emit('register-user', yourUserId); // Register user to track chats
 
 const messageInput = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
@@ -28,9 +34,8 @@ updateFriendsList();
 
 // Call this function to request the updated friends list from the server
 function updateFriendsList() {
-  const userId = yourUserId;  // Use the actual user ID
-  console.log('Requesting updated friends list for user:', userId);  // Debugging line
-  socket.emit('get-friends-list', { userId });
+  console.log('Requesting updated friends list for user:', yourUserId);  // Debugging line
+  socket.emit('get-friends-list', { userId: yourUserId });
 }
 
 function updateFriendsListOnUI(friendsList) {
@@ -105,7 +110,9 @@ function updateFriendsListOnUI(friendsList) {
     if (unreadCount > 0) {
       unreadBadge.textContent = unreadCount;
       unreadBadge.style.display = "inline-block";
-    } else {
+    }
+    
+    else {
       unreadBadge.textContent = "0";
       unreadBadge.style.display = "none";
     }
@@ -122,7 +129,6 @@ function updateFriendsListOnUI(friendsList) {
     friendsContainer.appendChild(listItem);
   });
 }
-
 
 function openChat(friend) {
   console.log('Opening chat with friend:', friend);
@@ -151,6 +157,53 @@ function openChat(friend) {
   }
 }
 
+// Send a private message using send button
+sendBtn.addEventListener('click', () => {
+  const message = messageInput.value.trim();
+  if (message) {
+    appendMessage({ 
+      message: message, 
+      user: 'You',
+      profileIcon: `/resources/img/${activeUser.profile_icon}`,
+      timestamp: new Date()
+    });
+    socket.emit('private-message', {
+      senderId: yourUserId,
+      recipientId: friendId,
+      content: message,
+      chatOpen: activeFriendId === friendId
+    }); 
+    messageInput.value = "";
+  }
+  
+  else {
+    console.error('Message content cannot be empty.');
+  }
+});
+  
+// Send messages with Enter and adding new lines with Shift+Enter
+messageInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault(); // Prevent default newline behavior
+    sendBtn.click(); // Trigger send button click event
+  }
+  
+  else if (event.key === "Enter" && event.shiftKey) {
+    // Allow Shift+Enter to create a new line when textbox on webpage
+    messageInput.value += "\n"; // Add a newline to the input field
+    event.preventDefault(); // Prevent the default behavior of Enter
+  }
+});
+
+
+socket.on('connect', () => {
+  socket.emit('register-user', yourUserId);
+  
+  socket.once('user-registered', () => {
+    updateFriendsList(); // load friends
+  });
+});
+
 // Listen for the updated unread count and update the UI accordingly
 socket.on('update-unread-count', ({ senderId, recipientId, unreadCount }) => {
   // Don't update unread count if we're actively chatting with that friend
@@ -178,47 +231,12 @@ socket.on('increment-unread', ({ from }) => {
     const newCount = currentCount + 1;
     unreadBadge.textContent = newCount;
     unreadBadge.style.display = "inline-block";
-  } else {
+  }
+  
+  else {
     console.warn(`Unread badge for user ${from} not found.`);
   }
-});
 
-
-// Send a private message using send button
-sendBtn.addEventListener('click', () => {
-  const message = messageInput.value.trim();
-  if (message) {
-    appendMessage({ 
-      message: message, 
-      user: 'You',
-      profileIcon: `/resources/img/${activeUser.profile_icon}`,
-      timestamp: new Date()
-    });
-
-    socket.emit('private-message', {
-      senderId: yourUserId,
-      recipientId: friendId,
-      content: message
-    });
-
-    messageInput.value = "";
-  } else {
-    console.error('Message content cannot be empty.');
-  }
-});
-
-
-  
-// Send messages with Enter and adding new lines with Shift+Enter
-messageInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault(); // Prevent default newline behavior
-    sendBtn.click(); // Trigger send button click event
-  } else if (event.key === "Enter" && event.shiftKey) {
-    // Allow Shift+Enter to create a new line when textbox on webpage
-    messageInput.value += "\n"; // Add a newline to the input field
-    event.preventDefault(); // Prevent the default behavior of Enter
-  }
 });
 
 // When the server sends the updated friends list
@@ -235,13 +253,15 @@ socket.on('friends-list-updated', (friendsList) => {
   updateFriendsListOnUI(friendsList);
 });
 
-
-
 // Receive a private message
 socket.on('private-message', ({ senderId, content }) => {
-  console.log(`Incoming Message: Sender ID = ${senderId}, Active Friend ID = ${activeFriendId}, Content = ${content}`);
-  
-  // Convert to string for comparison
+  // 1. Ignore duplicates if it's from you and you're in the active chat
+  if (String(senderId) === String(yourUserId)) {
+    console.log('Skipping echo message from self');
+    return;
+  }
+
+  // 2. Ignore if you're not in that chat
   if (String(senderId) !== String(activeFriendId)) {
     console.log(`Message from ${senderId} ignored because activeFriendId is ${activeFriendId}.`);
     return;
@@ -249,13 +269,10 @@ socket.on('private-message', ({ senderId, content }) => {
 
   appendMessage({
     message: content,
-    user: senderId === yourUserId ? 'You' : friendName,
-    profileIcon: senderId === yourUserId 
-      ? `/resources/img/${activeUser.profile_icon}` 
-      : `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
+    user: friendName,
+    profileIcon: `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
     timestamp: new Date()
   });
-  
 });
 
 // Load messages for the selected friend
@@ -291,7 +308,7 @@ function appendMessage({ message, user, profileIcon = null, timestamp = new Date
   msgWrapper.classList.add(isSentByUser ? 'sent' : 'received');
 
   const profileImg = document.createElement('img');
-  profileImg.src = profileIcon || '/resources/img/default-icon.png'; // fallback image
+  profileImg.src = profileIcon
   profileImg.alt = 'Profile';
   profileImg.classList.add('profile-icon');
 
@@ -331,6 +348,7 @@ emojiBtn.addEventListener("click", () => {
     existingEmojiPicker.remove();
     return;
   }
+
   else{
     const emojiElement = document.createElement('div');
     emojiElement.innerHTML = `<emoji-picker></emoji-picker>`;
@@ -380,9 +398,12 @@ document.addEventListener('DOMContentLoaded', () => {
         iconElement.className = `bi ${emojiIcons[randomIndex]}`;
       }
     });
-  } else {
+  }
+  
+  else {
     console.error('emojiBtn is null or not found.');
   }
+
 });
 
 document.addEventListener("DOMContentLoaded", () => {
