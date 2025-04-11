@@ -2,6 +2,7 @@ const axios = require('axios');
 const OMDB_API_KEY = process.env.OMDB_API_KEY;
 
 const trailerCache = {};
+const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 class YouTubeApiService {
     constructor() {
