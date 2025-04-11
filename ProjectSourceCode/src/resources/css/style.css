@@ -102,6 +102,28 @@ body {
     flex-direction: column;
 }
 
+.form-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.icon-row img {
+    margin: 2px;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+    object-fit: cover;
+}
+
+.icon-row img.selected {
+    border: 3px solid #5F4B8B;
+}
+
 /* SOCIALS */
 .btn-social {
     background-color: #5F4B8B;
@@ -258,7 +280,6 @@ body {
 }
 
 /* Navbar styles */
-
 .navbar-light {
     background-color: #f8f9fa;
 }
@@ -398,7 +419,42 @@ footer {
     z-index: 1000;
 }
 
+
 .footer-content {
     max-width: 1200px;
     margin: 0 auto;
+}
+
+/*Following and Followers  */
+.followers-list,
+.following-list {
+    width: 80%;
+    max-width: 600px;
+    margin-top: 20px;
+}
+
+.follower-item,
+.following-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.follower-pic,
+.following-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.follower-info,
+.following-info {
+    flex-grow: 1;
+}
+
+.stat-item a:hover {
+    cursor: pointer;
+    text-decoration: underline;
 }

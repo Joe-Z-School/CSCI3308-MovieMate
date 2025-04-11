@@ -1,0 +1,72 @@
+<div id="editProfileModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Edit Profile</h2>
+        <form id="editProfileForm" action="/profile/edit" method="POST">
+            <div class="modal-content">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" class="form-control"
+                        value="{{user.first_name}}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" value="{{user.last_name}}">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{user.email}}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" name="bio" class="form-control">{{user.bio}}</textarea>
+                </div>
+                <label for="profile_icon">Select Profile Icon:</label>
+                <div class="product-container">
+                    <div class="icon-row">
+                        <img src="../../resources/img/profile_pic_option_1.png" width="60" height="60"
+                            alt="profile_icon" data-image="profile_pic_option_1.png">
+                        <img src="../../resources/img/profile_pic_option_2.png" width="60" height="60"
+                            alt="profile_icon" data-image="profile_pic_option_2.png">
+                        <img src="../../resources/img/profile_pic_option_3.png" width="60" height="60"
+                            alt="profile_icon" data-image="profile_pic_option_3.png">
+                        <img src="../../resources/img/profile_pic_option_4.png" width="60" height="60"
+                            alt="profile_icon" data-image="profile_pic_option_4.png">
+                        <img src="../../resources/img/profile_pic_option_5.png" width="60" height="60"
+                            alt="profile_icon" data-image="profile_pic_option_5.png">
+                        <img src="../../resources/img/profile_pic_option_6.png" width="60" height="60"
+                            alt="profile_icon" data-image="profile_pic_option_6.png">
+                    </div>
+                </div>
+                <!-- Hidden input field to store selected profile icon -->
+                <input type="hidden" id="profile_icon" name="profile_icon">
+                <div class="form-actions">
+                    <button type="submit" class="btn-login">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const profileIcons = document.querySelectorAll('.icon-row img');
+        const profileIconInput = document.getElementById('profile_icon');
+
+        profileIcons.forEach(icon => {
+            icon.addEventListener('click', function () {
+                profileIcons.forEach(icon => icon.classList.remove('selected'));
+
+                this.classList.add('selected');
+
+                const selectedIcon = this.getAttribute('data-image');
+                profileIconInput.value = selectedIcon;
+
+                console.log('Selected Icon:', selectedIcon);
+            });
+        });
+    });
+</script>
