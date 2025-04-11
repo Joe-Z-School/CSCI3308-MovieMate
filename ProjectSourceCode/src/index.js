@@ -704,6 +704,10 @@ app.get('/profile/following', async (req, res) => {
   }
 });
 
+app.get('/watchlist', async (req, res) => {
+
+    res.render('pages/watchlist');
+});
 // *****************************************************
 // <!-- Messages Page -->
 // *****************************************************
