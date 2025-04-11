@@ -458,3 +458,29 @@ footer {
     cursor: pointer;
     text-decoration: underline;
 }
+/*Post modal*/
+/* Force the close button "X" to be white */
+.btn-close {
+    --bs-btn-close-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath d='M.293.293a1 1 0 011.414 0L8 6.586l6.293-6.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3E%3C/svg%3E") !important;
+    filter: none !important; /* remove Bootstrap's invert filter if it's being applied */
+}
+
+#movieThoughts {
+    background-color: #333;   /* Dark background */
+    color: #999;              /* Light gray text */
+    border: 1px solid #444;   /* Subtle border */
+    border-radius: 4px;
+    padding: 10px;
+}
+
+/* Placeholder text */
+#movieThoughts::placeholder {
+    color: #999;
+}
+
+/* On focus */
+#movieThoughts:focus {
+    outline: none;
+    border-color: #6f42c1; /* Optional: purple border on focus */
+    background-color: #1a1a1a;
+}
