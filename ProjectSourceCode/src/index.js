@@ -208,7 +208,7 @@ app.get('/dev/register', async (req, res) => {
         last_name: 'joe1',
         username: 'joe1',
         email: 'joe1@email.com',
-        profile_icon: 'Profile_pic_option_1.png',
+        profile_icon: 'profile_pic_option_1.png',
         bio: 'joe1'
       },
       { first_name: 'joe2',
@@ -1158,195 +1158,171 @@ app.get('/messaging', async (req, res) => {
   }
 });
 
-// Store which users are currrently chatting
-const activeChats = new Map(); // Stores { userId: chattingWithUserId }
+
+// Track sockets and active chats
+const userSockets = new Map(); // { userId: socket }
+const activeChats = new Map(); // { userId: chattingWithUserId }
 
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
-  
 
-  // Fetch friends list for a user
+  console.log(`User connected: ${socket.id}`);
+
+  socket.on('register-user', (userId) => {
+    socket.userId = String(userId);
+    userSockets.set(socket.userId, socket);
+    socket.emit('user-registered');
+  });
+
   socket.on('get-friends-list', async ({ userId }) => {
     try {
       const query = `
         SELECT f.followed_user_id AS id, u.username AS name, u.profile_icon, 
                f.latest_message, f.unread_count, f.last_active
-          FROM friends f
-          JOIN users u ON u.id = f.followed_user_id
-          WHERE f.following_user_id = $1
+        FROM friends f
+        JOIN users u ON u.id = f.followed_user_id
+        WHERE f.following_user_id = $1
       `;
-  
       const result = await db.query(query, [userId]);
-      // console.log('Query Result:', result); // Show result of query
-  
-      const friendsList = result;
-  
-      if (!friendsList || friendsList.length === 0) {
-        console.error('No friends found for user:', userId);
-        socket.emit('friends-list-updated', []); // Send empty array if no friends found
-        return;
-      }
-  
-      // Send the updated friends list
-      socket.emit('friends-list-updated', friendsList);
-      // console.log('Updated friends list:', friendsList);
+      socket.emit('friends-list-updated', result || []);
     } catch (error) {
       console.error('Failed to fetch friends list:', error);
-      socket.emit('friends-list-updated', []); // Send empty array if error
+      socket.emit('friends-list-updated', []);
     }
-  });  
+  });
 
-  // Join room for the current user
   socket.on('join-room', async ({ senderId, recipientId }) => {
-    socket.join(`user-${senderId}`);
-    socket.join(`user-${recipientId}`);
-  
-    // Track the active chat
-    activeChats.set(senderId, recipientId);
-  
+    const sId = String(senderId);
+    const rId = String(recipientId);
+
+    socket.join(`user-${sId}`);
+    socket.join(`user-${rId}`);
+
+    activeChats.set(sId, rId); // Track sender's open chat
+
     try {
       const query = `
         SELECT sender_id, recipient_id, content, timestamp
-          FROM messages
-          WHERE (sender_id = $1 AND recipient_id = $2)
-             OR (sender_id = $2 AND recipient_id = $1)
-          ORDER BY timestamp ASC
+        FROM messages
+        WHERE (sender_id = $1 AND recipient_id = $2)
+           OR (sender_id = $2 AND recipient_id = $1)
+        ORDER BY timestamp ASC
       `;
-      const result = await db.query(query, [senderId, recipientId]);
-  
+      const result = await db.query(query, [sId, rId]);
       socket.emit('load-messages', result);
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
   });
 
-  // Handle private messages
   socket.on('private-message', async ({ senderId, recipientId, content }) => {
     try {
-      console.log('Private message received:', { senderId, recipientId, content });
-  
-      // Determine if the recipient is actively chatting with the sender
-      const recipientActiveChat = activeChats.get(recipientId);
-      const isChatOpen = recipientActiveChat === senderId;
-  
-      // Insert the message into the database
-      const insertQuery = `
+      const sId = String(senderId);
+      const rId = String(recipientId);
+      const recipientChattingWith = activeChats.get(rId);
+      const chatOpen = recipientChattingWith === sId;
+
+      console.log('Private message received:', { sId, rId, content, chatOpen });
+
+      // Store the message
+      await db.query(`
         INSERT INTO messages (sender_id, recipient_id, content, is_read, timestamp)
         VALUES ($1, $2, $3, $4, NOW())
-      `;
-      await db.query(insertQuery, [senderId, recipientId, content, isChatOpen]);
+      `, [sId, rId, content, chatOpen]);
 
-      console.log(`Recipient's active chat:`, recipientActiveChat);
-      console.log(`SenderId:`, senderId);
-      console.log(`Chat open?`, isChatOpen);
-
-  
-      if (!isChatOpen) {
-        // If chat is not open, increment unread count
-        const updateUnread = `
+      if (!chatOpen) {
+        // Increment unread
+        await db.query(`
           UPDATE friends
           SET latest_message = $1,
               last_active = NOW(),
               unread_count = unread_count + 1
           WHERE following_user_id = $2 AND followed_user_id = $3
-        `;
-        await db.query(updateUnread, [content, recipientId, senderId]);
-  
-        // Send updated unread count (optional)
-        const unreadQuery = `SELECT unread_count FROM friends WHERE following_user_id = $1 AND followed_user_id = $2`;
-        const { rows } = await db.query(unreadQuery, [recipientId, senderId]);
-        const unreadCount = rows[0]?.unread_count || 0;
-  
-        io.to(`user-${recipientId}`).emit('update-unread-count', { senderId, recipientId, unreadCount });
-        io.to(`user-${recipientId}`).emit('increment-unread', { from: senderId });
+        `, [content, rId, sId]);
+
+        const { rows } = await db.query(`
+          SELECT unread_count FROM friends
+          WHERE following_user_id = $1 AND followed_user_id = $2
+        `, [rId, sId]);
+
+        const unreadCount = rows?.[0]?.unread_count || 0;
+
+        io.to(`user-${rId}`).emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount });
+        io.to(`user-${rId}`).emit('increment-unread', { from: sId });
       } else {
-        // Chat is open — mark all messages as read immediately
-        const markRead = `
+        // Mark as read, reset unread count
+        await db.query(`
           UPDATE messages
           SET is_read = true
           WHERE recipient_id = $1 AND sender_id = $2
-        `;
-        await db.query(markRead, [recipientId, senderId]);
-  
-        // Reset unread count
-        const resetUnread = `
+        `, [rId, sId]);
+
+        await db.query(`
           UPDATE friends
           SET unread_count = 0,
               latest_message = $1,
               last_active = NOW()
           WHERE following_user_id = $2 AND followed_user_id = $3
-        `;
-        await db.query(resetUnread, [content, recipientId, senderId]);
-  
-        // Notify UI to clear unread badge
-        io.to(`user-${recipientId}`).emit('update-unread-count', { senderId, recipientId, unreadCount: 0 });
+        `, [content, rId, sId]);
+
+        io.to(`user-${rId}`).emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount: 0 });
       }
-  
-      // Send the message to the recipient
-      io.to(`user-${recipientId}`).emit('private-message', { senderId, content });
       
-  
+      io.to(`user-${rId}`).emit('private-message', { senderId: sId, content });
     } catch (error) {
       console.error('Error handling private message:', error);
     }
   });
-  
-  
 
-// Mark messages as read
-socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
-  try {
-    const query = `
-      UPDATE messages
-      SET is_read = true
-      WHERE recipient_id = $1 AND sender_id = $2;
-    `;
-    await db.query(query, [recipientId, senderId]);
+  socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
+    try {
+      const sId = String(senderId);
+      const rId = String(recipientId);
 
-    // Reset unread count
-    const resetUnreadCountQuery = `
-      UPDATE friends
-      SET unread_count = 0
-      WHERE following_user_id = $2 AND followed_user_id = $1;
-    `;
-    await db.query(resetUnreadCountQuery, [recipientId, senderId]);
+      await db.query(`
+        UPDATE messages
+        SET is_read = true
+        WHERE recipient_id = $1 AND sender_id = $2
+      `, [rId, sId]);
 
-    // Update unread count to 0
-    socket.emit('update-unread-count', { senderId, recipientId, unreadCount: 0 });
-    console.log(`Unread count reset for senderId: ${senderId}, recipientId: ${recipientId}`);
-    activeChats.delete(senderId); // Optionally clear it when chat ends (if you track closing)
+      await db.query(`
+        UPDATE friends
+        SET unread_count = 0
+        WHERE following_user_id = $2 AND followed_user_id = $1
+      `, [rId, sId]);
 
-  } catch (error) {
-    console.error('Failed to mark messages as read:', error);
-  }
-});
-
-// Set active chat
-socket.on('setActiveChat', (chatPartnerId) => {
-  const currentUserId = [...activeChats.entries()].find(([key, value]) => value === chatPartnerId)?.[0];
-  if (chatPartnerId === null) {
-    // User left the chat — clear from map
-    activeChats.delete(currentUserId);
-    console.log(`Cleared active chat for user ${currentUserId}`);
-  } else {
-    // Set new active chat
-    activeChats.set(currentUserId, chatPartnerId);
-    console.log(`User ${currentUserId} is now chatting with ${chatPartnerId}`);
-  }
-});
-
-
-  // User disconnect handler
-  socket.on('disconnect', () => {
-    for (let userId in activeChats) {
-      if (socket.id === `user-${userId}`) {
-        delete activeChats[userId];
-      }
+      socket.emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount: 0 });
+      console.log(`Unread count reset for senderId: ${sId}, recipientId: ${rId}`);
+    } catch (error) {
+      console.error('Failed to mark messages as read:', error);
     }
-    console.log(`User disconnected: ${socket.id}`);
+  });
+
+  socket.on('setActiveChat', (chatPartnerId) => {
+    const currentUserId = String(socket.userId);
+    const partnerId = chatPartnerId ? String(chatPartnerId) : null;
+
+    if (!currentUserId) {
+      console.warn('setActiveChat called before user was registered');
+      return;
+    }
+
+    if (partnerId === null) {
+      activeChats.delete(currentUserId);
+      console.log(`User ${currentUserId} cleared their active chat`);
+    } else {
+      activeChats.set(currentUserId, partnerId);
+      console.log(`User ${currentUserId} is now chatting with ${partnerId}`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    if (socket.userId) {
+      activeChats.delete(String(socket.userId));
+      userSockets.delete(String(socket.userId));
+      console.log(`Removed user ${socket.userId} on disconnect`);
+    }
   });
 });
-
 
 
 // *****************************************************
