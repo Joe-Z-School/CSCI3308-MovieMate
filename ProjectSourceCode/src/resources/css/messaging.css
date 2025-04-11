@@ -211,15 +211,7 @@
   .received .chat-bubble {
     background-color: var(--lightPurpleAccent);
     color: black;
-    border-bottom-left-radius: 0;
-    max-width: 75%; /* Adjust the width */
-    padding: 10px 14px; /* Adjust padding to fit better */
-    white-space: normal; /* Ensures text inside the bubble wraps */
-    word-break: break-word; /* Forces breaking long words */
-    margin-right: 10px; /* Slight margin to separate from profile picture */
-    display: inline-block; /* Ensures bubble shrinks to fit text */
-    overflow-wrap: break-word; /* Makes sure words are wrapped */
-    line-height: 1.3; /* Slightly tighter line-height for better visual fit */
+    border-top-left-radius: 0;
   }
   
   .sent .chat-bubble {
