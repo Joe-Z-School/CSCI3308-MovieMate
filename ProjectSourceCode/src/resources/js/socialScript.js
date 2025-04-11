@@ -135,7 +135,6 @@ function toggleWatchlist(title, picture, whereToWatch, index) {
     new bootstrap.Tooltip(addButton, { trigger: 'hover' });
 }
 
-
 function toggleLikes(event) {
     const heartButton = event.target.closest('.heart-button');
     if (!heartButton) {

@@ -135,3 +135,12 @@ CREATE TABLE notifications (
   FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE watchlist (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  poster_picture VARCHAR(255) NOT NULL,
+  where_to_watch VARCHAR(255),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
