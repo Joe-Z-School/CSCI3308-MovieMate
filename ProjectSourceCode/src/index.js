@@ -514,7 +514,14 @@ app.post("/api/posts/:id/like", async (req, res) => {
         "UPDATE posts SET like_count = like_count - 1 WHERE id = $1",
         [postId]
       );
-      return res.json({ action: "unliked" });
+      // Get updated like count
+      const { like_count } = await db.one(
+        "SELECT like_count FROM posts WHERE id = $1",
+        [postId]
+        );
+        const action = "inliked";
+  
+      return res.json({ action, likeCount: like_count });
     } else {
       // Like it
       await db.none(
@@ -525,7 +532,28 @@ app.post("/api/posts/:id/like", async (req, res) => {
         "UPDATE posts SET like_count = like_count + 1 WHERE id = $1",
         [postId]
       );
-      return res.json({ action: "liked" });
+      // 🔔 Create notification if the liker is not the post owner
+        const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
+
+        if (postOwner && postOwner.user_id !== userId) {
+          await db.none(
+            `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
+            VALUES ($1, $2, $3, NOW())`,
+            [userId, postOwner.user_id, 'liked your post']
+          );
+        }
+        // Log all current notifications
+      const allNotifications = await db.any('SELECT * FROM notifications ORDER BY created_at DESC');
+      console.log("🔔 Current Notifications:", allNotifications);
+      
+      // Get updated like count
+      const { like_count } = await db.one(
+      "SELECT like_count FROM posts WHERE id = $1",
+      [postId]
+      );
+      const action = "liked";
+
+    return res.json({ action, likeCount: like_count });
     }
   } catch (err) {
     console.error("Error in like route:", err);
@@ -552,6 +580,19 @@ app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async
       [userId, postId, comment]
     );
     await db.none("UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1", [postId]);
+    // 🔔 Create notification if the commenter is not the post owner
+  const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
+
+  if (postOwner && postOwner.user_id !== userId) {
+    await db.none(
+    `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
+     VALUES ($1, $2, $3, NOW())`,
+    [userId, postOwner.user_id, `commented on your post: "${comment}"`]
+  );
+    }
+    // 🔍 Log all current notifications
+    const allNotifications = await db.any('SELECT * FROM notifications ORDER BY created_at DESC');
+    console.log("🔔 Current Notifications:", allNotifications);
 
     res.redirect("/social");
   } catch (err) {
@@ -572,8 +613,8 @@ app.get('/dev/create-follow-requests', async (req, res) => {
     const requests = [
       { requester_id: 2, receiver_id: 11 },
       { requester_id: 3, receiver_id: 11 },
-      { requester_id: 4, receiver_id: 11 },
-      { requester_id: 5, receiver_id: 11 },
+      { requester_id: 7, receiver_id: 11 },
+      { requester_id: 8, receiver_id: 11 },
       { requester_id: 6, receiver_id: 11 }
     ];
 
@@ -599,6 +640,10 @@ app.get('/dev/create-friends', async (req, res) => {
     const friends = [
       { follower_id: 11, followed_id: 2 }, // YourUser → max_power
       { follower_id: 11, followed_id: 3 }, // Youruser → sara_sky
+      { follower_id: 11, followed_id: 7 }, // YourUser → 
+      { follower_id: 11, followed_id: 8 }, // Youruser → 
+      { follower_id: 11, followed_id: 9 }, // YourUser → max_power
+      { follower_id: 11, followed_id: 10 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
     ];
@@ -674,6 +719,100 @@ app.get('/dev/create-notifications', async (req, res) => {
   }
 });
 
+// Visit: http://localhost:3000/dev/create-user-posts
+app.get('/dev/create-user-posts', async (req, res) => {
+  try {
+    const postOwnerId = 11; // Must exist in your users table
+
+    // 🔹 Step 1: Create test posts
+    const postIds = [];
+    const testPosts = [
+      {
+        title: "Inception",
+        body: "Test body for Inception",
+        cover: "https://image.tmdb.org/t/p/w500/poster1.jpg",
+        where_to_watch: "Netflix",
+        review: 4.5
+      },
+      {
+        title: "The Matrix",
+        body: "Test body for The Matrix",
+        cover: "https://image.tmdb.org/t/p/w500/poster2.jpg",
+        where_to_watch: "HBO Max",
+        review: 4.8
+      }
+    ];
+
+    for (const post of testPosts) {
+      const inserted = await db.one(
+        `INSERT INTO posts (title, body, user_id, cover, where_to_watch, review, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         RETURNING id`,
+        [post.title, post.body, postOwnerId, post.cover, post.where_to_watch, post.review]
+      );
+      postIds.push(inserted.id);
+    }
+
+    // 🔹 Step 2: Add likes + notifications
+    const likerIds = [2, 3, 4];
+    for (const postId of postIds) {
+      for (const likerId of likerIds) {
+        if (likerId !== postOwnerId) {
+          await db.none(
+            `INSERT INTO post_likes (user_id, post_id) VALUES ($1, $2)
+             ON CONFLICT DO NOTHING`,
+            [likerId, postId]
+          );
+          await db.none(
+            `UPDATE posts SET like_count = like_count + 1 WHERE id = $1`,
+            [postId]
+          );
+          await db.none(
+            `INSERT INTO notifications (recipient_id, sender_id, message)
+             VALUES ($1, $2, $3)`,
+            [postOwnerId, likerId, 'liked your post']
+          );
+        }
+      }
+    }
+
+    // 🔹 Step 3: Add comments + notifications
+    const commenterIds = [3, 5];
+    const sampleComments = ["Nice pick!", "One of my favorites!"];
+    let i = 0;
+
+    for (const postId of postIds) {
+      for (const commenterId of commenterIds) {
+        const commentText = sampleComments[i % sampleComments.length];
+        i++;
+
+        await db.none(
+          `INSERT INTO post_comments (user_id, post_id, comment)
+           VALUES ($1, $2, $3)`,
+          [commenterId, postId, commentText]
+        );
+        await db.none(
+          `UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1`,
+          [postId]
+        );
+        await db.none(
+          `INSERT INTO notifications (recipient_id, sender_id, message)
+           VALUES ($1, $2, $3)`,
+          [postOwnerId, commenterId, `commented on your post: "${commentText}"`]
+        );
+      }
+    }
+
+    res.send(`✅ Created posts, likes, comments, and notifications for user ID ${postOwnerId}`);
+  } catch (err) {
+    console.error("❌ Error creating user posts:", err.message);
+    console.error(err.stack);
+    res.status(500).send("❌ Failed to create test data.");
+  }
+});
+
+
+
 
 
 
@@ -687,25 +826,27 @@ app.get('/social', async (req, res) => {
 
   try {
     const posts = await db.any(`
-      SELECT 
-        posts.id, 
-        posts.title, 
-        posts.body, 
-        posts.cover, 
-        posts.where_to_watch, 
-        posts.review, 
-        posts.like_count, 
-        posts.comment_count,
-        users.username AS user,
-        EXISTS (
-          SELECT 1 FROM post_likes 
-          WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
-        ) AS liked
-      FROM posts
-      JOIN users ON posts.user_id = users.id
-      ORDER BY posts.created_at DESC
-      LIMIT $2 OFFSET $3
-    `, [userId || 0, limit, offset]);
+  SELECT 
+    posts.id, 
+    posts.title, 
+    posts.body, 
+    posts.cover, 
+    posts.where_to_watch, 
+    posts.review, 
+    posts.like_count, 
+    posts.comment_count,
+    users.username AS user,
+    EXISTS (
+      SELECT 1 FROM post_likes 
+      WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
+    ) AS liked
+  FROM posts
+  JOIN users ON posts.user_id = users.id
+  JOIN friends ON friends.followed_user_id = posts.user_id
+  WHERE friends.following_user_id = $1
+  ORDER BY posts.created_at DESC
+  LIMIT $2 OFFSET $3
+`, [userId, limit, offset]);
 
     res.render('pages/social', { layout: 'main', user: req.session.user, posts });
   } catch (err) {
@@ -724,25 +865,27 @@ app.get('/load-more', async (req, res) => {
 
   try {
     const posts = await db.any(`
-      SELECT 
-        posts.id, 
-        posts.title, 
-        posts.body, 
-        posts.cover, 
-        posts.where_to_watch, 
-        posts.review, 
-        posts.like_count, 
-        posts.comment_count,
-        users.username AS user,
-        EXISTS (
-          SELECT 1 FROM post_likes 
-          WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
-        ) AS liked
-      FROM posts
-      JOIN users ON posts.user_id = users.id
-      ORDER BY posts.created_at DESC
-      LIMIT $2 OFFSET $3
-    `, [userId, limit, offset]);
+  SELECT 
+    posts.id, 
+    posts.title, 
+    posts.body, 
+    posts.cover, 
+    posts.where_to_watch, 
+    posts.review, 
+    posts.like_count, 
+    posts.comment_count,
+    users.username AS user,
+    EXISTS (
+      SELECT 1 FROM post_likes 
+      WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
+    ) AS liked
+  FROM posts
+  JOIN users ON posts.user_id = users.id
+  JOIN friends ON friends.followed_user_id = posts.user_id
+  WHERE friends.following_user_id = $1
+  ORDER BY posts.created_at DESC
+  LIMIT $2 OFFSET $3
+`, [userId, limit, offset]);
 
     return res.json({ posts });
   } catch (err) {

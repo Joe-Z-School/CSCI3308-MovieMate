@@ -27,6 +27,7 @@
           <!-- ❤️ Like Button -->
           <button class="btn heart-button" data-post-id="{{id}}" aria-label="Like">
             <i class="bi {{#if liked}}bi-heart-fill{{else}}bi-heart{{/if}}"></i>
+            <span class="like-count ms-1">{{like_count}}</span>
           </button>
 
           <!-- ➕ Add to Watchlist Button -->
@@ -56,31 +57,6 @@
     <br>
 </div>
 
-<!--
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // ❤️ Like button toggle
-  document.querySelectorAll('.heart-button').forEach(button => {
-    button.addEventListener('click', async () => {
-      const postId = button.dataset.postId;
-      try {
-        const res = await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
-        if (res.ok) {
-          const data = await res.json();
-          const icon = button.querySelector('i');
-          icon.classList.toggle('bi-heart');
-          icon.classList.toggle('bi-heart-fill');
-        } else {
-          alert("Failed to like/unlike.");
-        }
-      } catch (err) {
-        console.error("Like toggle error:", err);
-      }
-    });
-  });
-});
-</script>
--->
 <script>
 let currentPage = 1;
 let isLoading = false;
@@ -116,6 +92,7 @@ window.addEventListener('scroll', async () => {
                   <!-- ❤️ Like Button -->
                   <button class="btn heart-button" data-post-id="${post.id}" aria-label="Like">
                     <i class="bi ${post.liked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                    <span class="like-count ms-1">${post.like_count}</span>
                   </button>
 
                   <!-- ➕ Add to Watchlist Button (optional) -->
@@ -165,9 +142,16 @@ function attachLikeListeners() {
       try {
         const res = await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
         if (res.ok) {
+          const data = await res.json();
           const icon = cloned.querySelector('i');
+          const countSpan = cloned.querySelector('.like-count');
+
           icon.classList.toggle('bi-heart');
           icon.classList.toggle('bi-heart-fill');
+
+          if (countSpan) {
+            countSpan.textContent = data.likeCount;
+          }
         } else {
           alert("Failed to like/unlike.");
         }
