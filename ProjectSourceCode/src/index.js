@@ -247,8 +247,7 @@ app.get('/dev/register', async (req, res) => {
           `, [sets.username, hash, sets.email, sets.profile_icon, sets.bio, created_at, sets.first_name, sets.last_name]);
       });
     }
-    console.log('data successfully added');
-    res.redirect('/dev/create-friends');
+    res.send('data successfully added');
   } catch (err) {
     req.session.Message = 'An error occurred';
     res.send('Error adding data');
@@ -546,6 +545,9 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 12 }, // joe1 → joe2
       { follower_id: 11, followed_id: 13 }, // joe1 → joe3
       { follower_id: 11, followed_id: 14 }, // joe1 → joe4
+      { follower_id: 11, followed_id: 4 }, // joe1 → matt
+      { follower_id: 11, followed_id: 5 }, // joe1 → jessie
+      { follower_id: 11, followed_id: 6 }, // joe1 → kay
     ];
 
     for (const pair of friends) {
@@ -705,13 +707,17 @@ app.get('/messaging', async (req, res) => {
     `;
     const allFriends = await db.query(allFriendsQuery, [activeUser.id]);
 
-    // Format last_active for each friend
     const formattedFriends = allFriends.map(friend => ({
-      ...friend,
+      id: friend.id,
+      name: friend.name,
+      profile_icon: friend.profile_icon,
+      latest_message: friend.latest_message,
+      unread_count: friend.unread_count ?? 0,
       last_active: friend.last_active
         ? formatDistanceToNow(new Date(friend.last_active), { addSuffix: true })
         : "Not available"
     }));
+    
 
     res.render('pages/messaging', {
       activeUser,
@@ -723,8 +729,12 @@ app.get('/messaging', async (req, res) => {
   }
 });
 
+// Store which users are currrently chatting
+const activeChats = new Map(); // Stores { userId: chattingWithUserId }
+
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
+  
 
   // Fetch friends list for a user
   socket.on('get-friends-list', async ({ userId }) => {
@@ -738,7 +748,7 @@ io.on('connection', (socket) => {
       `;
   
       const result = await db.query(query, [userId]);
-      console.log('Query Result:', result); // Log the results
+      // console.log('Query Result:', result); // Show result of query
   
       const friendsList = result;
   
@@ -748,9 +758,9 @@ io.on('connection', (socket) => {
         return;
       }
   
-      // Send the updated friends list to the client
+      // Send the updated friends list
       socket.emit('friends-list-updated', friendsList);
-      console.log('Sending updated friends list to client:', friendsList);
+      // console.log('Updated friends list:', friendsList);
     } catch (error) {
       console.error('Failed to fetch friends list:', error);
       socket.emit('friends-list-updated', []); // Send empty array if error
@@ -762,17 +772,19 @@ io.on('connection', (socket) => {
     socket.join(`user-${senderId}`);
     socket.join(`user-${recipientId}`);
   
+    // Track the active chat
+    activeChats.set(senderId, recipientId);
+  
     try {
       const query = `
         SELECT sender_id, recipient_id, content, timestamp
           FROM messages
           WHERE (sender_id = $1 AND recipient_id = $2)
-            OR (sender_id = $2 AND recipient_id = $1)
+             OR (sender_id = $2 AND recipient_id = $1)
           ORDER BY timestamp ASC
       `;
       const result = await db.query(query, [senderId, recipientId]);
   
-      // Send messages to the client
       socket.emit('load-messages', result);
     } catch (error) {
       console.error('Failed to load messages:', error);
@@ -780,43 +792,77 @@ io.on('connection', (socket) => {
   });
 
   // Handle private messages
-socket.on('private-message', async ({ senderId, recipientId, content }) => {
-  try {
-    console.log('Private message event received:', { senderId, recipientId, content }); // Debug incoming data
+  socket.on('private-message', async ({ senderId, recipientId, content }) => {
+    try {
+      console.log('Private message received:', { senderId, recipientId, content });
+  
+      // Determine if the recipient is actively chatting with the sender
+      const recipientActiveChat = activeChats.get(recipientId);
+      const isChatOpen = recipientActiveChat === senderId;
+  
+      // Insert the message into the database
+      const insertQuery = `
+        INSERT INTO messages (sender_id, recipient_id, content, is_read, timestamp)
+        VALUES ($1, $2, $3, $4, NOW())
+      `;
+      await db.query(insertQuery, [senderId, recipientId, content, isChatOpen]);
 
-    // Save the message in the database
-    const query = `
-      INSERT INTO messages (sender_id, recipient_id, content, is_read, timestamp)
-      VALUES ($1, $2, $3, false, NOW());
-    `;
-    await db.query(query, [senderId, recipientId, content]);
+      console.log(`Recipient's active chat:`, recipientActiveChat);
+      console.log(`SenderId:`, senderId);
+      console.log(`Chat open?`, isChatOpen);
 
-    // Update metadata for friends (latest message, unread count, last active)
-    const updateMetadataQuery = `
-      UPDATE friends
-      SET latest_message = $1,
-          last_active = NOW(),
-          unread_count = CASE 
-            WHEN (following_user_id = $2 AND followed_user_id = $3) THEN unread_count
-            WHEN (following_user_id = $3 AND followed_user_id = $2) THEN unread_count + 1
-            ELSE unread_count
-          END
-      WHERE (following_user_id = $2 AND followed_user_id = $3)
-         OR (following_user_id = $3 AND followed_user_id = $2);
-    `;
-    await db.query(updateMetadataQuery, [content, senderId, recipientId]);
-
-    // Broadcast message to recipient
-    io.to(`user-${recipientId}`).emit('private-message', { senderId, content });
-    console.log(`Broadcasting message to recipient room user-${recipientId}:`, { senderId, content });
-
-    // Retrieve the current unread count for the recipient
-    const getCount = await db.query('SELECT unread_count FROM friends WHERE (following_user_id = $1 AND followed_user_id = $2) OR (following_user_id = $2 AND followed_user_id = $1)', [senderId, recipientId]);
-    console.log('Current count of unread messages for recipient:', getCount.rows[0].unread_count); // Debugging line
-  } catch (error) {
-    console.error('Failed to save or broadcast message:', error);
-  }
-});
+  
+      if (!isChatOpen) {
+        // If chat is not open, increment unread count
+        const updateUnread = `
+          UPDATE friends
+          SET latest_message = $1,
+              last_active = NOW(),
+              unread_count = unread_count + 1
+          WHERE following_user_id = $2 AND followed_user_id = $3
+        `;
+        await db.query(updateUnread, [content, recipientId, senderId]);
+  
+        // Send updated unread count (optional)
+        const unreadQuery = `SELECT unread_count FROM friends WHERE following_user_id = $1 AND followed_user_id = $2`;
+        const { rows } = await db.query(unreadQuery, [recipientId, senderId]);
+        const unreadCount = rows[0]?.unread_count || 0;
+  
+        io.to(`user-${recipientId}`).emit('update-unread-count', { senderId, recipientId, unreadCount });
+        io.to(`user-${recipientId}`).emit('increment-unread', { from: senderId });
+      } else {
+        // Chat is open — mark all messages as read immediately
+        const markRead = `
+          UPDATE messages
+          SET is_read = true
+          WHERE recipient_id = $1 AND sender_id = $2
+        `;
+        await db.query(markRead, [recipientId, senderId]);
+  
+        // Reset unread count
+        const resetUnread = `
+          UPDATE friends
+          SET unread_count = 0,
+              latest_message = $1,
+              last_active = NOW()
+          WHERE following_user_id = $2 AND followed_user_id = $3
+        `;
+        await db.query(resetUnread, [content, recipientId, senderId]);
+  
+        // Notify UI to clear unread badge
+        io.to(`user-${recipientId}`).emit('update-unread-count', { senderId, recipientId, unreadCount: 0 });
+      }
+  
+      // Send the message to the recipient
+      io.to(`user-${recipientId}`).emit('private-message', { senderId, content });
+      
+  
+    } catch (error) {
+      console.error('Error handling private message:', error);
+    }
+  });
+  
+  
 
 // Mark messages as read
 socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
@@ -839,13 +885,35 @@ socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
     // Update unread count to 0
     socket.emit('update-unread-count', { senderId, recipientId, unreadCount: 0 });
     console.log(`Unread count reset for senderId: ${senderId}, recipientId: ${recipientId}`);
+    activeChats.delete(senderId); // Optionally clear it when chat ends (if you track closing)
+
   } catch (error) {
     console.error('Failed to mark messages as read:', error);
   }
 });
 
+// Set active chat
+socket.on('setActiveChat', (chatPartnerId) => {
+  const currentUserId = [...activeChats.entries()].find(([key, value]) => value === chatPartnerId)?.[0];
+  if (chatPartnerId === null) {
+    // User left the chat — clear from map
+    activeChats.delete(currentUserId);
+    console.log(`Cleared active chat for user ${currentUserId}`);
+  } else {
+    // Set new active chat
+    activeChats.set(currentUserId, chatPartnerId);
+    console.log(`User ${currentUserId} is now chatting with ${chatPartnerId}`);
+  }
+});
+
+
   // User disconnect handler
   socket.on('disconnect', () => {
+    for (let userId in activeChats) {
+      if (socket.id === `user-${userId}`) {
+        delete activeChats[userId];
+      }
+    }
     console.log(`User disconnected: ${socket.id}`);
   });
 });
