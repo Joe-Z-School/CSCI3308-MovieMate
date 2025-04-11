@@ -597,15 +597,30 @@ app.post('/remove-from-watchlist', async (req, res) => {
 // *****************************************************
 //  <!-- Profile Page --!>
 // *****************************************************
-app.get('/profile', (req, res) => {
-  const profileUsername = req.query.username || req.session.user.username;
-  const loggedInUsername = req.session.user ? req.session.user.username : null;
-  const isOwnProfile = loggedInUsername === profileUsername;
+app.get('/profile', async (req, res) => {
+  const profileUserID = req.query.id || req.session.user.id;
+  const loggedInUserID = req.session.user.id ? req.session.user.id : null;
+  const isOwnProfile = loggedInUserID === profileUserID;
+  if (isOwnProfile) {
+    res.render('pages/profile', {
+      user: req.session.user,
+      profile: req.session.user,
+      isOwnProfile: isOwnProfile
+    });
+  }
+  else {
+    const profileUser = await db.one(
+      'SELECT * FROM users WHERE id = $1',
+      [profileUserID]
+    );
+    console.log(profileUser)
+    res.render('pages/profile', {
+      user: req.session.user,
+      profile: profileUser,
+      isOwnProfile: isOwnProfile
+    });
+  }
 
-  res.render('pages/profile', {
-    user: req.session.user,
-    isOwnProfile: isOwnProfile
-  });
 });
 
 app.get('/profile/edit', (req, res) => {

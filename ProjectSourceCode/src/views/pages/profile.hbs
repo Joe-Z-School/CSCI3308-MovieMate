@@ -10,11 +10,11 @@
 {{> nav}}
 <div class="profile-container">
     <div class="profile-header">
-        <img src="../../resources/img/{{user.profile_icon}}" alt="Profile Picture" class="profile-pic">
+        <img src="../../resources/img/{{profile.profile_icon}}" alt="Profile Picture" class="profile-pic">
 
         <div class="profile-info">
-            <h1 class="profile-name">{{user.first_name}}</h1>
-            <p class="profile-username">@{{user.username}}</p>
+            <h1 class="profile-name">{{profile.first_name}}</h1>
+            <p class="profile-username">@{{profile.username}}</p>
             {{#if isOwnProfile}}
             <button id="openEditModal" class="btn-edit">Edit Profile</button>
             {{else}}
@@ -29,21 +29,21 @@
             <div class="stat-label">Posts</div>
         </div>
         <div class="stat-item">
-            <a href="/profile/followers?userId={{user.id}}" style="text-decoration: none; color: inherit;">
-                <div class="stat-value">{{user.followers}}</div>
+            <a href="/profile/followers?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
+                <div class="stat-value">{{profile.followers}}</div>
                 <div class="stat-label" id="followers">Followers</div>
             </a>
         </div>
         <div class="stat-item">
-            <a href="/profile/following?userId={{user.id}}" style="text-decoration: none; color: inherit;">
-                <div class="stat-value">{{user.following}}</div>
+            <a href="/profile/following?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
+                <div class="stat-value">{{profile.following}}</div>
                 <div class="stat-label" id="following">Following</div>
             </a>
         </div>
     </div>
 
     <div class="profile-bio">
-        <p>{{user.bio}}</p>
+        <p>{{profile.bio}}</p>
     </div>
 
     <div class="post-container">

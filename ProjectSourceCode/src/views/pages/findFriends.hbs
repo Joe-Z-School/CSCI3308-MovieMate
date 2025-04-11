@@ -2,116 +2,124 @@
 <div class="container mt-4">
 
 
-    <h2 class="mb-4">Find and Follow Users</h2>
+  <h2 class="mb-4">Find and Follow Users</h2>
 
 
-    <div class="input-group mb-4">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search by username..."
-            onkeyup="filterUsers()">
-    </div>
+  <div class="input-group mb-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Search by username..."
+      onkeyup="filterUsers()">
+  </div>
 
 
-    <table class="table" id="userTable">
-        {{!-- <thead>
-            <tr>
-                <th scope="col">Profile</th>
-                <th scope="col">Username</th>
-                <th scope="col">Bio</th>
-                <th scope="col">Action</th>
-            </tr>
-        </thead> --}}
-        <tbody>
-            {{#each users}}
-            <tr class="user-row">
-                <td>
-                    <img src="../../resources/img/{{profile_icon}}" alt="Profile" style="width: 50px; height: 50px; border-radius: 50%;">
-                </td>
-                <td>
-                  <div>
-                    <strong style="color: #5F4B8B">{{first_name}} {{last_name}}</strong>
-                  </div>
-                  <div>
-                    @{{username}}
-                  </div> 
+  <table class="table" id="userTable">
+    {{!-- <thead>
+      <tr>
+        <th scope="col">Profile</th>
+        <th scope="col">Username</th>
+        <th scope="col">Bio</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead> --}}
+    <tbody>
+      {{#each users}}
+      <tr class="user-row">
+        <td>
+          <img src="../../resources/img/{{profile_icon}}" alt="Profile"
+            style="width: 50px; height: 50px; border-radius: 50%;">
+        </td>
+        <td>
+          <div>
+            <a href="/profile?id={{id}}" style="text-decoration: none; color: inherit;">
+              <strong style="color: #5F4B8B">{{first_name}} {{last_name}}</strong>
+            </a>
+          </div>
+          <div>
+            @{{username}}
+          </div>
 
-                </td>
-                <td>{{bio}}</td>
-           <td>
-            {{#if is_following}}
-              <button type="button" class="btn btn-outline-danger" style="padding: 10px 20px; font-size: 16px; border-radius: 5px;" onclick="showUnfollowModal('{{id}}', '{{username}}')">Unfollow</button>
-            {{else if is_requested}}
-               <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')"> Requested</button>
+        </td>
+        <td>{{bio}}</td>
+        <td>
+          {{#if is_following}}
+          <button type="button" class="btn btn-outline-danger"
+            style="padding: 10px 20px; font-size: 16px; border-radius: 5px;"
+            onclick="showUnfollowModal('{{id}}', '{{username}}')">Unfollow</button>
+          {{else if is_requested}}
+          <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')">
+            Requested</button>
           {{else}}
-            <form action="/users/follow" method="POST">
+          <form action="/users/follow" method="POST">
             <input type="hidden" name="following_id" value="{{id}}">
-            <button type="submit" style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
-            </form>
+            <button type="submit"
+              style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
+          </form>
           {{/if}}
-          </td>
+        </td>
 
-         </tr>
-       {{/each}}
-     </tbody>
-   </table>
-   <!-- Unfollow Confirmation Modal -->
-<div class="modal fade" id="unfollowModal" tabindex="-1" aria-labelledby="unfollowModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content p-3">
-      <div class="modal-header">
-        <h5 class="modal-title" id="unfollowModalLabel">Confirm Unfollow</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to unfollow <strong id="unfollowUsername"></strong>?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <form id="unfollowForm" method="POST" action="/users/unfollow">
-          <input type="hidden" name="following_id" id="unfollowUserId">
-          <button type="submit" class="btn btn-danger">Unfollow</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Cancel Follow Request Modal -->
-<div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content p-3">
-      <div class="modal-header">
-        <h5 class="modal-title" id="cancelRequestModalLabel">Cancel Follow Request</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to cancel your follow request to <strong id="cancelRequestUsername"></strong>?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nevermind</button>
-        <form id="cancelRequestForm" method="POST" action="/users/cancel-request">
-          <input type="hidden" name="receiver_id" id="cancelRequestUserId">
-          <button type="submit" class="btn btn-warning">Cancel Request</button>
-        </form>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  <!-- Unfollow Confirmation Modal -->
+  <div class="modal fade" id="unfollowModal" tabindex="-1" aria-labelledby="unfollowModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
+        <div class="modal-header">
+          <h5 class="modal-title" id="unfollowModalLabel">Confirm Unfollow</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to unfollow <strong id="unfollowUsername"></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <form id="unfollowForm" method="POST" action="/users/unfollow">
+            <input type="hidden" name="following_id" id="unfollowUserId">
+            <button type="submit" class="btn btn-danger">Unfollow</button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Cancel Follow Request Modal -->
+  <div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cancelRequestModalLabel">Cancel Follow Request</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to cancel your follow request to <strong id="cancelRequestUsername"></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nevermind</button>
+          <form id="cancelRequestForm" method="POST" action="/users/cancel-request">
+            <input type="hidden" name="receiver_id" id="cancelRequestUserId">
+            <button type="submit" class="btn btn-warning">Cancel Request</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
- </div>
-
- <script>
-   function filterUsers() {
-     const input = document.getElementById('searchInput').value.toLowerCase();
-     const rows = document.querySelectorAll('.user-row');
+<script>
+  function filterUsers() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('.user-row');
 
 
-     rows.forEach(row => {
-       const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-       row.style.display = username.includes(input) ? '' : 'none';
-     });
-   }
+    rows.forEach(row => {
+      const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+      row.style.display = username.includes(input) ? '' : 'none';
+    });
+  }
 
-   
+
   function showUnfollowModal(userId, username) {
     document.getElementById('unfollowUserId').value = userId;
     document.getElementById('unfollowUsername').textContent = username;
@@ -121,14 +129,14 @@
   }
 
   function showCancelRequestModal(userId, username) {
-  document.getElementById('cancelRequestUserId').value = userId;
-  document.getElementById('cancelRequestUsername').textContent = username;
+    document.getElementById('cancelRequestUserId').value = userId;
+    document.getElementById('cancelRequestUsername').textContent = username;
 
-  const modal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
-  modal.show();
-}
+    const modal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
+    modal.show();
+  }
 
- </script>
+</script>
 </body>
-</html>
 
+</html>
