@@ -9,3 +9,24 @@ INSERT INTO users (username, password, email, profile_icon, bio, followers_count
 ('amy_codes', 'amyrules', 'amy@example.com', 'profile_pic_option_2.png', 'Front-end dev & dog mom.', 0, 1, CURRENT_TIMESTAMP, 'Amy', 'Codes'),
 ('omar_ocean', 'waves123', 'omar@example.com', 'profile_pic_option_3.png', 'Surfer. Engineer. Explorer.', 2, 1, CURRENT_TIMESTAMP, 'Omar', 'Ocean'),
 ('taylor_dev', 'password456', 'taylor@example.com', 'profile_pic_option_4.png', 'Backend builder & API fan.', 3, 3, CURRENT_TIMESTAMP, 'Taylor', 'Dev');
+
+-- Insert 15 sample posts using only user_id 1-10
+INSERT INTO posts (title, body, user_id, status, created_at, cover, where_to_watch, review)
+VALUES 
+('Inception', 'A mind-bending thriller by Nolan.', 1, 'public', NOW(), 'cover1.jpg', 'Netflix', 4),
+('Interstellar', 'Explores the stars and time.', 2, 'public', NOW(), 'cover2.jpg', 'Hulu', 3.5),
+('TestTitle3', 'Test Description for TestTitle3.', 3, 'public', NOW(), 'cover3.jpg', 'HBO', 3),
+('TestTitle4', 'Test Description for TestTitle4.', 4, 'public', NOW(), 'cover4.jpg', 'Netflix', 1.1),
+('TestTitle5', 'Test Description for TestTitle5.', 5, 'public', NOW(), 'cover5.jpg', 'HBO', 5),
+('TestTitle6', 'Test Description for TestTitle6.', 6, 'public', NOW(), 'cover6.jpg', 'Paramount', 4.1),
+('TestTitle7', 'Test Description for TestTitle7.', 7, 'public', NOW(), 'cover7.jpg', 'Disney', 2.5),
+('TestTitle8', 'Test Description for TestTitle8.', 8, 'public', NOW(), 'cover8.jpg', 'Netflix', 3),
+('TestTitle9', 'Test Description for TestTitle9.', 9, 'public', NOW(), 'cover9.jpg', 'Netflix', 1),
+('TestTitle10', 'Test Description for TestTitle10.', 10, 'public', NOW(), 'cover10.jpg', 'HBO', 1),
+('TestTitle11', 'Test Description for TestTitle11.', 1, 'public', NOW(), 'cover11.jpg', 'Hulu', 4),
+('TestTitle12', 'Test Description for TestTitle12.', 2, 'public', NOW(), 'cover12.jpg', 'Hulu', 2.1),
+('TestTitle13', 'Test Description for TestTitle13.', 3, 'public', NOW(), 'cover13.jpg', 'Disney', 4.8),
+('TestTitle14', 'Test Description for TestTitle14.', 4, 'public', NOW(), 'cover14.jpg', 'Disney', 2.7),
+('TestTitle15', 'Test Description for TestTitle15.', 5, 'public', NOW(), 'cover15.jpg', 'Paramount', 1.9);
+
+
