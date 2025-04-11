@@ -80,7 +80,62 @@ window.onscroll = () => {
     }, 150);
 };
 
-function toggleWatchlist(title, picture, whereToWatch, index) {
+// function toggleWatchlist(title, picture, whereToWatch, index) {
+//     const addedIcon = document.getElementById(`add-icon-${index}`);
+//     const addButton = document.getElementById(`add-button-${index}`);
+    
+//     if (!addedIcon || !addButton) {
+//         console.error('Elements for toggleWatchlist not found:', { addedIcon, addButton });
+//         return;
+//     }
+
+//     const isAdded = addedIcon.classList.contains('bi-dash-circle');
+    
+//     // Remove existing tooltip instance
+//     const existingTooltip = bootstrap.Tooltip.getInstance(addButton);
+//     if (existingTooltip) {
+//         existingTooltip.dispose();
+//     }
+
+//     if (!isAdded) {
+//         // Change icon to 'Remove'
+//         addedIcon.classList.remove('bi-plus-circle');
+//         addedIcon.classList.add('bi-dash-circle');
+//         addedIcon.style.color = 'red';
+//         addButton.setAttribute('data-bs-title', 'Remove from WatchList');
+        
+//         // Fetch to add to watchlist
+//         fetch('/add-to-watchlist', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ title, picture, whereToWatch }),
+//         })
+//         .then(response => response.json())
+//         .then(data => console.log(data.message))
+//         .catch(error => console.error('Error:', error));
+//     } else {
+//         // Change icon back to 'Add'
+//         addedIcon.classList.remove('bi-dash-circle');
+//         addedIcon.classList.add('bi-plus-circle');
+//         addedIcon.style.color = 'black';
+//         addButton.setAttribute('data-bs-title', 'Add to WatchList');
+        
+//         // Fetch to remove from watchlist
+//         fetch('/remove-from-watchlist', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ title }),
+//         })
+//         .then(response => response.json())
+//         .then(data => console.log(data.message))
+//         .catch(error => console.error('Error:', error));
+//     }
+
+//     // Recreate tooltip with updated title
+//     new bootstrap.Tooltip(addButton, { trigger: 'hover' });
+// }
+
+function toggleWatchlist(title, poster_picture, whereToWatch, index) {
     const addedIcon = document.getElementById(`add-icon-${index}`);
     const addButton = document.getElementById(`add-button-${index}`);
     
@@ -91,47 +146,55 @@ function toggleWatchlist(title, picture, whereToWatch, index) {
 
     const isAdded = addedIcon.classList.contains('bi-dash-circle');
     
-    // Remove existing tooltip instance
     const existingTooltip = bootstrap.Tooltip.getInstance(addButton);
     if (existingTooltip) {
         existingTooltip.dispose();
     }
 
     if (!isAdded) {
-        // Change icon to 'Remove'
         addedIcon.classList.remove('bi-plus-circle');
         addedIcon.classList.add('bi-dash-circle');
         addedIcon.style.color = 'red';
         addButton.setAttribute('data-bs-title', 'Remove from WatchList');
         
-        // Fetch to add to watchlist
         fetch('/add-to-watchlist', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, picture, whereToWatch }),
+            body: JSON.stringify({ title, poster_picture, whereToWatch }),
         })
         .then(response => response.json())
-        .then(data => console.log(data.message))
-        .catch(error => console.error('Error:', error));
+        .then(data => {
+            console.log(data.message);
+            if (data.message) {
+                alert(data.message); 
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
     } else {
-        // Change icon back to 'Add'
         addedIcon.classList.remove('bi-dash-circle');
         addedIcon.classList.add('bi-plus-circle');
         addedIcon.style.color = 'black';
         addButton.setAttribute('data-bs-title', 'Add to WatchList');
         
-        // Fetch to remove from watchlist
         fetch('/remove-from-watchlist', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title }),
         })
         .then(response => response.json())
-        .then(data => console.log(data.message))
-        .catch(error => console.error('Error:', error));
+        .then(data => {
+            console.log(data.message);
+            if (data.message) {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
     }
 
-    // Recreate tooltip with updated title
     new bootstrap.Tooltip(addButton, { trigger: 'hover' });
 }
 
