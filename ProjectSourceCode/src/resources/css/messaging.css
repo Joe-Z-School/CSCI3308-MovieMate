@@ -36,12 +36,12 @@
     background-color: var(--lighterBackground); /* Slightly lighter dark background */
     border-radius: 8px;
     padding: 10px;
-    height: calc(95vh - 60px);
+    height: calc(100vh - 120px);
     overflow-y: auto;
   }
 
   .friend {
-    height: 80px;
+    height: 100%;
     display: flex;
     align-items: center;
   }
@@ -250,26 +250,24 @@
   }
 
   /* Divider for new unread messages */
-.new-messages-divider {
-  background-color: #2a2a2a; /* Background color for the divider */
-  color: var(--lightPurpleAccent); /* Text color for the divider */
-  font-size: 0.9rem; /* Adjust font size */
-  text-align: center;
-  padding: 10px 0;
-  margin: 10px 0;
-  border-top: 2px solid #444; /* A subtle top border */
-  border-bottom: 2px solid #444; /* A subtle bottom border */
-  position: relative;
-}
+  .new-messages-divider {
+    background-color: #2a2a2a; /* Background color for the divider */
+    color: var(--lightPurpleAccent); /* Text color for the divider */
+    font-size: 0.9rem; /* Adjust font size */
+    text-align: center;
+    padding: 10px 0;
+    margin: 10px 0;
+    border-top: 2px solid #444; /* A subtle top border */
+    border-bottom: 2px solid #444; /* A subtle bottom border */
+    position: relative;
+  }
 
-.new-messages-divider span {
-  background-color: var(--darkBackground); /* Dark background for the text */
-  padding: 0 15px;
-  position: relative;
-  z-index: 1; /* Ensure text stays above the divider line */
-}
-
-  
+  .new-messages-divider span {
+    background-color: var(--darkBackground); /* Dark background for the text */
+    padding: 0 15px;
+    position: relative;
+    z-index: 1; /* Ensure text stays above the divider line */
+  }  
   
   button {
     padding: 5px 10px;
