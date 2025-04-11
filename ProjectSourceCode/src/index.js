@@ -129,7 +129,6 @@ app.get('/explore', (req, res) => {
     user: req.session.user,
     title: 'Explore Movies - MovieMates'
   });
-
 });
 
 app.get('/', (req, res) => {
@@ -598,8 +597,6 @@ app.post('/remove-from-watchlist', async (req, res) => {
 // *****************************************************
 //  <!-- Profile Page --!>
 // *****************************************************
-// Display the main page
-// If you want to use the current route format (no username in URL)
 app.get('/profile', (req, res) => {
   const profileUsername = req.query.username || req.session.user.username;
   const loggedInUsername = req.session.user ? req.session.user.username : null;
@@ -609,6 +606,102 @@ app.get('/profile', (req, res) => {
     user: req.session.user,
     isOwnProfile: isOwnProfile
   });
+});
+
+app.get('/profile/edit', (req, res) => {
+  const user = req.session.user;
+  res.render('pages/profile-edit', {
+    user: user
+  });
+})
+
+app.post('/profile/edit', async (req, res) => {
+  const userId = req.session.user.id;
+  const { first_name, last_name, email, bio, profile_icon } = req.body;
+  console.log(profile_icon)
+
+  try {
+    // Update database
+    await db.none(
+      `UPDATE users 
+       SET first_name = $1, last_name = $2, email = $3, bio = $4, profile_icon = $5
+       WHERE id = $6`,
+      [first_name, last_name, email, bio, profile_icon, userId]
+    );
+
+    // Create a new object with updated values instead of modifying the existing one
+    const updatedUser = {
+      ...req.session.user,
+      first_name,
+      last_name,
+      email,
+      bio,
+      profile_icon: profile_icon || req.session.user.profile_icon
+    };
+
+    // Update session with the new object
+    req.session.user = updatedUser;
+
+    req.session.save(err => {
+      if (err) {
+        console.error('Error saving session:', err);
+        return res.render('pages/profile-edit', {
+          user: req.session.user,
+          error: 'Failed to update profile. Please try again.'
+        });
+      }
+      res.redirect('/profile');
+    });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.render('pages/profile-edit', {
+      user: req.session.user,
+      error: 'Failed to update profile. Please try again.'
+    });
+  }
+});
+
+// Profile Followers/Following Routes
+app.get('/profile/followers', async (req, res) => {
+  const userId = req.query.userId || req.session.user.id;
+
+  try {
+    const followers = await db.any(`
+          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name, u.bio
+          FROM friends f
+          JOIN users u ON f.following_user_id = u.id
+          WHERE f.followed_user_id = $1
+      `, [userId]);
+
+    res.render('pages/followers', {
+      user: req.session.user,
+      followers
+    });
+  } catch (err) {
+    console.error('Error fetching followers:', err);
+    res.status(500).send('Error loading followers');
+  }
+});
+
+app.get('/profile/following', async (req, res) => {
+  const userId = req.query.userId || req.session.user.id;
+
+  try {
+    const following = await db.any(`
+          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name, u.bio
+          FROM friends f
+          JOIN users u ON f.followed_user_id = u.id
+          WHERE f.following_user_id = $1
+      `, [userId]);
+
+    res.render('pages/following', {
+      user: req.session.user,
+      following
+    });
+  } catch (err) {
+    console.error('Error fetching following:', err);
+    res.status(500).send('Error loading following');
+  }
 });
 
 // *****************************************************
