@@ -36,7 +36,20 @@
       <div class="tab-content" id="notificationTabContent">
         <!-- All Notifications -->
         <div class="tab-pane fade show active" id="all" role="tabpanel">
-          <div id="notification-list"></div>
+          {{#each generalNotifications}}
+          <div class="card notification-card mb-2 p-3" id="notification-{{this.id}}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="d-flex align-items-center">
+                <img src="{{this.profile_icon}}" alt="profile" class="profile-img me-3 rounded-circle" style="width: 40px; height: 40px;">
+                <div>
+                  <strong>{{this.sender_username}}</strong> {{this.message}}<br>
+                  <small class="text-muted">{{this.created_at}}</small>
+                </div>
+              </div>
+              <button type="button" class="btn-close ms-3" aria-label="Close" onclick="dismissNotification({{this.id}})"></button>
+            </div>
+          </div>
+          {{/each}}
         </div>
 
         <!-- Request Notifications -->
@@ -55,7 +68,6 @@
                 onclick="handleFollowAction('{{this.request_id}}', 'approve')">
                 Approve
               </button>
-
               <button type="button" class="btn btn-sm btn-outline-danger"
                 onclick="handleFollowAction('{{this.request_id}}', 'decline')"> Decline
               </button>
@@ -79,7 +91,6 @@
             const card = document.getElementById(`request-card-${requestId}`);
             card.style.transition = 'opacity 0.5s ease';
             card.style.opacity = '0';
-
             setTimeout(() => {
               card.remove();
             }, 500);
@@ -90,6 +101,27 @@
         .catch(err => {
           console.error(`Failed to ${action} request:`, err);
           alert('Something went wrong.');
+        });
+      }
+
+      function dismissNotification(notificationId) {
+        fetch(`/notifications/dismiss/${notificationId}`, {
+          method: 'POST'
+        })
+        .then(response => {
+          if (response.ok) {
+            const notif = document.getElementById(`notification-${notificationId}`);
+            notif.style.transition = 'opacity 0.4s ease';
+            notif.style.opacity = '0';
+            setTimeout(() => {
+              notif.remove();
+            }, 400);
+          } else {
+            alert("Couldn't dismiss notification.");
+          }
+        })
+        .catch(err => {
+          console.error("Dismiss error:", err);
         });
       }
     </script>
