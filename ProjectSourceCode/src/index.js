@@ -542,9 +542,7 @@ app.post("/api/posts/:id/like", async (req, res) => {
             [userId, postOwner.user_id, 'liked your post']
           );
         }
-        // Log all current notifications
-      const allNotifications = await db.any('SELECT * FROM notifications ORDER BY created_at DESC');
-      console.log("🔔 Current Notifications:", allNotifications);
+  
       
       // Get updated like count
       const { like_count } = await db.one(
@@ -590,9 +588,6 @@ app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async
     [userId, postOwner.user_id, `commented on your post: "${comment}"`]
   );
     }
-    // 🔍 Log all current notifications
-    const allNotifications = await db.any('SELECT * FROM notifications ORDER BY created_at DESC');
-    console.log("🔔 Current Notifications:", allNotifications);
 
     res.redirect("/social");
   } catch (err) {
@@ -1008,7 +1003,7 @@ app.get('/profile/followers', async (req, res) => {
 
   try {
     const followers = await db.any(`
-          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name
+          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name, u.bio
           FROM friends f
           JOIN users u ON f.following_user_id = u.id
           WHERE f.followed_user_id = $1
@@ -1029,7 +1024,7 @@ app.get('/profile/following', async (req, res) => {
 
   try {
     const following = await db.any(`
-          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name
+          SELECT u.id, u.username, u.profile_icon, u.first_name, u.last_name, u.bio
           FROM friends f
           JOIN users u ON f.followed_user_id = u.id
           WHERE f.following_user_id = $1

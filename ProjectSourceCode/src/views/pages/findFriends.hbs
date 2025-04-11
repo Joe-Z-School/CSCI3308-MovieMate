@@ -1,126 +1,197 @@
-{{> nav}}
-<div class="container mt-4">
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find and Follow Users</title>
+    <!-- Add Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <h2 class="mb-4">Find and Follow Users</h2>
+    <!-- Add Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
+    <style>
+        /* Override Bootstrap Styles with Higher Specificity */
+        #bootstrap-overrides .table {
+            background-color: #333;
+            color: white;
+        }
 
-    <div class="input-group mb-4">
-        <input type="text" id="searchInput" class="form-control" placeholder="Search by username..."
-            onkeyup="filterUsers()">
+        #bootstrap-overrides .table thead {
+            background-color: #1e1e1e;
+            color: white;
+        }
+
+        #bootstrap-overrides .table tbody tr {
+            background-color: #2a2a2a;
+            color: white;
+        }
+
+        #bootstrap-overrides .table tbody tr:hover {
+            background-color: #C4C3E3;
+            cursor: pointer;
+        }
+
+        #bootstrap-overrides .table td,
+        #bootstrap-overrides .table th {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+
+        #bootstrap-overrides .table tbody td:nth-child(2), /* Username column */
+        #bootstrap-overrides .table tbody td:nth-child(3) { /* Bio column */
+        color: #999 !important; /* Force the text color to be white */
+        }
+        /* Custom Root Variables for Consistency */
+        :root {
+            --primary-purple: #5F4B8B;
+            --secondary-purple: #C4C3E3;
+            --light-purple: #E9E8F7;
+            --dark-purple: #4a3a6d;
+            --accent-purple: #9683C3;
+        }
+
+        /* Global Body Styling */
+        body {
+            background-color: #121212;
+            color: white;
+        }
+
+    </style>
+</head>
+
+<body id="bootstrap-overrides">
+
+    {{> nav}}
+
+    <div class="container mt-4">
+        <h2 class="mb-4">Find and Follow Users</h2>
+
+        <div class="input-group mb-4">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by username..." onkeyup="filterUsers()">
+        </div>
+
+        <table class="table custom-table" id="userTable">
+            <thead>
+                <tr>
+                    <th scope="col" style="color: white;">Profile</th>
+                    <th scope="col" style="color: white;">Username</th>
+                    <th scope="col" style="color: white;">Bio</th>
+                    <th scope="col" style="color: white;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each users}}
+                <tr class="user-row">
+                    <td>
+                        <img src="../../resources/img/{{profile_icon}}" alt="Profile" style="width: 50px; height: 50px; border-radius: 50%;">
+                    </td>
+                    <td>
+                        <div style="font-weight: bold; color: #5F4B8B;">{{first_name}} {{last_name}}</div>
+                        <div>@{{username}}</div>
+                    </td>
+                    <td>{{bio}}</td>
+                    <td>
+                        {{#if is_following}}
+                        <button type="button" class="btn btn-outline-danger" onclick="showUnfollowModal('{{id}}', '{{username}}')" style="padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+                            Unfollow
+                        </button>
+                        {{else if is_requested}}
+                        <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')" style="padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+                            Requested
+                        </button>
+                        {{else}}
+                        <form action="/users/follow" method="POST">
+                            <input type="hidden" name="following_id" value="{{id}}">
+                            <button type="submit" style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+                                Follow
+                            </button>
+                        </form>
+                        {{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
     </div>
 
-
-    <table class="table" id="userTable">
-        <tbody>
-            {{#each users}}
-            <tr class="user-row">
-                <td>
-                    <img src="{{profile_icon}}" alt="Profile" style="width: 50px; height: 50px; border-radius: 50%;">
-                </td>
-                <td>
-                  <div>
-                    <strong style="color: #5F4B8B">{{first_name}} {{last_name}}</strong>
-                  </div>
-                  <div>
-                    @{{username}}
-                  </div> 
-
-                </td>
-                <td>{{bio}}</td>
-           <td>
-            {{#if is_following}}
-              <button type="button" class="btn btn-outline-danger" style="padding: 10px 20px; font-size: 16px; border-radius: 5px;" onclick="showUnfollowModal('{{id}}', '{{username}}')">Unfollow</button>
-            {{else if is_requested}}
-               <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')"> Requested</button>
-          {{else}}
-            <form action="/users/follow" method="POST">
-            <input type="hidden" name="following_id" value="{{id}}">
-            <button type="submit" style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
-            </form>
-          {{/if}}
-          </td>
-
-         </tr>
-       {{/each}}
-     </tbody>
-   </table>
-   <!-- Unfollow Confirmation Modal -->
-<div class="modal fade" id="unfollowModal" tabindex="-1" aria-labelledby="unfollowModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content p-3">
-      <div class="modal-header">
-        <h5 class="modal-title" id="unfollowModalLabel">Confirm Unfollow</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to unfollow <strong id="unfollowUsername"></strong>?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <form id="unfollowForm" method="POST" action="/users/unfollow">
-          <input type="hidden" name="following_id" id="unfollowUserId">
-          <button type="submit" class="btn btn-danger">Unfollow</button>
-        </form>
-      </div>
+    <!-- Unfollow Confirmation Modal -->
+    <div class="modal fade" id="unfollowModal" tabindex="-1" aria-labelledby="unfollowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="unfollowModalLabel">Confirm Unfollow</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to unfollow <strong id="unfollowUsername"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="unfollowForm" method="POST" action="/users/unfollow">
+                        <input type="hidden" name="following_id" id="unfollowUserId">
+                        <button type="submit" class="btn btn-danger">Unfollow</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- Cancel Follow Request Modal -->
-<div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content p-3">
-      <div class="modal-header">
-        <h5 class="modal-title" id="cancelRequestModalLabel">Cancel Follow Request</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to cancel your follow request to <strong id="cancelRequestUsername"></strong>?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nevermind</button>
-        <form id="cancelRequestForm" method="POST" action="/users/cancel-request">
-          <input type="hidden" name="receiver_id" id="cancelRequestUserId">
-          <button type="submit" class="btn btn-warning">Cancel Request</button>
-        </form>
-      </div>
+    <!-- Cancel Follow Request Modal -->
+    <div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelRequestModalLabel">Cancel Follow Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to cancel your follow request to <strong id="cancelRequestUsername"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nevermind</button>
+                    <form id="cancelRequestForm" method="POST" action="/users/cancel-request">
+                        <input type="hidden" name="receiver_id" id="cancelRequestUserId">
+                        <button type="submit" class="btn btn-warning">Cancel Request</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
- </div>
+    <!-- Custom JS -->
+    <script>
+        function filterUsers() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('.user-row');
 
- <script>
-   function filterUsers() {
-     const input = document.getElementById('searchInput').value.toLowerCase();
-     const rows = document.querySelectorAll('.user-row');
+            rows.forEach(row => {
+                const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                row.style.display = username.includes(input) ? '' : 'none';
+            });
+        }
 
+        function showUnfollowModal(userId, username) {
+            document.getElementById('unfollowUserId').value = userId;
+            document.getElementById('unfollowUsername').textContent = username;
 
-     rows.forEach(row => {
-       const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-       row.style.display = username.includes(input) ? '' : 'none';
-     });
-   }
+            const modal = new bootstrap.Modal(document.getElementById('unfollowModal'));
+            modal.show();
+        }
 
-   
-  function showUnfollowModal(userId, username) {
-    document.getElementById('unfollowUserId').value = userId;
-    document.getElementById('unfollowUsername').textContent = username;
+        function showCancelRequestModal(userId, username) {
+            document.getElementById('cancelRequestUserId').value = userId;
+            document.getElementById('cancelRequestUsername').textContent = username;
 
-    const modal = new bootstrap.Modal(document.getElementById('unfollowModal'));
-    modal.show();
-  }
+            const modal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
+            modal.show();
+        }
+    </script>
 
-  function showCancelRequestModal(userId, username) {
-  document.getElementById('cancelRequestUserId').value = userId;
-  document.getElementById('cancelRequestUsername').textContent = username;
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-  const modal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
-  modal.show();
-}
-
- </script>
 </body>
-</html>
 
+</html>
