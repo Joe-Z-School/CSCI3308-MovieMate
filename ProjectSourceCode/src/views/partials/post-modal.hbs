@@ -1,0 +1,138 @@
+<!-- Trigger Button to Open Modal (Test) -->
+<button type="button" class="btn btn-success mt-4" data-bs-toggle="modal" data-bs-target="#postModal">
+  Create Movie Post
+</button>
+
+<!-- Post Container -->
+<div id="postContainer" class="container mt-4"></div>
+
+<!-- Modal Partial -->
+<div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header"></div>
+    <h5 class="modal-title" id="postModalLabel">Share Your Movie Thoughts</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+        <!-- Inline SVG with white color -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-x" viewBox="0 0 16 16">
+            <path d="M11.742 10.742a1 1 0 0 0 0-1.414L7.414 5.414a1 1 0 1 0-1.414 1.414L9.586 10l-3.586 3.586a1 1 0 0 0 1.414 1.414l3.586-3.586 3.586 3.586a1 1 0 0 0 1.414-1.414L10.828 10l3.586-3.586a1 1 0 0 0-1.414-1.414L10 7.586l-3.586-3.586a1 1 0 0 0-1.414 1.414L7.414 5.414l3.586 3.586a1 1 0 0 0 1.414-1.414L10.828 7.586z"/>
+        </svg>
+    </button>
+</div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <form id="moviePostForm" enctype="multipart/form-data">
+          <!-- Movie Cover Upload -->
+            <div class="mb-3"></div>
+  <label for="movieCover" class="form-label" style="color: #999;">Movie Cover</label>
+  <div class="custom-file-upload">
+    <label for="movieCover" class="file-button">Choose File</label>
+    <input type="file" id="movieCover" accept="image/*" class="hidden-input">
+    <span id="file-name" class="file-name-text">No file selected</span>
+  </div>
+</div>
+
+          <!-- Thoughts -->
+          <div class="mb-3">
+            <label for="movieThoughts" class="form-label">Your Thoughts</label>
+            <textarea class="form-control" id="movieThoughts" rows="4" placeholder="Write your thoughts here..."></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-purple">Post</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Movie Post Template -->
+<script id="movie-post-template" type="text/x-handlebars-template">
+  <div class="card mt-4">
+    {{#if coverUrl}}
+      <img src="{{coverUrl}}" class="card-img-top" alt="Movie Cover">
+    {{/if}}
+    <div class="card-body">
+      <p class="card-text">{{thoughts}}</p>
+
+      <!-- Likes -->
+      <button class="btn btn-outline-primary btn-sm like-btn">Like (<span class="like-count">0</span>)</button>
+
+      <!-- Comments Section -->
+      <div class="mt-3">
+        <h6>Comments</h6>
+        <ul class="list-group comment-list"></ul>
+        <input type="text" class="form-control mt-2 comment-input" placeholder="Write a comment...">
+      </div>
+    </div>
+  </div>
+</script>
+
+<!-- JavaScript for Form Submission, Likes, and Comments -->
+<script>
+  document.addEventListener('submit', function(e) {
+    if (e.target.id === 'moviePostForm') {
+      e.preventDefault();
+
+      const fileInput = document.getElementById('movieCover');
+      const thoughts = document.getElementById('movieThoughts').value;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const coverUrl = e.target.result;
+
+        // Compile and append the new post
+        const source = document.getElementById('movie-post-template').innerHTML;
+        const template = Handlebars.compile(source);
+        const newPostHTML = template({ coverUrl, thoughts });
+
+        const postContainer = document.getElementById('postContainer');
+        postContainer.insertAdjacentHTML('afterbegin', newPostHTML);
+
+        // Close modal and reset form
+        const modal = bootstrap.Modal.getInstance(document.getElementById('postModal'));
+        modal.hide();
+        document.getElementById('moviePostForm').reset();
+      };
+
+      if (fileInput.files.length > 0) {
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        // If no image, still render post
+        const source = document.getElementById('movie-post-template').innerHTML;
+        const template = Handlebars.compile(source);
+        const newPostHTML = template({ thoughts });
+        document.getElementById('postContainer').insertAdjacentHTML('afterbegin', newPostHTML);
+      }
+    }
+  });
+
+  // Event listener for liking posts
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('like-btn')) {
+      const countEl = e.target.querySelector('.like-count');
+      let count = parseInt(countEl.textContent, 10);
+      countEl.textContent = count + 1;
+    }
+  });
+
+  // Event listener for adding comments
+  document.addEventListener('keypress', function(e) {
+    if (e.target.classList.contains('comment-input') && e.key === 'Enter') {
+      const commentList = e.target.closest('.card-body').querySelector('.comment-list');
+      const commentText = e.target.value.trim();
+      if (commentText) {
+        const li = document.createElement('li');
+        li.classList.add('list-group-item');
+        li.textContent = commentText;
+        commentList.appendChild(li);
+        e.target.value = '';
+      }
+    }
+  });
+</script>
+
