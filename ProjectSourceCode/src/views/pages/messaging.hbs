@@ -25,7 +25,11 @@
             </div>
             <div class="extra-info text-end">
               <small class="text-muted">{{this.last_active}}</small>
-              <span class="badge unread-badge">{{this.unread_count}}</span>
+              {{#if this.unread_count}}
+                <span class="badge unread-badge">{{this.unread_count}}</span>
+              {{else}}
+                <span class="badge unread-badge" style="display: none;">0</span>
+              {{/if}}
             </div>
           </li>
         {{else}}
