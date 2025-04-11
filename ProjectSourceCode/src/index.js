@@ -951,10 +951,51 @@ app.get('/load-more', async (req, res) => {
   }
 });
 
+// watchlist functions: will need modification later when other pages are fully completed
 
+// app.post('/add-to-watchlist', async (req, res) => {
+//   const { title, poster_picture, whereToWatch } = req.body;
+//   const userId = req.session.user?.id;
 
+//   if (!title || !poster_picture || !whereToWatch) {
+//     res.json('pages/social', { layout: 'main', message: 'Incomplete movie information.', status: 400 });
+//     return;
+//   }
+
+//   try {
+//     await db.none(
+//           `INSERT INTO watchlist (user_id, title, poster_picture, where_to_watch)
+//           VALUES ($1, $2, $3, $4)
+//           ON CONFLICT DO NOTHING`,
+//           [userId, title, poster_picture, whereToWatch]
+//       );
+//       res.json({ success: true, message: `${title} added to watchlist.` });
+//   } catch (err) {
+//       console.error('Add to watchlist error:', err);
+//       res.status(500).json({ success: false, message: 'Server error.' });
+//   }
+// });
+
+// app.post('/remove-from-watchlist', async (req, res) => {
+//   const title = req.body.title;
+
+//   if (!title) {
+//     res.json('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400 });
+//     return;
+//   }
+
+//   db.tx(async remove => {
+//     // Remove the course from the student's list of courses.
+//     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
+//   }).then(social => {
+//     res.json('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
+//   }).catch(err => {
+//     res.json('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
+//   });
+// });
 
 // Temporary in-memory storage for the watchlist
+
 app.post('/add-to-watchlist', async (req, res) => {
   const { title, picture, whereToWatch } = req.body;
 
@@ -990,6 +1031,30 @@ app.post('/remove-from-watchlist', async (req, res) => {
   }).catch(err => {
     res.render('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
   });
+});
+
+app.get('/watchlist', async (req, res) => {
+  const userId = req.session.user?.id;
+
+  if (!userId) return res.redirect('/login');
+
+  try {
+    const watchlist = await db.any(
+      `SELECT * FROM watchlist WHERE user_id = $1 ORDER BY title DESC`,
+      [userId]
+    );
+
+    res.render('pages/watchlist', {
+      layout: 'main',
+      watchlist
+    });
+  } catch (err) {
+    console.error('Watchlist fetch error:', err);
+    res.render('pages/watchlist', {
+      layout: 'main',
+      message: 'Could not load watchlist.'
+    });
+  }
 });
 
 // *****************************************************
@@ -1101,6 +1166,7 @@ app.get('/profile/following', async (req, res) => {
     res.status(500).send('Error loading following');
   }
 });
+
 
 // *****************************************************
 // <!-- Messages Page -->
