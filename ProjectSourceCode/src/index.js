@@ -18,10 +18,10 @@ const movieController = require('./controllers/movieController'); // To handle m
 // *****************************************************
 // <!-- Socket.IO Server Creation -->
 // *****************************************************
-const { Server } = require('socket.io'); // To enable real-time communication between the server and the client
-const http = require('http'); // To create an HTTP server
-const server = http.createServer(app);
-const io = new Server(server); // To create a Socket.IO server
+const http = require('http');
+const { Server } = require('socket.io');
+const server = http.createServer(app); // Create an HTTP server
+const io = new Server(server); // Attach Socket.IO to the server
 
 // *****************************************************
 // <!-- Section 2 : Connect to DB -->
@@ -55,6 +55,7 @@ db.connect()
   .catch(error => {
     console.log('ERROR:', error.message || error);
   });
+
 
 // *****************************************************
 // <!-- Section 3 : App Settings -->
@@ -173,6 +174,7 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
   //hash the password using bcrypt library
   const hash = await bcrypt.hash(req.body.password, 10);
+  console.log('Generated Hash:', hash);
 
   const first_name = req.body.first_name;
   const last_name = req.body.last_name;
@@ -194,6 +196,60 @@ app.post('/register', async (req, res) => {
   } catch (err) {
     req.session.Message = 'An error occurred';
     res.redirect('/register');
+  };
+});
+
+// Development route for messaging tests
+app.get('/dev/register', async (req, res) => {
+  //hash the password using bcrypt library
+  
+    const accounts = [
+      { first_name: 'joe1',
+        last_name: 'joe1',
+        username: 'joe1',
+        email: 'joe1@email.com',
+        profile_icon: 'profile_pic_option_1.png',
+        bio: 'joe1'
+      },
+      { first_name: 'joe2',
+        last_name: 'joe2',
+        username: 'joe2',
+        email: 'joe2@email.com',
+        profile_icon: 'profile_pic_option_6.png',
+        bio: 'joe2'
+      },
+      { first_name: 'joe3',
+        last_name: 'joe3',
+        username: 'joe3',
+        email: 'joe3@email.com',
+        profile_icon: 'profile_pic_option_2.png',
+        bio: 'joe3'
+      },
+      { first_name: 'joe4',
+        last_name: 'joe4',
+        username: 'joe4',
+        email: 'joe4@email.com',
+        profile_icon: 'profile_pic_option_5.png',
+        bio: 'joe4'
+      },
+    ]
+    // Generate a timestamp for when this request is made
+    const created_at = new Date().toISOString();
+    const hash = await bcrypt.hash('joe', 10);
+    try{
+    //creating insert
+    for (const sets of accounts) {
+      await db.tx(async t => {
+        await t.none(`
+          INSERT INTO users (username, password, email, profile_icon, bio, created_at, first_name, last_name) 
+          VALUES( $1, $2, $3, $4, $5, $6, $7, $8)
+          `, [sets.username, hash, sets.email, sets.profile_icon, sets.bio, created_at, sets.first_name, sets.last_name]);
+      });
+    }
+    res.send('data successfully added');
+  } catch (err) {
+    req.session.Message = 'An error occurred';
+    res.send('Error adding data');
   };
 });
 
@@ -641,6 +697,12 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 10 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
+      { follower_id: 11, followed_id: 12 }, // joe1 → joe2
+      { follower_id: 11, followed_id: 13 }, // joe1 → joe3
+      { follower_id: 11, followed_id: 14 }, // joe1 → joe4
+      { follower_id: 11, followed_id: 4 }, // joe1 → matt
+      { follower_id: 11, followed_id: 5 }, // joe1 → jessie
+      { follower_id: 11, followed_id: 6 }, // joe1 → kay
     ];
 
     for (const pair of friends) {
@@ -1110,35 +1172,222 @@ app.get('/profile/following', async (req, res) => {
 // <!-- Messages Page -->
 // *****************************************************
 
-// Socket.IO dependency
-io.on('connection', (socket) => {
-  console.log('A user connected');
+const { formatDistanceToNow } = require('date-fns');
 
-  socket.on('send_message', (data) => {
-    io.emit('receive_message', data);
+app.get('/messaging', async (req, res) => {
+  try {
+    const activeUser = {
+      id: req.session.user?.id,
+      name: req.session.user?.first_name,
+      profile_icon: req.session.user?.profile_icon,
+    };
+
+    if (!activeUser.id) {
+      console.error('Active User not found in session.');
+      return res.status(400).send('User session is invalid.');
+    }
+
+    const allFriendsQuery = `
+      SELECT DISTINCT ON (u.id)
+             u.id, u.username AS name, u.profile_icon,
+             f.latest_message,
+             f.last_active,
+             f.unread_count
+        FROM friends f
+        JOIN users u ON (
+             (u.id = f.followed_user_id AND f.following_user_id = $1)
+          OR (u.id = f.following_user_id AND f.followed_user_id = $1)
+        )
+       WHERE u.id != $1;
+    `;
+    const allFriends = await db.query(allFriendsQuery, [activeUser.id]);
+
+    const formattedFriends = allFriends.map(friend => ({
+      id: friend.id,
+      name: friend.name,
+      profile_icon: friend.profile_icon,
+      latest_message: friend.latest_message,
+      unread_count: friend.unread_count ?? 0,
+      last_active: friend.last_active
+        ? formatDistanceToNow(new Date(friend.last_active), { addSuffix: true })
+        : "Not available"
+    }));
+    
+
+    res.render('pages/messaging', {
+      activeUser,
+      allFriends: formattedFriends,
+    });
+  } catch (error) {
+    console.error('Error loading messaging page:', error.message);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
+// Track sockets and active chats
+const userSockets = new Map(); // { userId: socket }
+const activeChats = new Map(); // { userId: chattingWithUserId }
+
+io.on('connection', (socket) => {
+
+  console.log(`User connected: ${socket.id}`);
+
+  socket.on('register-user', (userId) => {
+    socket.userId = String(userId);
+    userSockets.set(socket.userId, socket);
+    socket.emit('user-registered');
+  });
+
+  socket.on('get-friends-list', async ({ userId }) => {
+    try {
+      const query = `
+        SELECT f.followed_user_id AS id, u.username AS name, u.profile_icon, 
+               f.latest_message, f.unread_count, f.last_active
+        FROM friends f
+        JOIN users u ON u.id = f.followed_user_id
+        WHERE f.following_user_id = $1
+      `;
+      const result = await db.query(query, [userId]);
+      socket.emit('friends-list-updated', result || []);
+    } catch (error) {
+      console.error('Failed to fetch friends list:', error);
+      socket.emit('friends-list-updated', []);
+    }
+  });
+
+  socket.on('join-room', async ({ senderId, recipientId }) => {
+    const sId = String(senderId);
+    const rId = String(recipientId);
+
+    socket.join(`user-${sId}`);
+    socket.join(`user-${rId}`);
+
+    activeChats.set(sId, rId); // Track sender's open chat
+
+    try {
+      const query = `
+        SELECT sender_id, recipient_id, content, timestamp
+        FROM messages
+        WHERE (sender_id = $1 AND recipient_id = $2)
+           OR (sender_id = $2 AND recipient_id = $1)
+        ORDER BY timestamp ASC
+      `;
+      const result = await db.query(query, [sId, rId]);
+      socket.emit('load-messages', result);
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+    }
+  });
+
+  socket.on('private-message', async ({ senderId, recipientId, content }) => {
+    try {
+      const sId = String(senderId);
+      const rId = String(recipientId);
+      const recipientChattingWith = activeChats.get(rId);
+      const chatOpen = recipientChattingWith === sId;
+
+      console.log('Private message received:', { sId, rId, content, chatOpen });
+
+      // Store the message
+      await db.query(`
+        INSERT INTO messages (sender_id, recipient_id, content, is_read, timestamp)
+        VALUES ($1, $2, $3, $4, NOW())
+      `, [sId, rId, content, chatOpen]);
+
+      if (!chatOpen) {
+        // Increment unread
+        await db.query(`
+          UPDATE friends
+          SET latest_message = $1,
+              last_active = NOW(),
+              unread_count = unread_count + 1
+          WHERE following_user_id = $2 AND followed_user_id = $3
+        `, [content, rId, sId]);
+
+        const { rows } = await db.query(`
+          SELECT unread_count FROM friends
+          WHERE following_user_id = $1 AND followed_user_id = $2
+        `, [rId, sId]);
+
+        const unreadCount = rows?.[0]?.unread_count || 0;
+
+        io.to(`user-${rId}`).emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount });
+        io.to(`user-${rId}`).emit('increment-unread', { from: sId });
+      } else {
+        // Mark as read, reset unread count
+        await db.query(`
+          UPDATE messages
+          SET is_read = true
+          WHERE recipient_id = $1 AND sender_id = $2
+        `, [rId, sId]);
+
+        await db.query(`
+          UPDATE friends
+          SET unread_count = 0,
+              latest_message = $1,
+              last_active = NOW()
+          WHERE following_user_id = $2 AND followed_user_id = $3
+        `, [content, rId, sId]);
+
+        io.to(`user-${rId}`).emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount: 0 });
+      }
+      
+      io.to(`user-${rId}`).emit('private-message', { senderId: sId, content });
+    } catch (error) {
+      console.error('Error handling private message:', error);
+    }
+  });
+
+  socket.on('mark-messages-read', async ({ senderId, recipientId }) => {
+    try {
+      const sId = String(senderId);
+      const rId = String(recipientId);
+
+      await db.query(`
+        UPDATE messages
+        SET is_read = true
+        WHERE recipient_id = $1 AND sender_id = $2
+      `, [rId, sId]);
+
+      await db.query(`
+        UPDATE friends
+        SET unread_count = 0
+        WHERE following_user_id = $2 AND followed_user_id = $1
+      `, [rId, sId]);
+
+      socket.emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount: 0 });
+      console.log(`Unread count reset for senderId: ${sId}, recipientId: ${rId}`);
+    } catch (error) {
+      console.error('Failed to mark messages as read:', error);
+    }
+  });
+
+  socket.on('setActiveChat', (chatPartnerId) => {
+    const currentUserId = String(socket.userId);
+    const partnerId = chatPartnerId ? String(chatPartnerId) : null;
+
+    if (!currentUserId) {
+      console.warn('setActiveChat called before user was registered');
+      return;
+    }
+
+    if (partnerId === null) {
+      activeChats.delete(currentUserId);
+      console.log(`User ${currentUserId} cleared their active chat`);
+    } else {
+      activeChats.set(currentUserId, partnerId);
+      console.log(`User ${currentUserId} is now chatting with ${partnerId}`);
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
+    if (socket.userId) {
+      activeChats.delete(String(socket.userId));
+      userSockets.delete(String(socket.userId));
+      console.log(`Removed user ${socket.userId} on disconnect`);
+    }
   });
-});
-
-app.get('/messaging', auth, async (req, res) => {
-  const { user } = req.session;
-
-  try {
-    const friends = await db.query(`
-      SELECT u.id, u.username, u.profile_icon, COUNT(m.id) AS unread_count
-        FROM users u
-        LEFT JOIN messages m ON m.sender_id = u.id AND m.recipient_id = $1 AND m.is_read = FALSE
-        WHERE u.id != $1
-        GROUP BY u.id, u.username, u.profile_icon`, [user.id]);
-
-    res.render('pages/messaging', { layout: 'main', friends: friends.rows });
-  } catch (error) {
-    console.error('Error fetching friends with unread messages:', error);
-    res.status(500).send('Internal Server Error');
-  }
 });
 
 
@@ -1146,5 +1395,7 @@ app.get('/messaging', auth, async (req, res) => {
 // <!-- Section 5 : Start Server-->
 // *****************************************************
 // starting the server and keeping the connection open to listen for more requests
-app.listen(3000);
-console.log('Server is listening on port 3000');
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
+});

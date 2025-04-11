@@ -64,10 +64,14 @@ CREATE TABLE friends (
   following_user_id INTEGER NOT NULL,
   followed_user_id INTEGER NOT NULL,
   friends_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  latest_message TEXT DEFAULT 'No messages yet',
+  last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  unread_count INT DEFAULT 0,
   PRIMARY KEY (following_user_id, followed_user_id),
   FOREIGN KEY (following_user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (followed_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE posts (
   id SERIAL PRIMARY KEY,

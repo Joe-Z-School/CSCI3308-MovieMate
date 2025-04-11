@@ -1,0 +1,337 @@
+/* global colors matching explorer page colors */
+:root{
+  --darkBackground: #121212;
+  --lighterBackground: #1a1a1a;
+  --lightPurpleAccent: #E9E8F7;
+  --darkPurpleAccent: #5F4B8B;
+}
+
+/* Spacing for Navbar */
+.container-fluid {
+    margin-top: 60px; /* Navbar height */
+    margin-bottom: 60px;
+    height: calc(100vh - 120px); /* Full viewport height */
+    display: flex;
+    flex-direction: row; 
+  }
+  
+  /* Sticky Navbar to Prevent Overlap */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+  }
+  
+  /* Reset */
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: var(--darkBackground); /* Dark background */
+    color: #e0e0e0; /* Light text color */
+  }
+  
+  /* Friends Sidebar */
+  .friends-list {
+    background-color: var(--lighterBackground); /* Slightly lighter dark background */
+    border-radius: 8px;
+    padding: 10px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+
+  .friend {
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  
+  .friend-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .friend-name {
+    font-weight: bold;
+    font-size: 1rem; /* Font size for names */
+  }
+  
+  .text-muted {
+    color: var(--lightPurpleAccent);
+  }
+
+  .recent-message {
+    font-size: 0.85rem;
+    color: var(--lightPurpleAccent) !important;
+  }
+  
+  .extra-info {
+    text-align: right;
+  }
+  
+  .extra-info small {
+    display: block;
+    font-size: 0.75rem; /* Small timestamp */
+    color: var(--lightPurpleAccent) !important;
+  }
+  
+  .unread-badge {
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+  }
+
+  
+  .friends-list h6 {
+    color: #d1c4e9; /* Purple accent header text */
+    font-weight: bold;
+  }
+  
+  /* List Group */
+  .list-group-item {
+    background-color: transparent;
+    color: #e0e0e0;
+    border: none;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .list-group-item:hover {
+    background-color: #4527a0; /* Purple hover effect */
+    cursor: pointer;
+    transform: scale(1.05);
+  }
+  
+  /* Chat Area Styling */
+  .chat-area {
+    display: flex;
+    flex-direction: column; /* Stacks header, messages, and input vertically */
+    height: 100%; /* Account for navbar */
+  }
+  
+  .chat-header {
+    background-color: var(--lighterBackground); /* Darker background header */
+    border-bottom: var(--darkPurpleAccent); /* Purple accent border */
+    color: #d1c4e9; /* Purple accent text */
+    flex-shrink: 0;
+    height: 60px; 
+  }
+  
+  .chat-body {
+    flex-grow: 1; /* Chat body to grow and fill */
+    overflow-y: auto; /* Enables scrolling */
+    background-color: #1c1c1c; /* Dark mode background */
+    border-radius: 8px;
+    box-shadow: inset 0px 0px 10px #000000;
+    z-index: 1000;
+    max-height: calc(100vh - 120px); /* Prevents overflow */
+    padding: 15px;
+    padding-bottom: 15px;
+  }
+
+  .chat-message {
+    display: flex;
+    align-items: flex-start; /* Align items correctly */
+    gap: 8px;
+    margin-bottom: 10px;
+  }  
+  
+  .chat-message .profile-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .chat-message.sent {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end; /* Align profile icon with bottom of bubble */
+    gap: 8px;
+  }
+
+  .chat-message.received {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start; /* Align profile icon with top of bubble */
+    gap: 8px;
+  }
+  .chat-message.received .profile-icon {
+    order: 1; /* Profile icon on the left */
+    align-self: flex-start;
+  }
+  .chat-message.received .message-content {
+    order: 2;
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .chat-message.sent .profile-icon {
+    order: 2; /* Profile icon on the right */
+    align-self: flex-end;
+  }
+
+  .chat-message.sent .message-content {
+    order: 1;
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  
+  .message-content {
+    display: flex;
+    flex-direction: column;
+    max-width: 75%;
+    margin: 0 10px;
+  }
+  
+  .message-meta {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 4px;
+  }
+  
+  .chat-bubble {
+    word-break: break-word;
+    overflow-wrap: break-word; /* Prevent overflow */
+    padding: 10px 14px;
+    background-color: #f1f0f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin: 0;
+    display: inline-block;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Received message bubble specific styles */
+  .received .chat-bubble {
+    background-color: var(--lightPurpleAccent);
+    color: black;
+    border-top-left-radius: 0;
+  }
+  
+  .sent .chat-bubble {
+    background-color: var(--darkPurpleAccent);
+    color: white;
+    border-bottom-right-radius: 0;
+  }
+  
+  .chat-footer {
+    background-color: var(--lighterBackground);
+    border-top: var(--darkPurpleAccent); /* Purple accent border */
+    flex-shrink: 0;
+    height: 60px;
+    margin-top: 10px;
+  }
+  
+  #message-input {
+    background-color: #2a2a2a !important;
+    color: #e0e0e0 !important;
+    border: 2px solid var(--darkPurpleAccent); /* Purple accent border */
+  }
+  
+  /* Style for Placeholder Text */
+  #message-input::placeholder {
+    color: #d1c4e9; /* Light purple text */
+    opacity: 1;
+    font-style: italic;
+  }
+
+  /* Divider for new unread messages */
+  .new-messages-divider {
+    background-color: #2a2a2a; /* Background color for the divider */
+    color: var(--lightPurpleAccent); /* Text color for the divider */
+    font-size: 0.9rem; /* Adjust font size */
+    text-align: center;
+    padding: 10px 0;
+    margin: 10px 0;
+    border-top: 2px solid #444; /* A subtle top border */
+    border-bottom: 2px solid #444; /* A subtle bottom border */
+    position: relative;
+  }
+
+  .new-messages-divider span {
+    background-color: var(--darkBackground); /* Dark background for the text */
+    padding: 0 15px;
+    position: relative;
+    z-index: 1; /* Ensure text stays above the divider line */
+  }  
+  
+  button {
+    padding: 5px 10px;
+    font-size: 9px;
+    height: 50px;
+    color: #e0e0e0 !important;
+    background-color: var(--darkPurpleAccent) !important; /* Purple button background */
+    border: none !important;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  button:hover {
+    background-color: var(--lightPurpleAccent) !important; /* Slightly lighter purple on hover */
+    color: var(--darkBackground) !important; /* Dark text on hover */
+  }
+  
+  /* Hide File Input */
+  input[type="file"] {
+    display: none; /* Hides the file input */
+  }
+  
+  /* Style File Upload label as Button */
+  label[for="file-input"] {
+    display: inline-block;
+    padding: 12px 10px; /* Adjust padding for button size */
+    font-size: 20px;
+    height: 50px;
+    color: #e0e0e0; /* Light text color for dark mode */
+    background-color: var(--darkPurpleAccent); /* Purple background */
+    border: none;
+    border-radius: 4px; /* Rounded corners for button */
+    cursor: pointer; /* Pointer to indicate clickability */
+    transition: all 0.3s ease-in-out;
+  }
+  
+  label[for="file-input"]:hover {
+    background-color: var(--lightPurpleAccent); /* Slightly lighter purple on hover */
+    color: var(--darkBackground);
+  }
+  
+  .position-relative img {
+    display: inline-block;
+  }
+  
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.4em;
+  }
+
+  .badge.unread-badge{
+    color: var(--lightPurpleAccent) !important; 
+    background-color: var(--darkPurpleAccent) !important;
+  }
+  
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
