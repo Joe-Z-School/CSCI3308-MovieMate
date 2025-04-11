@@ -23,6 +23,8 @@ let friendName = null;
 let activeFriendId = null;
 let unreadCount = null;
 
+// Initial load of the friends list
+updateFriendsList();
 
 // Call this function to request the updated friends list from the server
 function updateFriendsList() {
@@ -99,7 +101,15 @@ function updateFriendsListOnUI(friendsList) {
 
     const unreadBadge = document.createElement("span");
     unreadBadge.className = "badge unread-badge";
-    unreadBadge.textContent = unreadCount; // Display unread count
+
+    if (unreadCount > 0) {
+      unreadBadge.textContent = unreadCount;
+      unreadBadge.style.display = "inline-block";
+    } else {
+      unreadBadge.textContent = "0";
+      unreadBadge.style.display = "none";
+    }
+    
     extraInfo.appendChild(timestamp);
     extraInfo.appendChild(unreadBadge);
     listItem.appendChild(extraInfo);
@@ -120,6 +130,8 @@ function openChat(friend) {
   friendName = friend.name;
   activeFriendId = friend.id;
 
+  socket.emit('setActiveChat', friend.id);
+
   const chatHeader = document.getElementById("chat-user-name");
   const chatProfileIcon = document.getElementById("chat-profile-icon");
   chatHeader.textContent = friendName;
@@ -135,10 +147,9 @@ function openChat(friend) {
   const unreadBadge = document.querySelector(`[data-user-id="${friendId}"] .unread-badge`);
   if (unreadBadge) {
     unreadBadge.textContent = "0";
+    unreadBadge.style.display = "none";
   }
 }
-
-
 
 // Listen for the updated unread count and update the UI accordingly
 socket.on('update-unread-count', ({ senderId, recipientId, unreadCount }) => {
@@ -151,6 +162,24 @@ socket.on('update-unread-count', ({ senderId, recipientId, unreadCount }) => {
   const unreadBadge = document.querySelector(`[data-user-id="${senderId}"] .unread-badge`);
   if (unreadBadge) {
     unreadBadge.textContent = unreadCount;
+  }
+});
+
+// Increment unread count if message comes from a friend who isn't the active chat
+socket.on('increment-unread', ({ from }) => {
+  const friendListItem = document.querySelector(`[data-user-id="${from}"]`);
+  const unreadBadge = friendListItem?.querySelector('.unread-badge');
+
+  if (unreadBadge) {
+    // Get current unread count or default to 0
+    let currentCount = parseInt(unreadBadge.textContent, 10);
+    if (isNaN(currentCount)) currentCount = 0;
+
+    const newCount = currentCount + 1;
+    unreadBadge.textContent = newCount;
+    unreadBadge.style.display = "inline-block";
+  } else {
+    console.warn(`Unread badge for user ${from} not found.`);
   }
 });
 
@@ -365,6 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  activeFriendId = null;
   // Set default chat header message
   const chatHeader = document.getElementById('chat-user-name');
   const chatProfileIcon = document.getElementById('chat-profile-icon');
@@ -373,7 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
   chatProfileIcon.style.display = 'none'; // Hide profile icon by default
 });
 
-setInterval(updateFriendsList, 15000); // 15000ms = 15 seconds
+setInterval(updateFriendsList, 15000); // 15 seconds
 
-// Initial load of the friends list
-updateFriendsList();
+window.addEventListener('beforeunload', () => {
+  socket.emit('setActiveChat', null); // Let server know you left
+});
