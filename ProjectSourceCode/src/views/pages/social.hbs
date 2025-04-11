@@ -1,45 +1,202 @@
-
-<script src="../resources/js/socialScript.js"></script>
 {{> nav}}
-<div class="container mt-4">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <div class="row justify-content-between">
-        <div class="col-4">
-            <h1>Friends Posts</h1>
-        </div>
-        <div class="col-4 text-end">
-            <a class="btn-social" href="/findfriends">Find Friends</a>
-        </div>
-    </div>
-    <div id="movie-container" class="row">
-        {{#each posts}}
-        <div class="row row-cols-1 row-cols-md-1 g-4">
-            <div class="card h-100">
-                <p class="card-text">~USER~ {{user}}</p>
-                <img src="{{cover}}" class="card-img-top" alt="{{title}}">
-                <div class="card-body">
-                    <h5 class="card-title text-center">Movie Title: {{title}}</h5>
-                    <p class="card-text">Review: {{review}}</p>
-                    <p class="card-text">Description: {{description}}</p>
-                    <p class="card-text">Where To Watch: {{whereToWatch}}</p>
-                    <button class="btn heart-button" data-post='{{json this}}' data-bs-toggle="tooltip"
-                        data-bs-title="Like Post">
-                        <i class="bi bi-heart"></i>
-                    </button>
-                    <button class="btn add-button" id="add-button-{{@index}}" data-title="{{title}}"
-                        data-cover="{{cover}}" data-where="{{whereToWatch}}" data-bs-toggle="tooltip"
-                        data-bs-title="Add to WatchList">
-                        <i class="bi bi-plus-circle" id="add-icon-{{@index}}"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        {{/each}}
+<div class="container mt-5 pt-5">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
+  <div class="row justify-content-between">
+    <div class="col-4">
+      <h1 class="friends-post-title">Friends Posts</h1>
     </div>
-    <br>
+    <div class="col-4 text-end">
+      <a class="btn-social" href="/findfriends">Find Friends</a>
+    </div>
+  </div>
+
+  <div id="movie-container" class="row">
+    {{#each posts}}
+    <div class="row row-cols-1 row-cols-md-1 g-4">
+      <div class="card h-100">
+        <p class="card-text"><strong>User:</strong> {{user}}</p>
+        <img src="{{cover}}" class="card-img-top" alt="{{title}}">
+        <div class="card-body">
+          <h5 class="card-title text-center">{{title}}</h5>
+          <p class="card-text">Review: {{review}}</p>
+          <p class="card-text">Description: {{description}}</p>
+          <p class="card-text">Where To Watch: {{whereToWatch}}</p>
+
+          <!-- ❤️ Like Button -->
+          <button class="btn heart-button" data-post-id="{{id}}" aria-label="Like">
+            <i class="bi {{#if liked}}bi-heart-fill{{else}}bi-heart{{/if}}"></i>
+            <span class="like-count ms-1">{{like_count}}</span>
+          </button>
+
+          <!-- ➕ Add to Watchlist Button -->
+          <form action="/add-to-watchlist" method="POST" class="d-inline">
+            <input type="hidden" name="title" value="{{title}}">
+            <input type="hidden" name="cover" value="{{cover}}">
+            <input type="hidden" name="whereToWatch" value="{{whereToWatch}}">
+            <button type="submit" class="btn" aria-label="Add to Watchlist">
+              <i class="bi bi-plus-circle"></i>
+            </button>
+          </form>
+
+          <!-- 💬 Comment Form -->
+          <form action="/api/posts/{{id}}/comment" method="POST" class="comment-form mt-2">
+            <input type="text" name="comment" class="form-control comment-input" placeholder="Add a comment..." required>
+            <button type="submit" class="btn btn-sm btn-primary">Comment</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+  <br>
     <div id="loading" class="text-center mt-4" style="display: none;">
         <p>Loading more posts...</p>
     </div>
     <br>
 </div>
+
+<script>
+let currentPage = 1;
+let isLoading = false;
+let hasMorePosts = true;
+
+window.addEventListener('scroll', async () => {
+  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+  if (!isLoading && hasMorePosts && scrollTop + clientHeight >= scrollHeight - 10) {
+    isLoading = true;
+    currentPage++;
+    document.getElementById('loading').style.display = 'block';
+
+    try {
+      const res = await fetch(`/load-more?page=${currentPage}`);
+      const data = await res.json();
+
+      if (data.posts && data.posts.length > 0) {
+        const container = document.getElementById("movie-container");
+
+        data.posts.forEach(post => {
+          const postHtml = `
+            <div class="col-12 mb-3">
+              <div class="card h-100 p-2">
+                <p class="card-text"><strong>User:</strong> ${post.user}</p>
+                <img src="${post.cover}" class="card-img-top" alt="${post.title}">
+                <div class="card-body">
+                  <h5 class="card-title text-center">${post.title}</h5>
+                  <p class="card-text">Review: ${post.review}</p>
+                  <p class="card-text">Description: ${post.description || ''}</p>
+                  <p class="card-text">Where To Watch: ${post.where_to_watch}</p>
+
+                  <!-- ❤️ Like Button -->
+                  <button class="btn heart-button" data-post-id="${post.id}" aria-label="Like">
+                    <i class="bi ${post.liked ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                    <span class="like-count ms-1">${post.like_count}</span>
+                  </button>
+
+                  <!-- ➕ Add to Watchlist Button (optional) -->
+                  <form action="/add-to-watchlist" method="POST" class="d-inline">
+                    <input type="hidden" name="title" value="${post.title}">
+                    <input type="hidden" name="cover" value="${post.cover}">
+                    <input type="hidden" name="whereToWatch" value="${post.where_to_watch}">
+                    <button type="submit" class="btn" aria-label="Add to Watchlist">
+                      <i class="bi bi-plus-circle"></i>
+                    </button>
+                  </form>
+
+                  <!-- 💬 Comment Form -->
+                  <form action="/api/posts/${post.id}/comment" method="POST" class="comment-form mt-2">
+                    <input type="text" name="comment" class="form-control comment-input" placeholder="Add a comment..." required>
+                    <button type="submit" class="btn btn-sm btn-primary">Comment</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          `;
+          container.insertAdjacentHTML("beforeend", postHtml);
+        });
+
+        attachLikeListeners();
+        attachCommentListeners();
+      } else {
+        hasMorePosts = false;
+        document.getElementById('loading').innerHTML = "<p>No more posts to show.</p>";
+      }
+    } catch (err) {
+      console.error("Error loading more posts:", err);
+    } finally {
+      if (hasMorePosts) document.getElementById('loading').style.display = 'none';
+      isLoading = false;
+    }
+  }
+});
+
+function attachLikeListeners() {
+  document.querySelectorAll('.heart-button').forEach(button => {
+    const cloned = button.cloneNode(true);
+    button.replaceWith(cloned);
+
+    cloned.addEventListener('click', async () => {
+      const postId = cloned.dataset.postId;
+      try {
+        const res = await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          const icon = cloned.querySelector('i');
+          const countSpan = cloned.querySelector('.like-count');
+
+          icon.classList.toggle('bi-heart');
+          icon.classList.toggle('bi-heart-fill');
+
+          if (countSpan) {
+            countSpan.textContent = data.likeCount;
+          }
+        } else {
+          alert("Failed to like/unlike.");
+        }
+      } catch (err) {
+        console.error("Like toggle error:", err);
+      }
+    });
+  });
+}
+
+function attachCommentListeners() {
+  document.querySelectorAll('.comment-form').forEach(form => {
+    const cloned = form.cloneNode(true);
+    form.replaceWith(cloned);
+
+    cloned.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(cloned);
+      const comment = formData.get('comment');
+      const action = cloned.getAttribute('action');
+
+      try {
+        const res = await fetch(action, {
+          method: 'POST',
+          body: new URLSearchParams({ comment }),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
+
+        if (res.ok) {
+          cloned.querySelector('.comment-input').value = '';
+          alert("Comment submitted!");
+        } else {
+          alert("Failed to submit comment.");
+        }
+      } catch (err) {
+        console.error("Comment submission error:", err);
+      }
+    });
+  });
+}
+
+// Initial page load
+document.addEventListener('DOMContentLoaded', () => {
+  attachLikeListeners();
+  attachCommentListeners();
+});
+</script>
