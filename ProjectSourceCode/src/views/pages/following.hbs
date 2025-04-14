@@ -1,6 +1,6 @@
 <style>
   body {
-    display: block !important; 
+    display: block !important;
     justify-content: unset !important;
   }
 
@@ -14,7 +14,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-    padding:20px;
+    padding: 20px;
     margin-top: 20px;
   }
 
@@ -26,8 +26,8 @@
     padding: 20px;
     text-align: center;
     display: flex;
-    align-items: center; 
-    justify-content: center; 
+    align-items: center;
+    justify-content: center;
     flex-direction: column;
   }
 
@@ -45,18 +45,20 @@
     color: #e9defa;
     margin-bottom: 10px;
   }
-
 </style>
 
 {{> nav}}
 <h1 style="color: #e9defa">Following</h1>
 <div class="cards-container">
   {{#each following}}
-    <div class="card">
+  <div class="card">
+    <a href="/profile?id={{id}}" style="text-decoration: none; color: inherit;">
       <img src="../../resources/img/{{this.profile_icon}}" alt="Profile Picture" class="follower-pic">
       <div class="name">{{this.first_name}} {{this.last_name}}</div>
       <p style="color: #735aaa">@{{this.username}}</p>
       <p style="color: #e9defa">{{this.bio}}</p>
-    </div>
-  {{/each}}
+    </a>
+  </div>
+</div>
+{{/each}}
 </div>
