@@ -11,22 +11,35 @@
     </div>
   </div>
 
-  <div id=" movie-container" class="row">
-        {{#each posts}}
-        <div class="row row-cols-1 row-cols-md-1 g-4">
-          <div class="card h-100">
-            <p class="card-text"><strong>User:</strong> {{user}}</p>
-            <img src="{{cover}}" class="card-img-top" alt="{{title}}">
-            <div class="card-body">
-              <h5 class="card-title text-center">{{title}}</h5>
-              <p class="card-text">Review: {{review}}</p>
-              <p class="card-text">Description: {{description}}</p>
-              <p class="card-text">Where To Watch: {{whereToWatch}}</p>
+  <div id="movie-container" class="row">
+    {{#each posts}}
+    <div class="col-12 mb-4">
+  <div class="card post-card bg-dark text-light rounded shadow-sm" style="border: 1px solid #444;">
+    <!-- Header: User Info -->
+    <div class="card-header d-flex align-items-center justify-content-between border-bottom border-secondary bg-dark">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-person-circle fs-4 me-2 text-secondary"></i>
+        <strong class="text-light">@{{user}}</strong>
+      </div>
+    </div>
+
+    <!-- Image -->
+    <div class="ratio ratio-1x1" style="overflow: hidden;">
+      <img src="{{cover}}" alt="{{title}}" class="w-100 h-100" style="object-fit: cover;">
+    </div>
+
+    <!-- Content Body -->
+    <div class="card-body">
+      <h5 class="card-title mb-2">{{title}}</h5>
+      <p class="card-text mb-1"><strong>Review:</strong> {{review}}</p>
+      <p class="card-text mb-1"><strong>Description:</strong> {{description}}</p>
+      <p class="card-text mb-2"><strong>Where to Watch:</strong> {{whereToWatch}}</p>
+
 
               <!-- ❤️ Like Button -->
               <button class="btn heart-button" data-post-id="{{id}}" aria-label="Like">
-                <i class="bi {{#if liked}}bi-heart-fill{{else}}bi-heart{{/if}}"></i>
-                <span class="like-count ms-1">{{like_count}}</span>
+                <i class="bi {{#if liked}}bi-heart-fill{{else}}bi-heart{{/if}}" style="color: white;"></i>
+                <span class="like-count ms-1" style="color: white;">{{like_count}}</span>
               </button>
 
               <!-- ➕ Add to Watchlist Button -->
@@ -35,7 +48,7 @@
                 <input type="hidden" name="cover" value="{{cover}}">
                 <input type="hidden" name="whereToWatch" value="{{whereToWatch}}">
                 <button type="submit" class="btn" aria-label="Add to Watchlist">
-                  <i class="bi bi-plus-circle"></i>
+                  <i class="bi bi-plus-circle" style="color: white;"></i>
                 </button>
               </form>
 
@@ -77,22 +90,34 @@
           if (data.posts && data.posts.length > 0) {
             const container = document.getElementById("movie-container");
 
-            data.posts.forEach(post => {
-              const postHtml = `
-            <div class="col-12 mb-3">
-              <div class="card h-100 p-2">
-                <p class="card-text"><strong>User:</strong> ${post.user}</p>
-                <img src="${post.cover}" class="card-img-top" alt="${post.title}">
-                <div class="card-body">
-                  <h5 class="card-title text-center">${post.title}</h5>
-                  <p class="card-text">Review: ${post.review}</p>
-                  <p class="card-text">Description: ${post.description || ''}</p>
-                  <p class="card-text">Where To Watch: ${post.where_to_watch}</p>
+        data.posts.forEach(post => {
+          const postHtml = `
+            <div class="col-12 mb-4">
+                <div class="card post-card bg-dark text-light rounded shadow-sm" style="border: 1px solid #444;">
+                    <!-- Header: User Info -->
+                    <div class="card-header d-flex align-items-center justify-content-between border-bottom border-secondary bg-dark">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person-circle fs-4 me-2 text-secondary"></i>
+                        <strong class="text-light">@${post.user}</strong>
+                    </div>
+                    </div>
+
+                    <!-- Image -->
+                    <div class="ratio ratio-1x1" style="overflow: hidden;">
+                    <img src="${post.cover}" alt="${post.title}" class="w-100 h-100" style="object-fit: cover;">
+                    </div>
+
+                    <!-- Content Body -->
+                    <div class="card-body">
+                    <h5 class="card-title mb-2">${post.title}</h5>
+                    <p class="card-text mb-1"><strong>Review:</strong> ${post.review}</p>
+                    <p class="card-text mb-1"><strong>Description:</strong> ${post.description}</p>
+                    <p class="card-text mb-2"><strong>Where to Watch:</strong> ${post.where_to_watch}</p>
 
                   <!-- ❤️ Like Button -->
                   <button class="btn heart-button" data-post-id="${post.id}" aria-label="Like">
-                    <i class="bi ${post.liked ? 'bi-heart-fill' : 'bi-heart'}"></i>
-                    <span class="like-count ms-1">${post.like_count}</span>
+                    <i class="bi ${post.liked ? 'bi-heart-fill' : 'bi-heart'}" style="color: white;"></i>
+                    <span class="like-count ms-1" style="color: white;">${post.like_count}</span>
                   </button>
 
                   <!-- ➕ Add to Watchlist Button (optional) -->
@@ -101,7 +126,7 @@
                     <input type="hidden" name="cover" value="${post.cover}">
                     <input type="hidden" name="whereToWatch" value="${post.where_to_watch}">
                     <button type="submit" class="btn" aria-label="Add to Watchlist">
-                      <i class="bi bi-plus-circle"></i>
+                      <i class="bi bi-plus-circle" style="color: white;"></i>
                     </button>
                   </form>
 
