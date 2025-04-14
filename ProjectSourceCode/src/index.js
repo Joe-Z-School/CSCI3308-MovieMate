@@ -14,6 +14,51 @@ const bcrypt = require('bcryptjs'); //  To hash passwords
 const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
 const movieController = require('./controllers/movieController'); // To handle movie-related API requests
 
+// *****************************************************
+// <!-- AWS S3 File Storage -->
+// *****************************************************
+const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+async function uploadPoster(posterUrl, imdbID) {
+  const BUCKET_NAME = 'moviemate-pictures';
+  const REGION = 'us-east-2';
+  const key = `${imdbID}.jpg`;  // Use IMDb ID as the S3 key
+  const imageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${key}`;
+
+  try {
+    // Check if poster already exists
+    await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
+    console.log('Poster already exists, using existing file.');
+    return imageUrl;
+  } catch (err) {
+    if (err.code !== 'NotFound') {
+      throw err;
+    }
+
+    // Download the image from the original source
+    const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
+    const buffer = Buffer.from(response.data, 'binary');
+
+    // Upload to S3
+    const uploadParams = {
+      Bucket: BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: 'image/jpeg',
+    };
+
+    await s3.upload(uploadParams).promise();
+    console.log('Uploaded new poster to S3');
+    return imageUrl;
+  }
+}
 
 // *****************************************************
 // <!-- Socket.IO Server Creation -->
@@ -1034,23 +1079,23 @@ app.get('/load-more', async (req, res) => {
 // Temporary in-memory storage for the watchlist
 
 app.post('/add-to-watchlist', async (req, res) => {
-  const { title, picture, whereToWatch } = req.body;
+  const userId = req.session.user?.id;
+  const {imdbID, title, picture, description } = req.body;
 
-  if (!title || !picture || !whereToWatch) {
-    res.render('pages/social', { layout: 'main', message: 'Incomplete movie information.', status: 400 });
-    return;
+  try {
+    const s3ImageURL = await uploadPoster(picture, imdbID); 
+
+    await db.query(
+      'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
+      [userId, title, s3ImageURL, description]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to add movie to Watchlist' });
   }
-
-  db.tx(async insert => {
-    // Remove the course from the student's list of courses.
-    await insert.query('INSERT INTO watchlist (title, picture, whereToWatch) VALUES ($1, $2, $3)', [title, picture, whereToWatch]);
-  }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully added ${title} to your watchlist.` });
-  }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to add movie to watchlist.' });
-  });
-
 });
+
 
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
@@ -1061,7 +1106,6 @@ app.post('/remove-from-watchlist', async (req, res) => {
   }
 
   db.tx(async remove => {
-    // Remove the course from the student's list of courses.
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
     res.render('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
@@ -1073,26 +1117,20 @@ app.post('/remove-from-watchlist', async (req, res) => {
 app.get('/watchlist', async (req, res) => {
   const userId = req.session.user?.id;
 
-  if (!userId) return res.redirect('/login');
-
   try {
-    const watchlist = await db.any(
-      `SELECT * FROM watchlist WHERE user_id = $1 ORDER BY title DESC`,
+    const result = await db.query(
+      'SELECT title, poster_picture, description FROM watchlist WHERE user_id = $1',
       [userId]
     );
 
-    res.render('pages/watchlist', {
-      layout: 'main',
-      watchlist
-    });
+    const watchlist = result;
+    res.render('pages/watchlist', { watchlist });
   } catch (err) {
-    console.error('Watchlist fetch error:', err);
-    res.render('pages/watchlist', {
-      layout: 'main',
-      message: 'Could not load watchlist.'
-    });
+    console.error(err);
+    res.status(500).send('Error loading watchlist');
   }
 });
+
 
 // *****************************************************
 //  <!-- Profile Page --!>
