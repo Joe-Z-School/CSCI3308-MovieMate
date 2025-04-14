@@ -1107,7 +1107,6 @@ app.get('/profile', async (req, res) => {
       (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
       (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
   `, [profileUserID]);
-  console.log(counts.following_count, counts.followers_count, counts.watchlist_count)
   if (isOwnProfile) {
     res.render('pages/profile', {
       user: req.session.user,
