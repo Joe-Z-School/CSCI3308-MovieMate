@@ -1,11 +1,15 @@
 DROP TABLE IF EXISTS friends;
 DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS post_comments;
+DROP TABLE IF EXISTS post_likes;
 DROP TABLE IF EXISTS movies_to_comments;
 DROP TABLE IF EXISTS movies_to_users;
 DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS movies;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS notifications;
+
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -60,10 +64,14 @@ CREATE TABLE friends (
   following_user_id INTEGER NOT NULL,
   followed_user_id INTEGER NOT NULL,
   friends_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  latest_message TEXT DEFAULT 'No messages yet',
+  last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  unread_count INT DEFAULT 0,
   PRIMARY KEY (following_user_id, followed_user_id),
   FOREIGN KEY (following_user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (followed_user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE posts (
   id SERIAL PRIMARY KEY,
@@ -71,10 +79,35 @@ CREATE TABLE posts (
   body TEXT, 
   user_id INTEGER NOT NULL,
   status VARCHAR(50),
-  liked VARCHAR(50),
-  created_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  cover VARCHAR(255),
+  where_to_watch VARCHAR(100),
+  review DECIMAL,
+  like_count INTEGER DEFAULT 0,
+  comment_count INTEGER DEFAULT 0,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE post_likes (
+  user_id INTEGER NOT NULL,
+  post_id INTEGER NOT NULL,
+  liked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, post_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE post_comments (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  post_id INTEGER NOT NULL,
+  comment TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+
 
 CREATE TABLE follow_requests (
   id SERIAL PRIMARY KEY,
@@ -94,4 +127,24 @@ CREATE TABLE messages (
     content TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_read BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE notifications (
+  id SERIAL PRIMARY KEY,
+  recipient_id INTEGER NOT NULL, -- who receives the notification
+  sender_id INTEGER,             -- who caused it (optional)
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_read BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE watchlist (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  poster_picture VARCHAR(255) NOT NULL,
+  where_to_watch VARCHAR(255),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

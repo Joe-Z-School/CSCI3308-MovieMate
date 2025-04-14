@@ -122,3 +122,84 @@ Week 2: April 4th
 
 ------------------------------------------------------------------------------
 
+Week 3: April 11th
+    - Lizze:
+        - what have you done since the last meeting?
+            - Updated Social page to work with Database
+            - Feature improvements on Social Page
+            - Notifications Page 
+            - Commenting on others Posts
+
+        - what are you planning to do until the next meeting?
+            - Server Side linking of Posts and Data
+            - 
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Maeve:
+        - what have you done since the last meeting?
+            - Updated followers/following pages UI
+            - Added card design for cleaner UI
+            - Created/Started work on Watch List page
+
+        - what are you planning to do until the next meeting?
+            - Implementation of Watch List
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Neha:
+        - what have you done since the last meeting?
+            - Added ability to edit Profile Page
+            - Update Database with profile changes
+            - See followers profiles from users profile
+            - See Followers/Following list on users Profile
+
+        - what are you planning to do until the next meeting?
+            - Continue Profile Edit Feature
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Ella:
+        - what have you done since the last meeting?
+            - Added Posting partial for Post Modal
+            - Updated UI color schemes of pages
+            - Created Footer Partial
+
+        - what are you planning to do until the next meeting?
+            - Continue work on Post Modal with file addition feature
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Conner:
+        - what have you done since the last meeting?
+            - Movies Details Page with YouTube API
+            - Add Movies to Watch/Watched List buttons
+            - Added Rating Feature to Movies Details page
+
+        - what are you planning to do until the next meeting?
+            - Linking Movie Data to Database for use in Posts
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Joe:
+        - what have you done since the last meeting?
+            - Messaging Page
+            - Create WebSockets for communication
+            - Dynamic Storing and Loading of message data
+
+        - what are you planning to do until the next meeting?
+            - Implement Notifications from messaging feature
+            - Better chat functionality
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Additionals:
+        - Look into Base64 or local download/hosting for file uploading if we want to house user uploaded images.
+
+------------------------------------------------------------------------------

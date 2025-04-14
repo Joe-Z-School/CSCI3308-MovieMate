@@ -1,23 +1,62 @@
 <style>
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-    }
+  body {
+    display: block !important; 
+    justify-content: unset !important;
+  }
+
+  h1 {
+    margin-top: 100px;
+    color: #e9defa;
+    padding-left: 20px;
+  }
+
+  .cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding:20px;
+    margin-top: 20px;
+  }
+
+  .card {
+    background-color: rgb(52, 52, 57);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(65, 43, 74, 0.1);
+    width: 250px;
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    align-items: center; 
+    justify-content: center; 
+    flex-direction: column;
+  }
+
+  .card img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    object-fit: cover;
+  }
+
+  .card .name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #e9defa;
+    margin-bottom: 10px;
+  }
+
 </style>
+
 {{> nav}}
-<div class="following-container">
-    <h1>Following</h1>
-    <div class="following-list">
-        {{#each following}}
-        <div class="following-item">
-            <img src="../../resources/img/{{this.profile_icon}}" alt="Profile Picture" class="following-pic">
-            <div class="following-info">
-                <h3>{{this.first_name}}</h3>
-                <p>@{{this.username}}</p>
-            </div>
-        </div>
-        {{/each}}
+<h1 style="color: #e9defa">Following</h1>
+<div class="cards-container">
+  {{#each following}}
+    <div class="card">
+      <img src="../../resources/img/{{this.profile_icon}}" alt="Profile Picture" class="follower-pic">
+      <div class="name">{{this.first_name}} {{this.last_name}}</div>
+      <p style="color: #735aaa">@{{this.username}}</p>
+      <p style="color: #e9defa">{{this.bio}}</p>
     </div>
+  {{/each}}
 </div>
