@@ -29,7 +29,7 @@
               <div class="movie-poster-container">
                 <img id="movie-poster" src="" alt="Movie Poster" class="movie-detail-poster">
                 <div class="movie-actions">
-                  <button id="add-watchlist-btn" class="btn action-btn watchlist-btn" data-movie-id="">
+                  <button id="add-watchlist-btn" class="btn action-btn watchlist-btn" data-movie-id="" data-title="" data-poster="" data-plot="">
                     <i class="bi bi-plus-lg"></i> Watchlist
                   </button>
                   <button id="mark-watched-btn" class="btn action-btn watched-btn" data-movie-id="">
@@ -835,6 +835,10 @@
       const watchlistBtn = document.getElementById('add-watchlist-btn');
       const watchedBtn = document.getElementById('mark-watched-btn');
       watchlistBtn.setAttribute('data-movie-id', movie.imdbID);
+      watchlistBtn.setAttribute('data-title', movie.Title);
+      watchlistBtn.setAttribute('data-poster', movie.Poster);
+      watchlistBtn.setAttribute('data-plot', movie.Plot);
+
       watchedBtn.setAttribute('data-movie-id', movie.imdbID);
       
       // Call loadMovieTrailer with the movie data
@@ -1014,18 +1018,21 @@
     // Add to watchlist
     document.getElementById('add-watchlist-btn').addEventListener('click', function() {
       const movieId = this.getAttribute('data-movie-id');
+      const movieTitle = this.getAttribute('data-title');
+      const moviePoster = this.getAttribute('data-poster');
+      const moviePlot = this.getAttribute('data-plot');
       
       // Show loading state
       this.disabled = true;
       this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
       
       // Add to watchlist API call
-      fetch('/api/movies/watchlist', {
+      fetch('/add-to-watchlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ imdbId: movieId }),
+        body: JSON.stringify({imdbID: movieId, title: movieTitle, picture: moviePoster, description: moviePlot}),
       })
       .then(response => response.json())
       .then(data => {
