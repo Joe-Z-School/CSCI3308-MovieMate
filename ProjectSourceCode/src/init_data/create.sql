@@ -124,7 +124,8 @@ CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     sender_id INT REFERENCES users(id),
     recipient_id INT REFERENCES users(id),
-    content TEXT NOT NULL,
+    content TEXT,
+    image_url TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_read BOOLEAN DEFAULT FALSE
 );
@@ -146,5 +147,6 @@ CREATE TABLE watchlist (
   title VARCHAR(255) NOT NULL,
   poster_picture VARCHAR(255) NOT NULL,
   where_to_watch VARCHAR(255),
+  description TEXT,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
