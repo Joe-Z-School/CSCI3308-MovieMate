@@ -730,9 +730,9 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 10 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
-      { follower_id: 11, followed_id: 12 }, // joe1 → joe2
-      { follower_id: 11, followed_id: 13 }, // joe1 → joe3
-      { follower_id: 11, followed_id: 14 }, // joe1 → joe4
+      //{ follower_id: 11, followed_id: 12 }, // joe1 → joe2
+      //{ follower_id: 11, followed_id: 13 }, // joe1 → joe3
+      //{ follower_id: 11, followed_id: 14 }, // joe1 → joe4
       { follower_id: 11, followed_id: 4 }, // joe1 → matt
       { follower_id: 11, followed_id: 5 }, // joe1 → jessie
       { follower_id: 11, followed_id: 6 }, // joe1 → kay
