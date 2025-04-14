@@ -148,11 +148,11 @@ app.get('/api/movies/trailer/:query', async (req, res) => {
         key: process.env.YOUTUBE_API_KEY
       }
     });
-    
+
     if (response.data.items && response.data.items.length > 0) {
       const videoId = response.data.items[0].id.videoId;
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         videoId: videoId,
         embedUrl: `https://www.youtube.com/embed/${videoId}`
       });
@@ -235,41 +235,45 @@ app.post('/register', async (req, res) => {
 // Development route for messaging tests
 app.get('/dev/register', async (req, res) => {
   //hash the password using bcrypt library
-  
-    const accounts = [
-      { first_name: 'joe1',
-        last_name: 'joe1',
-        username: 'joe1',
-        email: 'joe1@email.com',
-        profile_icon: 'profile_pic_option_1.png',
-        bio: 'joe1'
-      },
-      { first_name: 'joe2',
-        last_name: 'joe2',
-        username: 'joe2',
-        email: 'joe2@email.com',
-        profile_icon: 'profile_pic_option_6.png',
-        bio: 'joe2'
-      },
-      { first_name: 'joe3',
-        last_name: 'joe3',
-        username: 'joe3',
-        email: 'joe3@email.com',
-        profile_icon: 'profile_pic_option_2.png',
-        bio: 'joe3'
-      },
-      { first_name: 'joe4',
-        last_name: 'joe4',
-        username: 'joe4',
-        email: 'joe4@email.com',
-        profile_icon: 'profile_pic_option_5.png',
-        bio: 'joe4'
-      },
-    ]
-    // Generate a timestamp for when this request is made
-    const created_at = new Date().toISOString();
-    const hash = await bcrypt.hash('joe', 10);
-    try{
+
+  const accounts = [
+    {
+      first_name: 'joe1',
+      last_name: 'joe1',
+      username: 'joe1',
+      email: 'joe1@email.com',
+      profile_icon: 'profile_pic_option_1.png',
+      bio: 'joe1'
+    },
+    {
+      first_name: 'joe2',
+      last_name: 'joe2',
+      username: 'joe2',
+      email: 'joe2@email.com',
+      profile_icon: 'profile_pic_option_6.png',
+      bio: 'joe2'
+    },
+    {
+      first_name: 'joe3',
+      last_name: 'joe3',
+      username: 'joe3',
+      email: 'joe3@email.com',
+      profile_icon: 'profile_pic_option_2.png',
+      bio: 'joe3'
+    },
+    {
+      first_name: 'joe4',
+      last_name: 'joe4',
+      username: 'joe4',
+      email: 'joe4@email.com',
+      profile_icon: 'profile_pic_option_5.png',
+      bio: 'joe4'
+    },
+  ]
+  // Generate a timestamp for when this request is made
+  const created_at = new Date().toISOString();
+  const hash = await bcrypt.hash('joe', 10);
+  try {
     //creating insert
     for (const sets of accounts) {
       await db.tx(async t => {
@@ -607,9 +611,9 @@ app.post("/api/posts/:id/like", async (req, res) => {
       const { like_count } = await db.one(
         "SELECT like_count FROM posts WHERE id = $1",
         [postId]
-        );
-        const action = "inliked";
-  
+      );
+      const action = "inliked";
+
       return res.json({ action, likeCount: like_count });
     } else {
       // Like it
@@ -622,25 +626,25 @@ app.post("/api/posts/:id/like", async (req, res) => {
         [postId]
       );
       // 🔔 Create notification if the liker is not the post owner
-        const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
+      const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
 
-        if (postOwner && postOwner.user_id !== userId) {
-          await db.none(
-            `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
+      if (postOwner && postOwner.user_id !== userId) {
+        await db.none(
+          `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
             VALUES ($1, $2, $3, NOW())`,
-            [userId, postOwner.user_id, 'liked your post']
-          );
-        }
-  
-      
+          [userId, postOwner.user_id, 'liked your post']
+        );
+      }
+
+
       // Get updated like count
       const { like_count } = await db.one(
-      "SELECT like_count FROM posts WHERE id = $1",
-      [postId]
+        "SELECT like_count FROM posts WHERE id = $1",
+        [postId]
       );
       const action = "liked";
 
-    return res.json({ action, likeCount: like_count });
+      return res.json({ action, likeCount: like_count });
     }
   } catch (err) {
     console.error("Error in like route:", err);
@@ -668,14 +672,14 @@ app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async
     );
     await db.none("UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1", [postId]);
     // 🔔 Create notification if the commenter is not the post owner
-  const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
+    const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
 
-  if (postOwner && postOwner.user_id !== userId) {
-    await db.none(
-    `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
+    if (postOwner && postOwner.user_id !== userId) {
+      await db.none(
+        `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
      VALUES ($1, $2, $3, NOW())`,
-    [userId, postOwner.user_id, `commented on your post: "${comment}"`]
-  );
+        [userId, postOwner.user_id, `commented on your post: "${comment}"`]
+      );
     }
 
     res.redirect("/social");
@@ -1094,13 +1098,23 @@ app.get('/watchlist', async (req, res) => {
 //  <!-- Profile Page --!>
 // *****************************************************
 app.get('/profile', async (req, res) => {
-  const profileUserID = req.query.id || req.session.user.id;
+  const profileUserID = req.query.id ? Number(req.query.id) : req.session.user.id;
   const loggedInUserID = req.session.user.id ? req.session.user.id : null;
   const isOwnProfile = loggedInUserID === profileUserID;
+  const counts = await db.one(`
+    SELECT 
+      (SELECT COUNT(*) FROM friends WHERE followed_user_id = $1) AS followers_count,
+      (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
+      (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
+  `, [profileUserID]);
+  console.log(counts.following_count, counts.followers_count, counts.watchlist_count)
   if (isOwnProfile) {
     res.render('pages/profile', {
       user: req.session.user,
       profile: req.session.user,
+      followersCount: counts.followers_count,
+      followingCount: counts.following_count,
+      watchlistCount: counts.watchlist_count,
       isOwnProfile: isOwnProfile
     });
   }
@@ -1113,6 +1127,9 @@ app.get('/profile', async (req, res) => {
     res.render('pages/profile', {
       user: req.session.user,
       profile: profileUser,
+      followersCount: counts.followers_count,
+      followingCount: counts.following_count,
+      watchlistCount: counts.watchlist_count,
       isOwnProfile: isOwnProfile
     });
   }
@@ -1169,6 +1186,45 @@ app.post('/profile/edit', async (req, res) => {
       user: req.session.user,
       error: 'Failed to update profile. Please try again.'
     });
+  }
+});
+//Profile Watchlist Route
+app.get('/profile/watchlist', async (req, res) => {
+  const userId = req.query.userId || req.session.user.id;
+
+  try {
+    const watchlist = await db.any(`
+      SELECT id, title, poster_picture, where_to_watch 
+      FROM watchlist 
+      WHERE user_id = $1
+      ORDER BY id DESC
+    `, [userId]);
+
+    res.render('pages/watchlist', {
+      user: req.session.user,
+      watchlist: watchlist,
+    });
+  } catch (err) {
+    console.error('Error fetching watchlist:', err);
+    res.status(500).send('Error loading watchlist movies');
+  }
+});
+
+app.post('/remove-from-watchlist', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  try {
+    await db.none(`
+      DELETE FROM watchlist 
+      WHERE id = $1 AND user_id = $2
+    `, [req.body.watchlistId, req.session.user.id]);
+
+    res.redirect('/profile/watchlist');
+  } catch (err) {
+    console.error('Error removing from watchlist:', err);
+    res.status(500).send('Error removing item from watchlist');
   }
 });
 
@@ -1259,7 +1315,7 @@ app.get('/messaging', async (req, res) => {
         ? formatDistanceToNow(new Date(friend.last_active), { addSuffix: true })
         : "Not available"
     }));
-    
+
 
     res.render('pages/messaging', {
       activeUser,
@@ -1379,7 +1435,7 @@ io.on('connection', (socket) => {
 
         io.to(`user-${rId}`).emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount: 0 });
       }
-      
+
       io.to(`user-${rId}`).emit('private-message', { senderId: sId, content });
     } catch (error) {
       console.error('Error handling private message:', error);
