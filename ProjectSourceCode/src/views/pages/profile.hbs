@@ -18,7 +18,20 @@
             {{#if isOwnProfile}}
             <button id="openEditModal" class="btn-edit">Edit Profile</button>
             {{else}}
-            <button class="btn-follow">Follow</button>
+            {{#if is_following}}
+            <button type="button" class="btn btn-outline-danger"
+                style="padding: 10px 20px; font-size: 16px; border-radius: 5px;"
+                onclick="showUnfollowModal('{{id}}', '{{username}}')">Unfollow</button>
+            {{else if is_requested}}
+            <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')">
+                Requested</button>
+            {{else}}
+            <form action="/users/follow" method="POST">
+                <input type="hidden" name="following_id" value="{{id}}">
+                <button type="submit"
+                    style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
+            </form>
+            {{/if}}
             {{/if}}
         </div>
     </div>
