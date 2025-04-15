@@ -60,6 +60,23 @@ async function uploadPoster(posterUrl, imdbID) {
   }
 }
 
+async function uploadChatImage(buffer, contentType, userId) {
+  const BUCKET_NAME = 'moviemate-userupload';
+  const REGION = 'us-east-2';
+  const key = `chat/${userId}/${uuidv4()}.jpg`;
+
+  const uploadParams = {
+    Bucket: BUCKET_NAME,
+    Key: key,
+    Body: buffer,
+    ContentType: contentType,
+  };
+
+  await s3.upload(uploadParams).promise();
+  return `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${key}`;
+}
+
+
 // *****************************************************
 // <!-- Socket.IO Server Creation -->
 // *****************************************************
@@ -1361,6 +1378,23 @@ app.get('/messaging', async (req, res) => {
   } catch (error) {
     console.error('Error loading messaging page:', error.message);
     res.status(500).send('Internal Server Error');
+  }
+});
+
+const multer = require('multer');
+const upload = multer(); // memory storage for buffer access
+
+app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
+  try {
+    const userId = req.session.user?.id;
+    const file = req.file;
+    if (!file) return res.status(400).json({ success: false, error: 'No file uploaded' });
+
+    const imageUrl = await uploadChatImage(file.buffer, file.mimetype, userId);
+    res.json({ success: true, imageUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Image upload failed' });
   }
 });
 
