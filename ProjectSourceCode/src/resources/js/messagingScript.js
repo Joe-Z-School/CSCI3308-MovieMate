@@ -56,6 +56,18 @@ function updateFriendsListOnUI(friendsList) {
     friendsContainer.appendChild(noFriendsMessage);
   }
 
+  // Sort friends: unread messages first, then alphabetically by name
+  friendsList.sort((a, b) => {
+    const aUnread = a.unread_count || 0;
+    const bUnread = b.unread_count || 0;
+
+    if (aUnread > 0 && bUnread === 0) return -1; // a comes first
+    if (bUnread > 0 && aUnread === 0) return 1;  // b comes first
+
+    // If both have unread or both have none, sort alphabetically
+    return a.name.localeCompare(b.name);
+  });
+
   friendsList.forEach(friend => {
     const listItem = document.createElement("li");
     listItem.className = "list-group-item friend d-flex align-items-center";
@@ -271,7 +283,8 @@ socket.on('private-message', ({ senderId, content }) => {
     message: content,
     user: friendName,
     profileIcon: `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
-    timestamp: new Date()
+    timestamp: new Date(),
+    isImage: content.startsWith("https://moviemate-userupload.s3.")
   });
 });
 
@@ -287,7 +300,8 @@ socket.on('load-messages', (messages) => {
       profileIcon: isUser
         ? `/resources/img/${activeUser.profile_icon}`
         : `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
-      timestamp
+      timestamp,
+      isImage: content.startsWith("https://moviemate-userupload.s3.")
     });
   });
   
@@ -295,7 +309,7 @@ socket.on('load-messages', (messages) => {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 });
 
-function appendMessage({ message, user, profileIcon = null, timestamp = new Date() }) {
+function appendMessage({ message, user, profileIcon = null, timestamp = new Date(), isImage = false }) {
   if (!message || !user) {
     console.error('Message or user is undefined in appendMessage:', { message, user });
     return;
@@ -314,17 +328,24 @@ function appendMessage({ message, user, profileIcon = null, timestamp = new Date
 
   const messageContent = document.createElement('div');
   messageContent.classList.add('message-content');
-
   const meta = document.createElement('div');
   meta.classList.add('message-meta');
-
   const formattedTime = formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-
   meta.textContent = `${user} • ${formattedTime}`;
   
   const bubble = document.createElement('div');
   bubble.classList.add('chat-bubble');
-  bubble.textContent = message;
+
+  if (isImage || message.startsWith("https://moviemate-userupload.s3.")) {
+    const img = document.createElement('img');
+    img.src = message;
+    img.alt = "Sent image";
+    img.style.maxWidth = "200px";
+    img.style.borderRadius = "8px";
+    bubble.appendChild(img);
+  } else {
+    bubble.textContent = message;
+  }
 
   messageContent.appendChild(meta);
   messageContent.appendChild(bubble);
@@ -371,10 +392,62 @@ emojiBtn.addEventListener("click", () => {
 });
 
 // File Upload
-fileInput.addEventListener("change", () => {
-  const file = fileInput.files[0];
-  alert(`Selected file: ${file.name}`);
+document.getElementById('file-input').addEventListener('change', async function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const res = await fetch('/upload-chat-image', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Send image URL as a message or attach it to the message you're sending
+      sendMessage({ type: 'image', url: data.imageUrl });
+    } else {
+      alert('Upload failed: ' + data.error);
+    }
+  } catch (err) {
+    console.error('Upload error:', err);
+  }
 });
+
+
+function sendMessage(messageObj) {
+  if (!friendId) {
+    console.error("No friend selected to send the message.");
+    return;
+  }
+
+  const isImage = messageObj.type === 'image';
+
+  // Append the message to the chat window
+  appendMessage({ 
+    message: isImage ? messageObj.url : messageObj.text,
+    user: 'You',
+    profileIcon: `/resources/img/${activeUser.profile_icon}`,
+    timestamp: new Date(),
+    isImage
+  });
+
+  socket.emit('private-message', {
+    senderId: yourUserId,
+    recipientId: friendId,
+    content: isImage ? messageObj.url : messageObj.text,
+    type: messageObj.type || 'text',
+    chatOpen: activeFriendId === friendId
+  });
+
+  if (!isImage) {
+    messageInput.value = "";
+  }
+}
+
+
 
 // Emojis hover effect
 const emojiIcons = [
