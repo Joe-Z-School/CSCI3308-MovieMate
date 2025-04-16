@@ -605,6 +605,14 @@ app.get('/notifications', async (req, res) => {
 });
 
 
+// explore page:
+
+app.get('/explore', (req, res) => {
+  const initialPosts = posts.slice(0, 5); // Load the first 5 posts
+  res.render('pages/explore', { layout: 'main', posts: initialPosts, email: req.session.user.email });
+});
+
+
 // *****************************************************
 // <!-- Logout -->
 // *****************************************************
