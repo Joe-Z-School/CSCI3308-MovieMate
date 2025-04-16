@@ -3,19 +3,18 @@ console.log('Script loaded!'); // Check if messagingScript.js is running
 
 // Check if yourUserId is defined
 if (typeof yourUserId === 'undefined') {
-  console.error('yourUserId is not defined. Make sure your template injects it into the page before this script runs.');
+  console.error('yourUserId is not defined.');
 }
 
 const socket = io(); // Connect to the server
-socket.emit('register-user', yourUserId); // Register user to track chats
 
 const messageInput = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 const emojiBtn = document.getElementById('emoji-btn');
 const fileInput = document.getElementById("file-input"); 
 const chatMessages = document.getElementById("chat-messages");
-
 const friendsContainer = document.getElementById("friends");
+
 if (!friendsContainer) {
   console.error("#friends element not found.");
 }
@@ -69,6 +68,7 @@ function updateFriendsListOnUI(friendsList) {
   });
 
   friendsList.forEach(friend => {
+    // Create the list area for all friends
     const listItem = document.createElement("li");
     listItem.className = "list-group-item friend d-flex align-items-center";
     listItem.id = "friend";
@@ -76,7 +76,7 @@ function updateFriendsListOnUI(friendsList) {
     listItem.setAttribute("data-user", friend.name);
     listItem.setAttribute("data-user-unreadCount", friend.unread_count);
 
-    // Add profile image
+    // Add profile image to each friend in friends list
     const profileContainer = document.createElement("div");
     profileContainer.className = "position-relative me-3";
     const profileImage = document.createElement("img");
@@ -88,16 +88,22 @@ function updateFriendsListOnUI(friendsList) {
     profileContainer.appendChild(profileImage);
     listItem.appendChild(profileContainer);
 
-    // Add friend info
+    // Add friend name
     const friendInfo = document.createElement("div");
     friendInfo.className = "friend-info flex-grow-1";
     const friendName = document.createElement("div");
     friendName.className = "friend-name";
     friendName.textContent = friend.name;
+
+    // Get most recent message from friend
     const recentMessage = document.createElement("div");
     recentMessage.className = "recent-message text-muted";
     const rawMessage = friend.latest_message || "No recent messages";
-    recentMessage.textContent = rawMessage.length > 22 ? rawMessage.slice(0, 22) + "..." : rawMessage;
+    // Check if recent message was an image upload, if so, display text and not URL
+    const imageMessage = rawMessage.startsWith("https://d32c7xmivzr8hg.cloudfront.net/") ? 'Image uploaded...' : rawMessage;
+
+    // Dont display more than 22 characters in recent messages area for formatting. Add ellipses if longer
+    recentMessage.textContent = imageMessage.length > 22 ? imageMessage.slice(0, 22) + "..." : imageMessage;
 
     friendInfo.appendChild(friendName);
     friendInfo.appendChild(recentMessage);
@@ -119,11 +125,11 @@ function updateFriendsListOnUI(friendsList) {
     const unreadBadge = document.createElement("span");
     unreadBadge.className = "badge unread-badge";
 
+    // Hide unread badge counter if there are no unread messages
     if (unreadCount > 0) {
       unreadBadge.textContent = unreadCount;
       unreadBadge.style.display = "inline-block";
-    }
-    
+    }    
     else {
       unreadBadge.textContent = "0";
       unreadBadge.style.display = "none";
@@ -142,25 +148,43 @@ function updateFriendsListOnUI(friendsList) {
   });
 }
 
+// When selecting a friend, a chat room should open with selected
+// friend, gather the friend information to tie messages to friend
+// and reset an unread badge counter if there is one.
 function openChat(friend) {
   console.log('Opening chat with friend:', friend);
   friendId = friend.id;
   friendName = friend.name;
   activeFriendId = friend.id;
 
+  // Set the active chat room with friendid
   socket.emit('setActiveChat', friend.id);
 
+  // Gather friend information
   const chatHeader = document.getElementById("chat-user-name");
   const chatProfileIcon = document.getElementById("chat-profile-icon");
   chatHeader.textContent = friendName;
   chatProfileIcon.src = `/resources/img/${friend.profile_icon}`;
   chatProfileIcon.style.display = "block";
 
+  // Clear chat area for room switch and load of new friends chat
   const chatMessages = document.getElementById('chat-messages');
   chatMessages.innerHTML = "";
+  
+  // Re-enable blocked buttons/typing area
+  const messageTypeArea = document.getElementById('message-input');
+  messageTypeArea.removeAttribute('disabled') // Re-enable chat typing area
+  const sendButton = document.getElementById('send-btn')
+  sendButton.removeAttribute('disabled') // Re-enable send button
+  const imageUpButton = document.getElementById('file-input')
+  imageUpButton.removeAttribute('disabled') // Re-enable image upload button
+  const emojiButton = document.getElementById('emoji-btn')  
+  emojiButton.removeAttribute('disabled') // Re-enable emoji add button
 
+  // join the chat room with specific friend
   socket.emit('join-room', { senderId: yourUserId, recipientId: friendId });
 
+  // Reset unread counter to 0
   socket.emit('mark-messages-read', { senderId: yourUserId, recipientId: friendId });
   const unreadBadge = document.querySelector(`[data-user-id="${friendId}"] .unread-badge`);
   if (unreadBadge) {
@@ -173,18 +197,22 @@ function openChat(friend) {
 sendBtn.addEventListener('click', () => {
   const message = messageInput.value.trim();
   if (message) {
+    // Send message details + user info to append to chat
     appendMessage({ 
       message: message, 
       user: 'You',
       profileIcon: `/resources/img/${activeUser.profile_icon}`,
       timestamp: new Date()
     });
+    // Send message to friend
     socket.emit('private-message', {
       senderId: yourUserId,
       recipientId: friendId,
       content: message,
       chatOpen: activeFriendId === friendId
     }); 
+
+    // Clear message area
     messageInput.value = "";
   }
   
@@ -209,6 +237,7 @@ messageInput.addEventListener("keydown", (event) => {
 
 
 socket.on('connect', () => {
+  // register connection
   socket.emit('register-user', yourUserId);
   
   socket.once('user-registered', () => {
@@ -224,6 +253,7 @@ socket.on('update-unread-count', ({ senderId, recipientId, unreadCount }) => {
     return;
   }
 
+  // Get unread counter from friend
   const unreadBadge = document.querySelector(`[data-user-id="${senderId}"] .unread-badge`);
   if (unreadBadge) {
     unreadBadge.textContent = unreadCount;
@@ -232,6 +262,7 @@ socket.on('update-unread-count', ({ senderId, recipientId, unreadCount }) => {
 
 // Increment unread count if message comes from a friend who isn't the active chat
 socket.on('increment-unread', ({ from }) => {
+  // Get unread counters
   const friendListItem = document.querySelector(`[data-user-id="${from}"]`);
   const unreadBadge = friendListItem?.querySelector('.unread-badge');
 
@@ -246,7 +277,7 @@ socket.on('increment-unread', ({ from }) => {
   }
   
   else {
-    console.warn(`Unread badge for user ${from} not found.`);
+    console.log(`Unread badge for user ${from} not found.`);
   }
 
 });
@@ -257,7 +288,7 @@ socket.on('friends-list-updated', (friendsList) => {
 
   // Check if friendsList is valid
   if (!Array.isArray(friendsList) || friendsList.length === 0) {
-    console.error('Received invalid or empty friends list:', friendsList);
+    console.error('Received invalid or empty friends list:', friendsList); // Debugging line
     return;
   }
 
@@ -267,15 +298,9 @@ socket.on('friends-list-updated', (friendsList) => {
 
 // Receive a private message
 socket.on('private-message', ({ senderId, content }) => {
-  // Ignore duplicates from self
-  if (String(senderId) === String(yourUserId)) {
-    console.log('Skipping echo message from self');
-    return;
-  }
-
   // Ignore if receiver not in sender chat
   if (String(senderId) !== String(activeFriendId)) {
-    console.log(`Message from ${senderId} ignored because activeFriendId is ${activeFriendId}.`);
+    //console.log(`Message from ${senderId} ignored because activeFriendId is ${activeFriendId}.`); // Debug line
     return;
   }
 
@@ -292,6 +317,7 @@ socket.on('private-message', ({ senderId, content }) => {
 socket.on('load-messages', (messages) => {
   chatMessages.innerHTML = "";
 
+  // Gather all messages between user and friend
   messages.forEach(({ sender_id, content, timestamp }) => {
     const isUser = sender_id === yourUserId;
     appendMessage({
@@ -304,28 +330,33 @@ socket.on('load-messages', (messages) => {
       isImage: content.startsWith("https://d32c7xmivzr8hg.cloudfront.net/")
     });
   });
-  
 
+  // Scroll so latest message is visible
   chatMessages.scrollTop = chatMessages.scrollHeight;
 });
 
 function appendMessage({ message, user, profileIcon = null, timestamp = new Date(), isImage = false }) {
+  // Check if no message or no user
   if (!message || !user) {
     console.error('Message or user is undefined in appendMessage:', { message, user });
     return;
   }
 
+  // Create chat messaging area
   const msgWrapper = document.createElement('div');
   msgWrapper.classList.add('chat-message');
 
+  // Set user as titled 'You'
   const isSentByUser = user === 'You';
   msgWrapper.classList.add(isSentByUser ? 'sent' : 'received');
 
+  // Add friends profile icon to top for displaying chat room
   const profileImg = document.createElement('img');
   profileImg.src = profileIcon
   profileImg.alt = 'Profile';
   profileImg.classList.add('profile-icon');
 
+  // Message sending/receiving area
   const messageContent = document.createElement('div');
   messageContent.classList.add('message-content');
   const meta = document.createElement('div');
@@ -333,26 +364,32 @@ function appendMessage({ message, user, profileIcon = null, timestamp = new Date
   const formattedTime = formatDistanceToNow(new Date(timestamp), { addSuffix: true });
   meta.textContent = `${user} • ${formattedTime}`;
   
+  // Add styled chat bubbles to sends and received messages
   const bubble = document.createElement('div');
   bubble.classList.add('chat-bubble');
 
+  // Check if message sent/received is an image
   if (isImage || message.startsWith("https://d32c7xmivzr8hg.cloudfront.net/")) {
     const img = document.createElement('img');
     img.src = message;
     img.alt = "Sent image";
-    img.style.maxWidth = "200px";
+    img.style.maxWidth = "200px"; // Limit dimensions of image
     img.style.borderRadius = "8px";
     bubble.appendChild(img);
-  } else {
+  } 
+  else {
     bubble.textContent = message;
   }
 
+  // Add messages in bubble style to chat area
   messageContent.appendChild(meta);
   messageContent.appendChild(bubble);
 
+  // Add chat room friend profile image to top
   msgWrapper.appendChild(profileImg);
   msgWrapper.appendChild(messageContent);
 
+  // Add wrapper to page and scroll messages so newly added is visible
   chatMessages.appendChild(msgWrapper);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -371,12 +408,13 @@ emojiBtn.addEventListener("click", () => {
   }
 
   else{
+    // Create emoji selection window with location
     const emojiElement = document.createElement('div');
     emojiElement.innerHTML = `<emoji-picker></emoji-picker>`;
     emojiElement.style.position = "absolute";
     emojiElement.style.bottom = "90px"; // Position from the bottom
     emojiElement.style.right = "80px"; // Position from the right
-    emojiElement.style.zIndex = "1000"; // Ensure it's on top of other elements
+    emojiElement.style.zIndex = "1500"; // Ensure it's on top of other elements
     emojiElement.style.borderRadius = "10px"; // Rounded corners
     emojiElement.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)"; // Shadow effect
     document.body.appendChild(emojiElement);
@@ -391,7 +429,7 @@ emojiBtn.addEventListener("click", () => {
 
 });
 
-// File Upload
+// Image Upload
 document.getElementById('file-input').addEventListener('change', async function () {
   const file = this.files[0];
   if (!file) return;
@@ -408,6 +446,7 @@ document.getElementById('file-input').addEventListener('change', async function 
   formData.append('image', file);
 
   try {
+    // POST image to chat
     const res = await fetch('/upload-chat-image', {
       method: 'POST',
       body: formData
@@ -446,6 +485,7 @@ function sendMessage(messageObj) {
     isImage
   });
 
+  // Emit message to friend room
   socket.emit('private-message', {
     senderId: yourUserId,
     recipientId: friendId,
@@ -472,6 +512,7 @@ const emojiIcons = [
   'bi-emoji-neutral'
 ];
 
+// Change emoji icon when mouse hovers over emoji button
 document.addEventListener('DOMContentLoaded', () => {
   const emojiBtn = document.getElementById('emoji-btn');
   if (emojiBtn) {
@@ -504,13 +545,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set default chat header message
   const chatHeader = document.getElementById('chat-user-name');
   const chatProfileIcon = document.getElementById('chat-profile-icon');
+  const messageTypeArea = document.getElementById('message-input');
+  const sendButton = document.getElementById('send-btn')
+  const imageUpButton = document.getElementById('file-input')
+  const emojiButton = document.getElementById('emoji-btn')
 
   chatHeader.textContent = 'Select A Friend To Start Chatting'; // Default message
   chatProfileIcon.style.display = 'none'; // Hide profile icon by default
+  messageTypeArea.setAttribute('disabled', 'true') // Disallow a user from typing until a friend is selected
+  sendButton.setAttribute('disabled', 'true') // Disable send button
+  imageUpButton.setAttribute('disabled', 'true') // Disable image upload button
+  emojiButton.setAttribute('disabled', 'true') // Disable emoji add button
 });
 
 setInterval(updateFriendsList, 15000); // 15 seconds
 
 window.addEventListener('beforeunload', () => {
-  socket.emit('setActiveChat', null); // Let server know you left
+  socket.emit('setActiveChat', null); // Set active chat to Null when leaving page
 });
