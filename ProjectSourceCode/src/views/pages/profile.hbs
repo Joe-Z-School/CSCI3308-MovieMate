@@ -195,16 +195,17 @@
             {{#if isOwnProfile}}
             <button id="openEditModal" class="btn-edit">Edit Profile</button>
             {{else}}
-            {{#if is_following}}
+            {{#if profile.is_following}}
             <button type="button" class="btn btn-outline-danger"
                 style="padding: 10px 20px; font-size: 16px; border-radius: 5px;"
-                onclick="showUnfollowModal('{{id}}', '{{username}}')">Unfollow</button>
-            {{else if is_requested}}
-            <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')">
+                onclick="showUnfollowModal('{{profile.id}}', '{{profile.username}}')">Unfollow</button>
+            {{else if profile.is_requested}}
+            <button type="button" class="btn btn-warning"
+                onclick="showCancelRequestModal('{{profile.id}}', '{{profile.username}}')">
                 Requested</button>
             {{else}}
             <form action="/users/follow" method="POST">
-                <input type="hidden" name="following_id" value="{{id}}">
+                <input type="hidden" name="following_id" value="{{profile.id}}">
                 <button type="submit"
                     style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
             </form>
@@ -268,7 +269,7 @@
 {{#if isOwnProfile}}
 {{> edit-profile-modal}}
 {{/if}}
-
+{{>follow-modal}}
 <!-- Modal HTML for Posting Movie Review -->
 <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -279,32 +280,55 @@
                 <h5 class="modal-title" id="postModalLabel">Share Your Movie Thoughts</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
             <!-- Modal Body -->
-            <div class="modal-body">
-                <form id="moviePostForm" enctype="multipart/form-data">
-                    <!-- Movie Cover Upload -->
-                    <div class="mb-3">
-                        <label for="movieCover" class="form-label">Movie Cover</label>
-                        <input class="form-control" type="file" id="movieCover" accept="image/*">
-                    </div>
+<div class="modal-body">
+  <form id="moviePostForm" enctype="multipart/form-data">
+    <!-- Movie Title -->
+    <div class="mb-3">
+      <label for="movieTitle" class="form-label text-light">Movie Title</label>
+      <input type="text" class="form-control bg-dark text-light border-secondary" id="movieTitle" placeholder="Enter the movie title" required>
+    </div>
 
-                    <!-- Thoughts -->
-                    <div class="mb-3">
-                        <label for="movieThoughts" class="form-label">Your Thoughts</label>
-                        <textarea class="form-control" id="movieThoughts" rows="4"
-                            placeholder="Write your thoughts here..."></textarea>
-                    </div>
+    <!-- Movie Cover Upload -->
+    <div class="mb-3">
+      <label for="movieCover" class="form-label text-light">Movie Cover</label>
+      <input class="form-control bg-dark text-light border-secondary" type="file" id="movieCover" accept="image/*">
+    </div>
+    
+    <!-- Review -->
+    <div class="mb-3">
+      <label for="movieReview" class="form-label text-light">Review</label>
+      <input type="number" class="form-control bg-dark text-light border-secondary" id="movieReview" placeholder="Rate the movie (1-10)" min="1" max="10" required>
+    </div>
 
-                    <!-- Post Button -->
-                    <button type="submit" class="btn btn-purple">Post</button>
-            </div>
+    <!-- Where to Watch -->
+    <div class="mb-3">
+      <label for="movieWhereToWatch" class="form-label text-light">Where to Watch</label>
+      <input type="text" class="form-control bg-dark text-light border-secondary" id="movieWhereToWatch" placeholder="e.g. Netflix, Hulu, etc." required>
+    </div>
+
+    <!-- Thoughts -->
+    <div class="mb-3">
+      <label for="movieThoughts" class="form-label text-light">Your Thoughts</label>
+      <textarea class="form-control bg-dark text-light border-secondary" id="movieThoughts" rows="4"
+        placeholder="Write your thoughts here..."></textarea>
+    </div>
+
+    <!-- Post Button -->
+    <button type="submit" class="btn btn-purple">Post</button>
+
+  </form>
+</div>
+
 
         </div>
     </div>
 </div>
 
+
+<!-- Custom JS -->
 <script>
+    
     document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById('editProfileModal');
         const openBtn = document.getElementById('openEditModal');
