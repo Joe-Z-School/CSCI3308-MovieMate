@@ -93,16 +93,16 @@
 
 <h1 style="color: #e9defa">My Watchlist</h1>
 <div class="cards-container">
-  {{!-- {{#each watchlist}} --}}
+  {{#each watchlist}}
   <div class="card h-100">
     <img src="{{poster_picture}}" class="card-img-top" alt="{{title}}">
     <div class="info-bio-container">
-      <div class="name">Sample Title</div>
+      <div class="name">{{title}}</div>
       <div class="watch-on-rating">
-        <div class="watch-on">Where to watch: Netflix</div>
-        <div class="rating">Rating: 2/10</div>
+        <div class="watch-on">Where to watch: {{where_to_watch}}</div>
+        <div class="rating">Rating: {{rating}}</div>
       </div>
-      <p class="bio">Heres a bio that comes in paragraph form.</p>
+      {{!-- <p class="bio">{{}}</p> --}}
     </div>
     <form method="POST" action="/remove-from-watchlist">
       <input type="hidden" name="title" value="{{title}}">
@@ -110,7 +110,7 @@
     </form>
   </div>
 
-  <div class="card h-100">
+  {{!-- <div class="card h-100">
     <img src="{{poster_picture}}" class="card-img-top" alt="{{title}}">
     <div class="info-bio-container">
       <div class="name">Sample Title</div>
@@ -124,6 +124,6 @@
       <input type="hidden" name="title" value="{{title}}">
       <button type="submit" class="btn btn-danger">Remove from watchlist</button>
     </form>
-  </div>
-  {{!-- {{/each}} --}}
+  </div> --}}
+  {{/each}}
 </div>
