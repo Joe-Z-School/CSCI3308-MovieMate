@@ -267,13 +267,13 @@ socket.on('friends-list-updated', (friendsList) => {
 
 // Receive a private message
 socket.on('private-message', ({ senderId, content }) => {
-  // 1. Ignore duplicates if it's from you and you're in the active chat
+  // Ignore duplicates from self
   if (String(senderId) === String(yourUserId)) {
     console.log('Skipping echo message from self');
     return;
   }
 
-  // 2. Ignore if you're not in that chat
+  // Ignore if receiver not in sender chat
   if (String(senderId) !== String(activeFriendId)) {
     console.log(`Message from ${senderId} ignored because activeFriendId is ${activeFriendId}.`);
     return;
@@ -284,7 +284,7 @@ socket.on('private-message', ({ senderId, content }) => {
     user: friendName,
     profileIcon: `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
     timestamp: new Date(),
-    isImage: content.startsWith("https://moviemate-userupload.s3.")
+    isImage: content.startsWith("https://d32c7xmivzr8hg.cloudfront.net/")
   });
 });
 
@@ -301,7 +301,7 @@ socket.on('load-messages', (messages) => {
         ? `/resources/img/${activeUser.profile_icon}`
         : `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
       timestamp,
-      isImage: content.startsWith("https://moviemate-userupload.s3.")
+      isImage: content.startsWith("https://d32c7xmivzr8hg.cloudfront.net/")
     });
   });
   
@@ -336,7 +336,7 @@ function appendMessage({ message, user, profileIcon = null, timestamp = new Date
   const bubble = document.createElement('div');
   bubble.classList.add('chat-bubble');
 
-  if (isImage || message.startsWith("https://moviemate-userupload.s3.")) {
+  if (isImage || message.startsWith("https://d32c7xmivzr8hg.cloudfront.net/")) {
     const img = document.createElement('img');
     img.src = message;
     img.alt = "Sent image";
@@ -396,6 +396,14 @@ document.getElementById('file-input').addEventListener('change', async function 
   const file = this.files[0];
   if (!file) return;
 
+  const MAX_SIZE = 2 * 1024 * 1024; // 2 MB max image size
+
+  if (file.size > MAX_SIZE) {
+    alert('Image too large, Max Image size is 2MB.');
+    this.value = ''; // Clear the file input
+    return;
+  }
+
   const formData = new FormData();
   formData.append('image', file);
 
@@ -406,15 +414,19 @@ document.getElementById('file-input').addEventListener('change', async function 
     });
     const data = await res.json();
     if (data.success) {
-      // Send image URL as a message or attach it to the message you're sending
+
+      // Send image URL as message
       sendMessage({ type: 'image', url: data.imageUrl });
-    } else {
+    }
+    else {
       alert('Upload failed: ' + data.error);
     }
   } catch (err) {
     console.error('Upload error:', err);
+    alert('An error occurred during upload. Please try again.');
   }
 });
+
 
 
 function sendMessage(messageObj) {
