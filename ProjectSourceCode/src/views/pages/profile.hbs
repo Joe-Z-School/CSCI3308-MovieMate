@@ -9,70 +9,84 @@
 
     /* Dark theme modal */
     /* Make the close button "X" white */
-.modal-content .btn-close {
-    color: white !important;   /* Set the text (icon) color to white */
-    background-color: transparent !important; /* Ensure the background is transparent */
-    border: none !important;   /* Remove border */
-}
+    .modal-content .btn-close {
+        color: white !important;
+        /* Set the text (icon) color to white */
+        background-color: transparent !important;
+        /* Ensure the background is transparent */
+        border: none !important;
+        /* Remove border */
+    }
 
-/* If the icon itself isn't white yet, target the SVG directly */
-.modal-content .btn-close svg {
-    fill: white !important;  /* Set the SVG "X" icon color to white */
-}
+    /* If the icon itself isn't white yet, target the SVG directly */
+    .modal-content .btn-close svg {
+        fill: white !important;
+        /* Set the SVG "X" icon color to white */
+    }
 
-/* Optional: Close button hover effect */
-.modal-content .btn-close:hover {
-    color: #ccc !important; /* Slightly gray when hovered */
-}
+    /* Optional: Close button hover effect */
+    .modal-content .btn-close:hover {
+        color: #ccc !important;
+        /* Slightly gray when hovered */
+    }
+
     .modal-content {
-        background-color: #222 !important; /* Dark background */
-        color: #fff; /* Light text */
+        background-color: #222 !important;
+        /* Dark background */
+        color: #fff;
+        /* Light text */
     }
 
     .modal-header {
-        border-bottom: 1px solid #111; /* Dark border */
+        border-bottom: 1px solid #111;
+        /* Dark border */
     }
 
     .modal-body {
-        background-color: #222; /* Darker background for the body */
+        background-color: #222;
+        /* Darker background for the body */
     }
 
     .modal-title {
-        color: #fff; /* White text for modal title */
+        color: #fff;
+        /* White text for modal title */
     }
 
     .modal-header .btn-close {
-        color: #fff; /* White close button */
-        opacity: 1; /* Ensure it's visible */
+        color: #fff;
+        /* White close button */
+        opacity: 1;
+        /* Ensure it's visible */
     }
 
     /* Dark theme for the modal close button hover */
     .modal-header .btn-close:hover {
-        background-color: #555; /* Slightly darker hover background */
+        background-color: #555;
+        /* Slightly darker hover background */
     }
 
     /* Purple buttons */
     .btn-purple {
-    background-color: #5F4B8B !important;
-    color: white !important;
-    border: none !important;
+        background-color: #5F4B8B !important;
+        color: white !important;
+        border: none !important;
     }
 
     .btn-purple:hover {
-    background-color: #4a3a6d !important;
-    color: white !important;
+        background-color: #4a3a6d !important;
+        color: white !important;
     }
 
     /* Styling for post content */
     .post-content {
-        background-color: #222; 
+        background-color: #222;
         color: #fff;
         padding: 10px;
         border-radius: 8px;
     }
 
     .post-actions {
-        color: #ccc; 
+        color: #ccc;
     }
 
     .post-action {
@@ -82,7 +96,7 @@
 
     /* Style for "Add Post" button */
     .btn-add-post {
-        background-color: #5F4B8B; 
+        background-color: #5F4B8B;
         color: white;
         border: none;
         padding: 10px 20px;
@@ -92,122 +106,138 @@
     }
 
     .btn-add-post:hover {
-        background-color: #4a3a6d; 
+        background-color: #4a3a6d;
     }
 
     /* Style for input fields */
 
-textarea.form-control,
-input.form-control {
-  background-color: #222 !important;
-  color: #999 !important;
-  border: 1px solid #444 !important;
-}
-/* Hide the native file input */
-.custom-file-upload input[type="file"] {
-  display: none !important;
-}
+    textarea.form-control,
+    input.form-control {
+        background-color: #222 !important;
+        color: #999 !important;
+        border: 1px solid #444 !important;
+    }
 
-/* Container for the file input */
-.custom-file-upload {
-  background-color: #222 !important;
-  border: 1px solid #444 !important;
-  padding: 12px 16px !important;
-  border-radius: 6px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  color: #999 !important;
-}
+    /* Hide the native file input */
+    .custom-file-upload input[type="file"] {
+        display: none !important;
+    }
 
-/* Style the "Choose File" button (label) */
-.custom-file-upload .file-button {
-  background-color: #6f42c1 !important;
-  color: white !important;
-  padding: 8px 16px !important;
-  border-radius: 4px !important;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border: none !important;
-  font-size: 0.9rem;
-  display: inline-block;
-}
+    /* Container for the file input */
+    .custom-file-upload {
+        background-color: #222 !important;
+        border: 1px solid #444 !important;
+        padding: 12px 16px !important;
+        border-radius: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        color: #999 !important;
+    }
 
-/* Hover, focus, and active states for the button */
-.custom-file-upload .file-button:hover,
-.custom-file-upload .file-button:focus,
-.custom-file-upload .file-button:active {
-  background-color: #000 !important;
-  color: #999 !important;
-}
+    /* Style the "Choose File" button (label) */
+    .custom-file-upload .file-button {
+        background-color: #6f42c1 !important;
+        color: white !important;
+        padding: 8px 16px !important;
+        border-radius: 4px !important;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        border: none !important;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
 
-/* File name styling */
-.file-name-text {
-  color: #999 !important;
-  font-size: 0.9rem !important;
-}
+    /* Hover, focus, and active states for the button */
+    .custom-file-upload .file-button:hover,
+    .custom-file-upload .file-button:focus,
+    .custom-file-upload .file-button:active {
+        background-color: #000 !important;
+        color: #999 !important;
+    }
 
-/* Optional: Style the file input on focus (but it's hidden, so it's just for UX) */
-input[type="file"]:focus {
-    outline: none;
-    background-color: #222; /* Keep dark */
-    color: #999;
-    border-color: #6f42c1; /* Optional: purple border on focus */
-}
+    /* File name styling */
+    .file-name-text {
+        color: #999 !important;
+        font-size: 0.9rem !important;
+    }
 
-/* (Alternative) Making the native file button black on hover/focus/click */
-input[type="file"]::file-selector-button:hover,
-input[type="file"]::file-selector-button:active,
-input[type="file"]::file-selector-button:focus {
-    background-color: #000 !important;
-    color: #999 !important;
-}
+    /* Optional: Style the file input on focus (but it's hidden, so it's just for UX) */
+    input[type="file"]:focus {
+        outline: none;
+        background-color: #222;
+        /* Keep dark */
+        color: #999;
+        border-color: #6f42c1;
+        /* Optional: purple border on focus */
+    }
 
+    /* (Alternative) Making the native file button black on hover/focus/click */
+    input[type="file"]::file-selector-button:hover,
+    input[type="file"]::file-selector-button:active,
+    input[type="file"]::file-selector-button:focus {
+        background-color: #000 !important;
+        color: #999 !important;
+    }
 </style>
 
 {{> nav}}
 <div class="profile-container">
     <div class="profile-header">
-        <img src="../../resources/img/{{user.profile_icon}}" alt="Profile Picture" class="profile-pic">
+        <img src="../../resources/img/{{profile.profile_icon}}" alt="Profile Picture" class="profile-pic">
 
         <div class="profile-info">
-            <h1 class="profile-name">{{user.first_name}}</h1>
-            <p class="profile-username">@{{user.username}}</p>
+            <h1 class="profile-name">{{profile.first_name}} {{profile.last_name}}</h1>
+            <p class="profile-username">@{{profile.username}}</p>
+            <div class="profile-bio">
+                <p>{{profile.bio}}</p>
+            </div>
             {{#if isOwnProfile}}
             <button id="openEditModal" class="btn-edit">Edit Profile</button>
             {{else}}
-            <button class="btn-follow">Follow</button>
+            {{#if is_following}}
+            <button type="button" class="btn btn-outline-danger"
+                style="padding: 10px 20px; font-size: 16px; border-radius: 5px;"
+                onclick="showUnfollowModal('{{id}}', '{{username}}')">Unfollow</button>
+            {{else if is_requested}}
+            <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')">
+                Requested</button>
+            {{else}}
+            <form action="/users/follow" method="POST">
+                <input type="hidden" name="following_id" value="{{id}}">
+                <button type="submit"
+                    style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
+            </form>
+            {{/if}}
             {{/if}}
         </div>
     </div>
 
     <div class="profile-stats">
         <div class="stat-item">
-            <div class="stat-value">{{posts.length}}</div>
-            <div class="stat-label">Posts</div>
+            <a href="/profile/watchlist?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
+                <div class="stat-value">{{watchlistCount}}</div>
+                <div class="stat-label" id="followers">Watchlist</div>
+            </a>
         </div>
         <div class="stat-item">
-            <a href="/profile/followers?userId={{user.id}}" style="text-decoration: none; color: inherit;">
-                <div class="stat-value">{{user.followers}}</div>
+            <a href="/profile/followers?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
+                <div class="stat-value">{{followersCount}}</div>
                 <div class="stat-label" id="followers">Followers</div>
             </a>
         </div>
         <div class="stat-item">
-            <a href="/profile/following?userId={{user.id}}" style="text-decoration: none; color: inherit;">
-                <div class="stat-value">{{user.following}}</div>
+            <a href="/profile/following?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
+                <div class="stat-value">{{followingCount}}</div>
                 <div class="stat-label" id="following">Following</div>
             </a>
         </div>
     </div>
 
-    <div class="profile-bio">
-        <p>{{user.bio}}</p>
-    </div>
-
-     <!-- Add Post Button -->
+    <!-- Add Post Button -->
     {{#if isOwnProfile}}
     <button type="button" class="btn btn-purple mt-4" data-bs-toggle="modal" data-bs-target="#postModal">
-    Add Post
+        Add Post
     </button>
 
     {{/if}}
@@ -249,25 +279,46 @@ input[type="file"]::file-selector-button:focus {
                 <h5 class="modal-title" id="postModalLabel">Share Your Movie Thoughts</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
             <!-- Modal Body -->
-            <div class="modal-body">
-                <form id="moviePostForm" enctype="multipart/form-data">
-                    <!-- Movie Cover Upload -->
-                    <div class="mb-3">
-                        <label for="movieCover" class="form-label">Movie Cover</label>
-                        <input class="form-control" type="file" id="movieCover" accept="image/*">
-                    </div>
+<div class="modal-body">
+  <form id="moviePostForm" enctype="multipart/form-data">
+    <!-- Movie Title -->
+    <div class="mb-3">
+      <label for="movieTitle" class="form-label text-light">Movie Title</label>
+      <input type="text" class="form-control bg-dark text-light border-secondary" id="movieTitle" placeholder="Enter the movie title" required>
+    </div>
 
-                    <!-- Thoughts -->
-                    <div class="mb-3">
-                        <label for="movieThoughts" class="form-label">Your Thoughts</label>
-                        <textarea class="form-control" id="movieThoughts" rows="4" placeholder="Write your thoughts here..."></textarea>
-                    </div>
+    <!-- Movie Cover Upload -->
+    <div class="mb-3">
+      <label for="movieCover" class="form-label text-light">Movie Cover</label>
+      <input class="form-control bg-dark text-light border-secondary" type="file" id="movieCover" accept="image/*">
+    </div>
+    
+    <!-- Review -->
+    <div class="mb-3">
+      <label for="movieReview" class="form-label text-light">Review</label>
+      <input type="number" class="form-control bg-dark text-light border-secondary" id="movieReview" placeholder="Rate the movie (1-10)" min="1" max="10" required>
+    </div>
 
-                    <!-- Post Button -->
-                    <button type="submit" class="btn btn-purple">Post</button>
-            </div>
+    <!-- Where to Watch -->
+    <div class="mb-3">
+      <label for="movieWhereToWatch" class="form-label text-light">Where to Watch</label>
+      <input type="text" class="form-control bg-dark text-light border-secondary" id="movieWhereToWatch" placeholder="e.g. Netflix, Hulu, etc." required>
+    </div>
+
+    <!-- Thoughts -->
+    <div class="mb-3">
+      <label for="movieThoughts" class="form-label text-light">Your Thoughts</label>
+      <textarea class="form-control bg-dark text-light border-secondary" id="movieThoughts" rows="4"
+        placeholder="Write your thoughts here..."></textarea>
+    </div>
+
+    <!-- Post Button -->
+    <button type="submit" class="btn btn-purple">Post</button>
+
+  </form>
+</div>
+
 
         </div>
     </div>
@@ -300,9 +351,9 @@ input[type="file"]::file-selector-button:focus {
                 });
             });
         });
-        
+
         // Handle post submission
-        document.addEventListener('submit', function(e) {
+        document.addEventListener('submit', function (e) {
             if (e.target.id === 'moviePostForm') {
                 e.preventDefault();
 
@@ -310,7 +361,7 @@ input[type="file"]::file-selector-button:focus {
                 const thoughts = document.getElementById('movieThoughts').value;
 
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const coverUrl = e.target.result;
 
                     // Compile and append the new post
@@ -340,7 +391,7 @@ input[type="file"]::file-selector-button:focus {
         });
 
         // Handle likes
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (e.target.classList.contains('like-btn')) {
                 const countEl = e.target.querySelector('.like-count');
                 let count = parseInt(countEl.textContent, 10);
@@ -349,7 +400,7 @@ input[type="file"]::file-selector-button:focus {
         });
 
         // Handle comments
-        document.addEventListener('keypress', function(e) {
+        document.addEventListener('keypress', function (e) {
             if (e.target.classList.contains('comment-input') && e.key === 'Enter') {
                 const commentList = e.target.closest('.post').querySelector('.comment-list');
                 const commentText = e.target.value.trim();

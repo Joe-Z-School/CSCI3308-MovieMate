@@ -14,6 +14,51 @@ const bcrypt = require('bcryptjs'); //  To hash passwords
 const axios = require('axios'); // To make HTTP requests from our server. We'll learn more about it in Part C.
 const movieController = require('./controllers/movieController'); // To handle movie-related API requests
 
+// *****************************************************
+// <!-- AWS S3 File Storage -->
+// *****************************************************
+const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+async function uploadPoster(posterUrl, imdbID) {
+  const BUCKET_NAME = 'moviemate-pictures';
+  const REGION = 'us-east-2';
+  const key = `${imdbID}.jpg`;  // Use IMDb ID as the S3 key
+  const imageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${key}`;
+
+  try {
+    // Check if poster already exists
+    await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
+    console.log('Poster already exists, using existing file.');
+    return imageUrl;
+  } catch (err) {
+    if (err.code !== 'NotFound') {
+      throw err;
+    }
+
+    // Download the image from the original source
+    const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
+    const buffer = Buffer.from(response.data, 'binary');
+
+    // Upload to S3
+    const uploadParams = {
+      Bucket: BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: 'image/jpeg',
+    };
+
+    await s3.upload(uploadParams).promise();
+    console.log('Uploaded new poster to S3');
+    return imageUrl;
+  }
+}
 
 // *****************************************************
 // <!-- Socket.IO Server Creation -->
@@ -148,11 +193,11 @@ app.get('/api/movies/trailer/:query', async (req, res) => {
         key: process.env.YOUTUBE_API_KEY
       }
     });
-    
+
     if (response.data.items && response.data.items.length > 0) {
       const videoId = response.data.items[0].id.videoId;
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         videoId: videoId,
         embedUrl: `https://www.youtube.com/embed/${videoId}`
       });
@@ -235,41 +280,45 @@ app.post('/register', async (req, res) => {
 // Development route for messaging tests
 app.get('/dev/register', async (req, res) => {
   //hash the password using bcrypt library
-  
-    const accounts = [
-      { first_name: 'joe1',
-        last_name: 'joe1',
-        username: 'joe1',
-        email: 'joe1@email.com',
-        profile_icon: 'profile_pic_option_1.png',
-        bio: 'joe1'
-      },
-      { first_name: 'joe2',
-        last_name: 'joe2',
-        username: 'joe2',
-        email: 'joe2@email.com',
-        profile_icon: 'profile_pic_option_6.png',
-        bio: 'joe2'
-      },
-      { first_name: 'joe3',
-        last_name: 'joe3',
-        username: 'joe3',
-        email: 'joe3@email.com',
-        profile_icon: 'profile_pic_option_2.png',
-        bio: 'joe3'
-      },
-      { first_name: 'joe4',
-        last_name: 'joe4',
-        username: 'joe4',
-        email: 'joe4@email.com',
-        profile_icon: 'profile_pic_option_5.png',
-        bio: 'joe4'
-      },
-    ]
-    // Generate a timestamp for when this request is made
-    const created_at = new Date().toISOString();
-    const hash = await bcrypt.hash('joe', 10);
-    try{
+
+  const accounts = [
+    {
+      first_name: 'joe1',
+      last_name: 'joe1',
+      username: 'joe1',
+      email: 'joe1@email.com',
+      profile_icon: 'profile_pic_option_1.png',
+      bio: 'joe1'
+    },
+    {
+      first_name: 'joe2',
+      last_name: 'joe2',
+      username: 'joe2',
+      email: 'joe2@email.com',
+      profile_icon: 'profile_pic_option_6.png',
+      bio: 'joe2'
+    },
+    {
+      first_name: 'joe3',
+      last_name: 'joe3',
+      username: 'joe3',
+      email: 'joe3@email.com',
+      profile_icon: 'profile_pic_option_2.png',
+      bio: 'joe3'
+    },
+    {
+      first_name: 'joe4',
+      last_name: 'joe4',
+      username: 'joe4',
+      email: 'joe4@email.com',
+      profile_icon: 'profile_pic_option_5.png',
+      bio: 'joe4'
+    },
+  ]
+  // Generate a timestamp for when this request is made
+  const created_at = new Date().toISOString();
+  const hash = await bcrypt.hash('joe', 10);
+  try {
     //creating insert
     for (const sets of accounts) {
       await db.tx(async t => {
@@ -607,9 +656,9 @@ app.post("/api/posts/:id/like", async (req, res) => {
       const { like_count } = await db.one(
         "SELECT like_count FROM posts WHERE id = $1",
         [postId]
-        );
-        const action = "inliked";
-  
+      );
+      const action = "inliked";
+
       return res.json({ action, likeCount: like_count });
     } else {
       // Like it
@@ -622,25 +671,25 @@ app.post("/api/posts/:id/like", async (req, res) => {
         [postId]
       );
       // 🔔 Create notification if the liker is not the post owner
-        const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
+      const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
 
-        if (postOwner && postOwner.user_id !== userId) {
-          await db.none(
-            `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
+      if (postOwner && postOwner.user_id !== userId) {
+        await db.none(
+          `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
             VALUES ($1, $2, $3, NOW())`,
-            [userId, postOwner.user_id, 'liked your post']
-          );
-        }
-  
-      
+          [userId, postOwner.user_id, 'liked your post']
+        );
+      }
+
+
       // Get updated like count
       const { like_count } = await db.one(
-      "SELECT like_count FROM posts WHERE id = $1",
-      [postId]
+        "SELECT like_count FROM posts WHERE id = $1",
+        [postId]
       );
       const action = "liked";
 
-    return res.json({ action, likeCount: like_count });
+      return res.json({ action, likeCount: like_count });
     }
   } catch (err) {
     console.error("Error in like route:", err);
@@ -668,14 +717,14 @@ app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async
     );
     await db.none("UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1", [postId]);
     // 🔔 Create notification if the commenter is not the post owner
-  const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
+    const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
 
-  if (postOwner && postOwner.user_id !== userId) {
-    await db.none(
-    `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
+    if (postOwner && postOwner.user_id !== userId) {
+      await db.none(
+        `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
      VALUES ($1, $2, $3, NOW())`,
-    [userId, postOwner.user_id, `commented on your post: "${comment}"`]
-  );
+        [userId, postOwner.user_id, `commented on your post: "${comment}"`]
+      );
     }
 
     res.redirect("/social");
@@ -730,9 +779,9 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 10 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
-      { follower_id: 11, followed_id: 12 }, // joe1 → joe2
-      { follower_id: 11, followed_id: 13 }, // joe1 → joe3
-      { follower_id: 11, followed_id: 14 }, // joe1 → joe4
+      //{ follower_id: 11, followed_id: 12 }, // joe1 → joe2
+      //{ follower_id: 11, followed_id: 13 }, // joe1 → joe3
+      //{ follower_id: 11, followed_id: 14 }, // joe1 → joe4
       { follower_id: 11, followed_id: 4 }, // joe1 → matt
       { follower_id: 11, followed_id: 5 }, // joe1 → jessie
       { follower_id: 11, followed_id: 6 }, // joe1 → kay
@@ -1030,23 +1079,23 @@ app.get('/load-more', async (req, res) => {
 // Temporary in-memory storage for the watchlist
 
 app.post('/add-to-watchlist', async (req, res) => {
-  const { title, picture, whereToWatch } = req.body;
+  const userId = req.session.user?.id;
+  const {imdbID, title, picture, description } = req.body;
 
-  if (!title || !picture || !whereToWatch) {
-    res.render('pages/social', { layout: 'main', message: 'Incomplete movie information.', status: 400 });
-    return;
+  try {
+    const s3ImageURL = await uploadPoster(picture, imdbID); 
+
+    await db.query(
+      'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
+      [userId, title, s3ImageURL, description]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to add movie to Watchlist' });
   }
-
-  db.tx(async insert => {
-    // Remove the course from the student's list of courses.
-    await insert.query('INSERT INTO watchlist (title, picture, whereToWatch) VALUES ($1, $2, $3)', [title, picture, whereToWatch]);
-  }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully added ${title} to your watchlist.` });
-  }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to add movie to watchlist.' });
-  });
-
 });
+
 
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
@@ -1057,7 +1106,6 @@ app.post('/remove-from-watchlist', async (req, res) => {
   }
 
   db.tx(async remove => {
-    // Remove the course from the student's list of courses.
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
     res.render('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
@@ -1069,39 +1117,60 @@ app.post('/remove-from-watchlist', async (req, res) => {
 app.get('/watchlist', async (req, res) => {
   const userId = req.session.user?.id;
 
-  if (!userId) return res.redirect('/login');
-
   try {
-    const watchlist = await db.any(
-      `SELECT * FROM watchlist WHERE user_id = $1 ORDER BY title DESC`,
+    const result = await db.query(
+      'SELECT title, poster_picture, description FROM watchlist WHERE user_id = $1',
       [userId]
     );
 
-    res.render('pages/watchlist', {
-      layout: 'main',
-      watchlist
-    });
+    const watchlist = result;
+    res.render('pages/watchlist', { watchlist });
   } catch (err) {
-    console.error('Watchlist fetch error:', err);
-    res.render('pages/watchlist', {
-      layout: 'main',
-      message: 'Could not load watchlist.'
-    });
+    console.error(err);
+    res.status(500).send('Error loading watchlist');
   }
 });
+
 
 // *****************************************************
 //  <!-- Profile Page --!>
 // *****************************************************
-app.get('/profile', (req, res) => {
-  const profileUsername = req.query.username || req.session.user.username;
-  const loggedInUsername = req.session.user ? req.session.user.username : null;
-  const isOwnProfile = loggedInUsername === profileUsername;
+app.get('/profile', async (req, res) => {
+  const profileUserID = req.query.id ? Number(req.query.id) : req.session.user.id;
+  const loggedInUserID = req.session.user.id ? req.session.user.id : null;
+  const isOwnProfile = loggedInUserID === profileUserID;
+  const counts = await db.one(`
+    SELECT 
+      (SELECT COUNT(*) FROM friends WHERE followed_user_id = $1) AS followers_count,
+      (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
+      (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
+  `, [profileUserID]);
+  if (isOwnProfile) {
+    res.render('pages/profile', {
+      user: req.session.user,
+      profile: req.session.user,
+      followersCount: counts.followers_count,
+      followingCount: counts.following_count,
+      watchlistCount: counts.watchlist_count,
+      isOwnProfile: isOwnProfile
+    });
+  }
+  else {
+    const profileUser = await db.one(
+      'SELECT * FROM users WHERE id = $1',
+      [profileUserID]
+    );
+    console.log(profileUser)
+    res.render('pages/profile', {
+      user: req.session.user,
+      profile: profileUser,
+      followersCount: counts.followers_count,
+      followingCount: counts.following_count,
+      watchlistCount: counts.watchlist_count,
+      isOwnProfile: isOwnProfile
+    });
+  }
 
-  res.render('pages/profile', {
-    user: req.session.user,
-    isOwnProfile: isOwnProfile
-  });
 });
 
 app.get('/profile/edit', (req, res) => {
@@ -1154,6 +1223,45 @@ app.post('/profile/edit', async (req, res) => {
       user: req.session.user,
       error: 'Failed to update profile. Please try again.'
     });
+  }
+});
+//Profile Watchlist Route
+app.get('/profile/watchlist', async (req, res) => {
+  const userId = req.query.userId || req.session.user.id;
+
+  try {
+    const watchlist = await db.any(`
+      SELECT id, title, poster_picture, where_to_watch 
+      FROM watchlist 
+      WHERE user_id = $1
+      ORDER BY id DESC
+    `, [userId]);
+
+    res.render('pages/watchlist', {
+      user: req.session.user,
+      watchlist: watchlist,
+    });
+  } catch (err) {
+    console.error('Error fetching watchlist:', err);
+    res.status(500).send('Error loading watchlist movies');
+  }
+});
+
+app.post('/remove-from-watchlist', async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  try {
+    await db.none(`
+      DELETE FROM watchlist 
+      WHERE id = $1 AND user_id = $2
+    `, [req.body.watchlistId, req.session.user.id]);
+
+    res.redirect('/profile/watchlist');
+  } catch (err) {
+    console.error('Error removing from watchlist:', err);
+    res.status(500).send('Error removing item from watchlist');
   }
 });
 
@@ -1244,7 +1352,7 @@ app.get('/messaging', async (req, res) => {
         ? formatDistanceToNow(new Date(friend.last_active), { addSuffix: true })
         : "Not available"
     }));
-    
+
 
     res.render('pages/messaging', {
       activeUser,
@@ -1364,7 +1472,7 @@ io.on('connection', (socket) => {
 
         io.to(`user-${rId}`).emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount: 0 });
       }
-      
+
       io.to(`user-${rId}`).emit('private-message', { senderId: sId, content });
     } catch (error) {
       console.error('Error handling private message:', error);

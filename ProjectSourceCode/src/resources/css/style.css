@@ -2,8 +2,10 @@ body {
     background-color: #121212;
     margin: 0;
     min-height: 100vh;
-    padding-top: 80px;
-    justify-content: space-between;
+    padding-top: 80px;      /* for fixed navbar */
+    padding-bottom: 60px;   /* for fixed footer */
+    display: flex;
+    flex-direction: column;
 }
 
 /* REGISTER AND LOGIN */
@@ -547,7 +549,15 @@ footer {
     cursor: pointer;
     text-decoration: underline;
 }
-  
+
+.friends-post-title {
+    color: white;
+  }
+
+.notification-title {
+    color: white;
+}
+
 /*Post modal*/
 /* Force the close button "X" to be white */
 .btn-close {
