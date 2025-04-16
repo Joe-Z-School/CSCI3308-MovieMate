@@ -15,66 +15,46 @@ const axios = require('axios'); // To make HTTP requests from our server. We'll 
 const movieController = require('./controllers/movieController'); // To handle movie-related API requests
 
 // *****************************************************
-// <!-- AWS S3 File Storage -->
+// <!-- Image File Storage -->
 // *****************************************************
-const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
 async function uploadPoster(posterUrl, imdbID) {
-  const BUCKET_NAME = 'moviemate-pictures';
-  const REGION = 'us-east-2';
-  const key = `${imdbID}.jpg`;  // Use IMDb ID as the S3 key
-  const imageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${key}`;
-
-  try {
-    // Check if poster already exists
-    await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
-    console.log('Poster already exists, using existing file.');
-    return imageUrl;
-  } catch (err) {
-    if (err.code !== 'NotFound') {
-      throw err;
-    }
-
-    // Download the image from the original source
-    const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
-    const buffer = Buffer.from(response.data, 'binary');
-
-    // Upload to S3
-    const uploadParams = {
-      Bucket: BUCKET_NAME,
-      Key: key,
-      Body: buffer,
-      ContentType: 'image/jpeg',
-    };
-
-    await s3.upload(uploadParams).promise();
-    console.log('Uploaded new poster to S3');
-    return imageUrl;
+  // Check if the poster already exists in the database
+  const existing = await db.query('SELECT * FROM images WHERE imdb_id = $1', [imdbID]);
+  if (existing.length > 0) {
+    console.log('Poster already exists in database.');
+    return `/image/${imdbID}`; // endpoint to serve the image
   }
+
+  // Fetch the image
+  console.log('Fetching image from:', posterUrl);
+  const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
+  console.log('Fetched image, content-type:', response.headers['content-type']);
+
+  const buffer = Buffer.from(response.data, 'binary');
+  const contentType = response.headers['content-type'];
+
+  // Insert into the database
+  await db.query(
+    `INSERT INTO images (imdb_id, image_data, content_type) VALUES ($1, $2, $3)`,
+    [imdbID, buffer, contentType]
+  );
+
+  console.log('Poster uploaded to database');
+  return `/image/${imdbID}`;
 }
 
-async function uploadChatImage(buffer, contentType, userId) {
-  const BUCKET_NAME = 'moviemate-userupload';
-  const REGION = 'us-east-2';
-  const key = `chat/${userId}/${uuidv4()}.jpg`;
-  const CLOUDFRONT_DOMAIN = 'd32c7xmivzr8hg.cloudfront.net';
+async function uploadChatImage(buffer, contentType, userId, senderId, recipientId) {
+  const id = uuidv4();
 
-  const uploadParams = {
-    Bucket: BUCKET_NAME,
-    Key: key,
-    Body: buffer,
-    ContentType: contentType,
-  };
+  await db.query(
+    `INSERT INTO user_images (id, user_id, sender_id, recipient_id, image_data, content_type)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, userId, senderId, recipientId, buffer, contentType]
+  );
 
-  await s3.upload(uploadParams).promise();
-  return `https://${CLOUDFRONT_DOMAIN}/${key}`;
+  return id;
 }
 
 
@@ -1217,18 +1197,36 @@ app.get('/load-more', async (req, res) => {
 //   });
 // });
 
-// Temporary in-memory storage for the watchlist
+app.get('/image/:imdbID', async (req, res) => {
+  const { imdbID } = req.params;
+
+  const result = await db.query(
+    'SELECT image_data, content_type FROM images WHERE imdb_id = $1',
+    [imdbID]
+  );
+
+  // If no image found
+  if (!result || result.length === 0) {
+    return res.status(404).send('Image not found');
+  }
+
+  const image = result[0];
+  res.set('Content-Type', image.content_type);
+  res.send(image.image_data);
+});
+
 
 app.post('/add-to-watchlist', async (req, res) => {
   const userId = req.session.user?.id;
   const {imdbID, title, picture, description } = req.body;
 
   try {
-    const s3ImageURL = await uploadPoster(picture, imdbID); 
+    console.log('In add-to-watchlist with picture:', picture);
+    const imageUrl = await uploadPoster(picture, imdbID);
 
     await db.query(
       'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
-      [userId, title, s3ImageURL, description]
+      [userId, title, imageUrl, description]
     );
 
     res.json({ success: true });
@@ -1531,23 +1529,58 @@ const upload = multer({
 });
 
 app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
+  console.log('Incoming request:', req.body);
+  console.log('File uploaded:', req.file);  // Log the uploaded file data
+
+  if (!req.file) {
+    return res.status(400).json({ success: false, error: 'No file uploaded' });
+  }
+
   try {
     const userId = req.session.user?.id;
-    const file = req.file;
-    if (!file) return res.status(400).json({ success: false, error: 'No file uploaded' });
+    const { senderId, recipientId} = req.body; // Ensure userId is passed in the request
 
-    const imageUrl = await uploadChatImage(file.buffer, file.mimetype, userId);
-    res.json({ success: true, imageUrl });
-  } catch (err) {
-    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(413).json({ success: false, error: 'Image too large. Max 2MB allowed.' });
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID is required' });
     }
 
-    console.error(err);
-    res.status(500).json({ success: false, error: 'Image upload failed' });
+    // Call the uploadChatImage function to insert the image data into the database
+    const imageId = await uploadChatImage(
+      req.file.buffer,
+      req.file.mimetype,
+      userId,
+      senderId,
+      recipientId
+    );
+    console.log('Image uploaded successfully, ID:', imageId);
+    return res.json({ success: true, imageId });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    return res.status(500).json({ success: false, error: 'Database error' });
   }
 });
 
+app.get('/chat/image/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.query(
+      `SELECT image_data, content_type FROM user_images WHERE id = $1`,
+      [id]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).send('Image not found');
+    }
+
+    const image = result[0];
+    res.setHeader('Content-Type', image.content_type);
+    res.send(image.image_data);
+  } catch (err) {
+    console.error('Error retrieving image:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 // Track sockets and active chats
 const userSockets = new Map(); // { userId: socket }
