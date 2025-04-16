@@ -64,6 +64,7 @@ async function uploadChatImage(buffer, contentType, userId) {
   const BUCKET_NAME = 'moviemate-userupload';
   const REGION = 'us-east-2';
   const key = `chat/${userId}/${uuidv4()}.jpg`;
+  const CLOUDFRONT_DOMAIN = 'd32c7xmivzr8hg.cloudfront.net';
 
   const uploadParams = {
     Bucket: BUCKET_NAME,
@@ -73,7 +74,7 @@ async function uploadChatImage(buffer, contentType, userId) {
   };
 
   await s3.upload(uploadParams).promise();
-  return `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${key}`;
+  return `https://${CLOUDFRONT_DOMAIN}/${key}`;
 }
 
 
@@ -796,9 +797,10 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 10 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
-      //{ follower_id: 11, followed_id: 12 }, // joe1 → joe2
-      //{ follower_id: 11, followed_id: 13 }, // joe1 → joe3
-      //{ follower_id: 11, followed_id: 14 }, // joe1 → joe4
+      { follower_id: 11, followed_id: 12 }, // joe1 → joe2
+      { follower_id: 12, followed_id: 11 }, // joe1 → joe2
+      { follower_id: 11, followed_id: 13 }, // joe1 → joe3
+      { follower_id: 11, followed_id: 14 }, // joe1 → joe4
       { follower_id: 11, followed_id: 4 }, // joe1 → matt
       { follower_id: 11, followed_id: 5 }, // joe1 → jessie
       { follower_id: 11, followed_id: 6 }, // joe1 → kay
@@ -1382,7 +1384,10 @@ app.get('/messaging', async (req, res) => {
 });
 
 const multer = require('multer');
-const upload = multer(); // memory storage for buffer access
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB limit
+});
 
 app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
   try {
@@ -1393,6 +1398,10 @@ app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
     const imageUrl = await uploadChatImage(file.buffer, file.mimetype, userId);
     res.json({ success: true, imageUrl });
   } catch (err) {
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ success: false, error: 'Image too large. Max 2MB allowed.' });
+    }
+
     console.error(err);
     res.status(500).json({ success: false, error: 'Image upload failed' });
   }
