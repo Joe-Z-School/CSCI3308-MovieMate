@@ -130,6 +130,17 @@ CREATE TABLE messages (
     is_read BOOLEAN DEFAULT FALSE
 );
 
+CREATE TABLE messages_notifications (
+  id SERIAL PRIMARY KEY,
+  recipient_id INTEGER NOT NULL,      -- who receives the notification
+  sender_id INTEGER NOT NULL,         -- who sent the message (joins to users table)
+  message TEXT NOT NULL,              -- notification content like "New message from..."
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_read BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE notifications (
   id SERIAL PRIMARY KEY,
   recipient_id INTEGER NOT NULL, -- who receives the notification

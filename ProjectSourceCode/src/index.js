@@ -514,10 +514,20 @@ app.get('/notifications', async (req, res) => {
       [userId]
     );
 
+    const messagesNotifications = await db.any(
+      `SELECT n.id, n.message, u.username AS sender_username, u.profile_icon, n.created_at
+       FROM messages_notifications n
+       JOIN users u ON u.id = n.sender_id
+       WHERE n.recipient_id = $1
+       ORDER BY n.created_at DESC`,
+      [userId]
+    );
+
     res.render('pages/notifications', {
       user: req.session.user,
       followRequests,
-      generalNotifications
+      generalNotifications,
+      messagesNotifications
     });
 
   } catch (err) {
@@ -618,6 +628,23 @@ app.post('/notifications/dismiss/:id', async (req, res) => {
   } catch (err) {
     console.error('Failed to dismiss notification:', err.message);
     res.status(500).send('Error dismissing notification');
+  }
+});
+
+//dismissing message notifications
+app.post('/messages-notifications/dismiss/:id', async (req, res) => {
+  const notifId = parseInt(req.params.id);
+
+  try {
+    await db.none(`
+      DELETE FROM messages_notifications
+      WHERE id = $1
+    `, [notifId]);
+
+    res.status(200).send('Message notification dismissed.');
+  } catch (err) {
+    console.error('Error dismissing message notification:', err);
+    res.status(500).send('Failed to dismiss message notification.');
   }
 });
 
@@ -855,6 +882,38 @@ app.get('/dev/create-notifications', async (req, res) => {
   } catch (err) {
     console.error('Error inserting notifications:', err);
     res.status(500).send('Failed to create notifications.');
+  }
+
+  try {
+    const messageNotifs = [
+      {
+        recipient_id: 11,
+        sender_id: 2,
+        message: 'Hey! You around to chat?'
+      },
+      {
+        recipient_id: 11,
+        sender_id: 3,
+        message: 'Let’s catch up later.'
+      },
+      {
+        recipient_id: 11,
+        sender_id: 5,
+        message: 'Just saw your review, loved it!'
+      }
+    ];
+  
+    for (const notif of messageNotifs) {
+      await db.none(
+        `INSERT INTO messages_notifications (recipient_id, sender_id, message, created_at)
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
+        [notif.recipient_id, notif.sender_id, notif.message]
+      );
+    }
+  
+    console.log("✅ Sample message notifications inserted.");
+  } catch (err) {
+    console.error("❌ Failed to insert message notifications:", err);
   }
 });
 
@@ -1444,6 +1503,12 @@ io.on('connection', (socket) => {
               unread_count = unread_count + 1
           WHERE following_user_id = $2 AND followed_user_id = $3
         `, [content, rId, sId]);
+        
+        // Insert a new notification if the user is not currently chatting
+        await db.none(`
+          INSERT INTO messages_notifications (recipient_id, sender_id, message)
+          VALUES ($1, $2, $3)
+          `, [rId, sId, content]);
 
         const { rows } = await db.query(`
           SELECT unread_count FROM friends
@@ -1461,6 +1526,12 @@ io.on('connection', (socket) => {
           SET is_read = true
           WHERE recipient_id = $1 AND sender_id = $2
         `, [rId, sId]);
+
+        //deleting notification once read
+        await db.query(`
+        DELETE FROM messages_notifications
+        WHERE recipient_id = $1 AND sender_id = $2
+      `, [rId, sId]);
 
         await db.query(`
           UPDATE friends
@@ -1495,6 +1566,13 @@ io.on('connection', (socket) => {
         SET unread_count = 0
         WHERE following_user_id = $2 AND followed_user_id = $1
       `, [rId, sId]);
+
+      //deleting notification once read
+      await db.query(`
+        DELETE FROM messages_notifications
+        WHERE recipient_id = $1 AND sender_id = $2
+      `, [rId, sId]);
+
 
       socket.emit('update-unread-count', { senderId: sId, recipientId: rId, unreadCount: 0 });
       console.log(`Unread count reset for senderId: ${sId}, recipientId: ${rId}`);
