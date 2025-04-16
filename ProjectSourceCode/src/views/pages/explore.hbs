@@ -1,111 +1,126 @@
 {{> nav}}
 <script src="../resources/js/socialScript.js"></script>
 
-<div class="container-fluid explore-container">
+<div class="container-fluid movie-container">
   <div class="row">
     <!-- Left Sidebar for Filters -->
-    <div class="col-lg-2 filter-sidebar">
-      <h3 class="sidebar-title">Filter By</h3>
-      
-      <div class="filter-section">
-        <h5 class="filter-heading">Newest</h5>
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="newestFilter" checked>
-          <label class="form-check-label" for="newestFilter">Show newest first</label>
-        </div>
-      </div>
-      
-      <div class="filter-section">
-        <h5 class="filter-heading">Genre</h5>
-        <div class="genre-filters">
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="actionFilter" value="action">
-            <label class="form-check-label" for="actionFilter">Action</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="comedyFilter" value="comedy">
-            <label class="form-check-label" for="comedyFilter">Comedy</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="dramaFilter" value="drama">
-            <label class="form-check-label" for="dramaFilter">Drama</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="fantasyFilter" value="fantasy">
-            <label class="form-check-label" for="fantasyFilter">Fantasy</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="horrorFilter" value="horror">
-            <label class="form-check-label" for="horrorFilter">Horror</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="mysteryFilter" value="mystery">
-            <label class="form-check-label" for="mysteryFilter">Mystery</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="romanceFilter" value="romance">
-            <label class="form-check-label" for="romanceFilter">Romance</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="scifiFilter" value="sci-fi">
-            <label class="form-check-label" for="scifiFilter">Sci-fi</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="thrillerFilter" value="thriller">
-            <label class="form-check-label" for="thrillerFilter">Thriller</label>
-          </div>
-          
-          <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="westernFilter" value="western">
-            <label class="form-check-label" for="westernFilter">Western</label>
+    <div class="col-lg-3 col-xl-2 filter-sidebar">
+      <div class="filter-content">
+        <h3 class="sidebar-title">Filter By</h3>
+        
+        <div class="filter-section">
+          <h5 class="filter-heading">Sort Order</h5>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="newestFilter" checked>
+            <label class="form-check-label" for="newestFilter">Show newest first</label>
           </div>
         </div>
+        
+        <div class="filter-section">
+          <h5 class="filter-heading">Genre</h5>
+          <div class="genre-filters">
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="actionFilter" value="action">
+              <label class="form-check-label" for="actionFilter">Action</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="comedyFilter" value="comedy">
+              <label class="form-check-label" for="comedyFilter">Comedy</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="dramaFilter" value="drama">
+              <label class="form-check-label" for="dramaFilter">Drama</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="fantasyFilter" value="fantasy">
+              <label class="form-check-label" for="fantasyFilter">Fantasy</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="horrorFilter" value="horror">
+              <label class="form-check-label" for="horrorFilter">Horror</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="mysteryFilter" value="mystery">
+              <label class="form-check-label" for="mysteryFilter">Mystery</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="romanceFilter" value="romance">
+              <label class="form-check-label" for="romanceFilter">Romance</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="scifiFilter" value="sci-fi">
+              <label class="form-check-label" for="scifiFilter">Sci-fi</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="thrillerFilter" value="thriller">
+              <label class="form-check-label" for="thrillerFilter">Thriller</label>
+            </div>
+            
+            <div class="genre-item">
+              <input class="form-check-input" type="checkbox" id="westernFilter" value="western">
+              <label class="form-check-label" for="westernFilter">Western</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="filter-section">
+          <h5 class="filter-heading">Year</h5>
+          <select id="yearFilter" class="form-select filter-select">
+            <option selected value="">All Years</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="older">Before 2020</option>
+          </select>
+        </div>
+        
+        <div class="filter-section">
+          <h5 class="filter-heading">Type</h5>
+          <select id="typeFilter" class="form-select filter-select">
+            <option selected value="">All Types</option>
+            <option value="movie">Movies</option>
+            <option value="series">TV Series</option>
+            <option value="episode">Episodes</option>
+          </select>
+        </div>
+        
+        <button id="applyFiltersBtn" class="btn btn-primary apply-filters-btn">
+          <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+        </button>
       </div>
-      
-      <div class="filter-section">
-        <h5 class="filter-heading">Year</h5>
-        <select id="yearFilter" class="form-select filter-select">
-          <option selected value="">All Years</option>
-          <option value="2025">2025</option>
-          <option value="2024">2024</option>
-          <option value="2023">2023</option>
-          <option value="2022">2022</option>
-          <option value="2021">2021</option>
-          <option value="2020">2020</option>
-          <option value="older">Before 2020</option>
-        </select>
-      </div>
-      
-      <div class="filter-section">
-        <h5 class="filter-heading">Type</h5>
-        <select id="typeFilter" class="form-select filter-select">
-          <option selected value="">All Types</option>
-          <option value="movie">Movies</option>
-          <option value="series">TV Series</option>
-          <option value="episode">Episodes</option>
-        </select>
-      </div>
-      
-      <button id="applyFiltersBtn" class="btn btn-primary apply-filters-btn">
-        <i class="bi bi-funnel-fill me-1"></i> Apply Filters
-      </button>
     </div>
     
     <!-- Main Content Area -->
-    <div class="col-lg-10 main-content">
+    <div class="col-lg-9 col-xl-10 main-content">
       <div class="content-wrapper">
-        <h1 class="explore-title">Explore Movies</h1>
-        
+        <!-- Header: title + controls -->
+        <div class="explore-header mb-4">
+          <h1 class="explore-title">Explore Movies</h1>
+          
+          <div class="d-flex align-items-center">
+            <label class="mb-0 fw-semibold me-2" for="sortOptions">Sort by:</label>
+            <select id="sortOptions" class="form-select form-select-sm" style="min-width:130px">
+              <option value="relevance">Relevance</option>
+              <option value="year">Year</option>
+              <option value="title">Title</option>
+              <option value="rating">Rating</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Search section -->
-        <div class="search-container bg-white p-4 rounded-4 shadow-sm mb-4 animate-fade-in">
+        <div class="search-container mb-4 animate-fade-in">
           <form id="searchForm" class="mb-3">
             <div class="input-group">
               <input 
@@ -120,13 +135,13 @@
             </div>
           </form>
           
-          <div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex justify-content-end">
             <button id="advancedSearchToggle" class="btn btn-outline-secondary">
               <i class="bi bi-sliders me-1"></i> Advanced Filters
             </button>
           </div>
           
-          <div id="advancedSearchOptions" class="mt-3 animate-slide" style="display: none; max-height: 0; overflow: hidden;">
+          <div id="advancedSearchOptions" class="mt-3 animate-slide">
             <div class="row g-3">
               <div class="col-md-4">
                 <label for="directorFilter" class="form-label">Director</label>
@@ -166,20 +181,11 @@
         
         <!-- Results section -->
         <div id="resultsSection" class="results-container d-none animate-fade-in">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="results-title mb-0">Search Results</h2>
-            <div class="sort-by d-flex align-items-center">
-              <span class="me-2">Sort by:</span>
-              <select id="sortOptions" class="form-select">
-                <option value="relevance">Relevance</option>
-                <option value="year">Year</option>
-                <option value="title">Title</option>
-                <option value="rating">Rating</option>
-              </select>
-            </div>
+          <div class="section-header mb-3">
+            <h2 class="results-title">Search Results</h2>
           </div>
           
-          <div id="resultsContainer" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+          <div id="resultsContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-4">
             <!-- Search results will be inserted here -->
           </div>
           
@@ -207,8 +213,8 @@
         
         <!-- Initial state / trending movies -->
         <div id="trendingSection" class="animate-fade-in" style="animation-delay: 0.2s;">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="section-title mb-0">Trending Now</h2>
+          <div class="section-header mb-3">
+            <h2 class="section-title">Trending Now</h2>
             <div class="trending-tabs">
               <button class="tab-btn active" data-tab="popular">Popular</button>
               <button class="tab-btn" data-tab="latest">Latest</button>
@@ -216,7 +222,7 @@
             </div>
           </div>
           
-          <div id="trendingContainer" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+          <div id="trendingContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-4">
             <!-- Trending movies will be loaded here -->
             <div class="col">
               <div class="movie-card skeleton">
@@ -265,8 +271,8 @@
             </div>
           </div>
           
-          <!-- The same structure can be used to display your actual posts from the first snippet -->
-          <div id="watchlist-items" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-4 d-none">
+          <!-- The same structure can be used to display your actual posts -->
+          <div id="watchlist-items" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-4 mt-4 d-none">
             {{#each posts}}
             <div class="col animate-fade-in">
               <div class="movie-card">
@@ -297,6 +303,8 @@
   </div>
 </div>
 
+<div class="footer-spacer"></div>
+
 <style>
   /* Purple color scheme based on existing app */
   :root {
@@ -305,50 +313,77 @@
     --light-purple: #E9E8F7;
     --dark-purple: #4a3a6d;
     --accent-purple: #9683C3;
+    --bg-dark: #121212;
+    --bg-card: #1E1E1E;
+    --bg-element: #2A2A2A;
+    --bg-input: #333;
+    --border-color: #444;
+    --text-light: #fff;
+    --text-muted: #999;
+    --text-dim: #bbb;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --navbar-height: 70px;
+    --footer-height: 60px;
+    --sidebar-width: 280px;
   }
   
   body {
-    background-color: #121212;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: var(--footer-height);
   }
   
-  /* Explore container layout */
-  .explore-container {
-    padding: 20px;
-    width: 100%;
+  /* Main container layout */
+  .movie-container {
     max-width: 1920px;
+    width: 100%;
     margin: 0 auto;
+    padding: var(--spacing-md);
+    padding-top: calc(var(--navbar-height) + var(--spacing-lg));
   }
   
   /* Left sidebar styles */
   .filter-sidebar {
-    background-color: #1E1E1E;
-    border-radius: 12px;
-    padding: 20px;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .filter-content {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
     position: sticky;
-    top: 85px;
-    height: calc(100vh - 100px);
+    top: calc(var(--navbar-height) + var(--spacing-md));
+    max-height: calc(100vh - var(--navbar-height) - var(--spacing-md) * 2);
     overflow-y: auto;
   }
   
   .sidebar-title, .filter-heading {
-    color: #fff;
-    margin-bottom: 20px;
+    color: var(--text-light);
+    margin-bottom: var(--spacing-lg);
   }
   
   .filter-section {
-    margin-bottom: 30px;
+    margin-bottom: var(--spacing-xl);
   }
   
   .filter-heading {
-    border-bottom: 1px solid #333;
-    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-sm);
     font-size: 1.1rem;
   }
   
   .genre-filters {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--spacing-sm);
   }
   
   .genre-item {
@@ -357,8 +392,9 @@
   }
   
   .form-check-label {
-    color: #fff;
-    margin-left: 8px;
+    color: var(--text-light);
+    margin-left: var(--spacing-sm);
+    cursor: pointer;
   }
   
   .form-check-input {
@@ -371,23 +407,23 @@
   }
   
   .filter-select {
-    background-color: #2A2A2A;
-    color: #fff;
-    border-color: #444;
+    background-color: var(--bg-element);
+    color: var(--text-light);
+    border-color: var(--border-color);
   }
   
   .filter-select:focus {
     box-shadow: 0 0 0 0.25rem rgba(150, 131, 195, 0.25);
     border-color: var(--accent-purple);
-    background-color: #2A2A2A;
-    color: #fff;
+    background-color: var(--bg-element);
+    color: var(--text-light);
   }
   
   .apply-filters-btn {
     background-color: var(--primary-purple);
     border: none;
     width: 100%;
-    margin-top: 15px;
+    margin-top: var(--spacing-md);
     transition: all 0.3s;
   }
   
@@ -399,21 +435,33 @@
   
   /* Main content styles */
   .main-content {
-    padding: 0 20px;
+    padding: 0 var(--spacing-md);
   }
   
   .content-wrapper {
-    background-color: #1E1E1E;
-    border-radius: 12px;
-    padding: 25px;
+    background-color: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-xl);
   }
   
-  .explore-title {
-    color: #fff;
-    margin-bottom: 25px;
-    text-align: center;
+  /* Section headers */
+  .explore-header, .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+  }
+  
+  .explore-title, .section-title {
+    color: var(--text-light);
     font-weight: 700;
     letter-spacing: -0.5px;
+    margin: 0;
+  }
+  
+  .section-title {
+    font-weight: 600;
   }
   
   /* Animations */
@@ -429,14 +477,16 @@
   
   .animate-slide {
     transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+    max-height: 0;
+    overflow: hidden;
     opacity: 0;
   }
   
   .animate-slide.show {
     opacity: 1;
-    max-height: 300px !important;
-    padding: 15px;
-    border-top: 1px solid #333;
+    max-height: 300px;
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
   }
   
   /* Pulse animation for loading */
@@ -472,18 +522,11 @@
     opacity: 0.5;
   }
   
-  /* Titles */
-  .section-title {
-    color: #fff;
-    font-weight: 600;
-    letter-spacing: -0.5px;
-    margin-top: 40px;
-  }
-  
   /* Search elements */
   .search-container {
-    background-color: #2A2A2A !important;
-    border-radius: 12px;
+    background-color: var(--bg-element);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
     transition: box-shadow 0.3s ease;
   }
   
@@ -494,9 +537,9 @@
   .search-btn {
     background-color: var(--primary-purple);
     color: white;
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
-    padding: 8px 20px;
+    border-top-right-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
     transition: background-color 0.2s ease;
   }
   
@@ -506,25 +549,25 @@
   }
   
   #searchInput {
-    background-color: #333;
-    border-color: #444;
-    color: #fff;
+    color: white; 
+    background-color: var(--bg-input); 
+    border: 1px solid var(--border-color);
   }
   
   #searchInput::placeholder {
-    color: #999;
+    color: var(--text-muted);
   }
   
   #searchInput:focus {
-    background-color: #333;
-    color: #fff;
+    background-color: var(--bg-input);
+    color: var(--text-light);
     box-shadow: none;
     border-color: var(--accent-purple);
   }
   
   #advancedSearchToggle {
-    color: #ddd;
-    border-color: #555;
+    color: var(--text-dim);
+    border-color: var(--border-color);
   }
   
   #advancedSearchToggle:hover {
@@ -534,27 +577,27 @@
   }
   
   #advancedSearchOptions {
-    background-color: #333;
-    border-radius: 8px;
+    background-color: var(--bg-input);
+    border-radius: var(--radius-sm);
   }
   
   #advancedSearchOptions .form-label {
-    color: #ddd;
+    color: var(--text-dim);
   }
   
   #advancedSearchOptions .form-control, 
   #advancedSearchOptions .form-select {
-    background-color: #444;
-    border-color: #555;
-    color: #fff;
+    background-color: var(--bg-element);
+    border-color: var(--border-color);
+    color: var(--text-light);
   }
   
   /* Popular search pills */
   .popular-search-pill {
-    background-color: #2A2A2A;
+    background-color: var(--bg-element);
     color: var(--accent-purple);
     border: 1px solid var(--accent-purple);
-    border-radius: 20px;
+    border-radius: var(--radius-lg);
     padding: 6px 16px;
     transition: all 0.3s ease;
   }
@@ -576,32 +619,32 @@
     background: none;
     border: none;
     padding: 8px 16px;
-    color: #999;
-    border-radius: 20px;
+    color: var(--text-muted);
+    border-radius: var(--radius-lg);
     font-size: 0.9rem;
     transition: all 0.2s ease;
   }
   
   .tab-btn:hover {
-    color: #fff;
+    color: var(--text-light);
   }
   
   .tab-btn.active {
     background-color: var(--dark-purple);
-    color: #fff;
+    color: var(--text-light);
     font-weight: 600;
   }
   
   /* Movie cards */
   .movie-card {
     position: relative;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     overflow: hidden;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     cursor: pointer;
     height: 100%;
-    background-color: #2A2A2A;
+    background-color: var(--bg-element);
   }
   
   .movie-card:hover {
@@ -626,19 +669,19 @@
   }
   
   .movie-info {
-    padding: 15px;
+    padding: var(--spacing-md);
     position: relative;
-    background-color: #2A2A2A;
+    background-color: var(--bg-element);
   }
   
   .movie-title {
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);
     font-size: 1rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #fff;
+    color: var(--text-light);
     transition: color 0.2s ease;
   }
   
@@ -655,7 +698,7 @@
   }
   
   .movie-year {
-    color: #999;
+    color: var(--text-muted);
     font-size: 0.8rem;
   }
   
@@ -682,17 +725,17 @@
   }
   
   .movie-description {
-    color: #bbb;
+    color: var(--text-dim);
     font-size: 0.85rem;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);
   }
   
   .movie-watch-on {
-    color: #999;
+    color: var(--text-muted);
     font-size: 0.8rem;
     margin-bottom: 0;
   }
@@ -709,7 +752,7 @@
     align-items: center;
     justify-content: center;
     border: none;
-    color: #fff;
+    color: var(--text-light);
     opacity: 0;
     transform: translateY(-5px);
     transition: all 0.3s ease;
@@ -748,14 +791,14 @@
   }
   
   .movie-info-placeholder {
-    padding: 15px;
+    padding: var(--spacing-md);
   }
   
   .placeholder-title {
     height: 16px;
     background-color: #444;
     width: 85%;
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);
     border-radius: 4px;
   }
   
@@ -770,8 +813,8 @@
   #loadMoreBtn {
     color: var(--accent-purple);
     border-color: var(--accent-purple);
-    border-radius: 8px;
-    padding: 8px 24px;
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
     transition: all 0.3s ease;
   }
   
@@ -782,66 +825,120 @@
     box-shadow: 0 4px 12px rgba(95, 75, 139, 0.3);
   }
   
-  /* Sort by styles */
-  .sort-by .form-select {
-    background-color: #2A2A2A;
-    color: #fff;
-    border-color: #444;
-    max-width: 120px;
-  }
-  
-  .sort-by span {
-    color: #ddd;
-  }
-  
-  .results-title {
-    color: #fff;
-  }
-  
   /* Responsive adjustments */
   @media (max-width: 991.98px) {
-    .filter-sidebar {
+    .filter-content {
       position: static;
       height: auto;
-      margin-bottom: 20px;
+      max-height: none;
     }
     
     .filter-section {
-      margin-bottom: 20px;
+      margin-bottom: var(--spacing-lg);
     }
     
     .genre-filters {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-sm);
+    }
+    
+    .explore-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
     }
   }
   
   @media (max-width: 767.98px) {
-    .results-title {
-      font-size: 1.5rem;
+    .movie-container {
+      padding-top: calc(var(--navbar-height) + var(--spacing-md));
     }
     
-    .sort-by span {
-      display: none;
+    .content-wrapper {
+      padding: var(--spacing-md);
     }
     
     .trending-tabs {
-      display: flex;
+      width: 100%;
       overflow-x: auto;
       white-space: nowrap;
       padding-bottom: 5px;
-      margin-left: -10px;
-      width: 100%;
+      margin-top: var(--spacing-sm);
     }
     
     .tab-btn {
       flex: 0 0 auto;
     }
     
+    .search-container {
+      padding: var(--spacing-md);
+    }
+    
     .explore-title {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
+    }
+    
+    .section-title {
+      font-size: 1.3rem;
     }
   }
+  
+  @media (max-width: 575.98px) {
+    .movie-container {
+      padding: var(--spacing-sm);
+      padding-top: calc(var(--navbar-height) + var(--spacing-sm));
+    }
+    
+    .content-wrapper {
+      padding: var(--spacing-sm);
+      border-radius: var(--radius-sm);
+    }
+    
+    .filter-content {
+      padding: var(--spacing-md);
+    }
+    
+    .filter-section {
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .search-container {
+      padding: var(--spacing-sm);
+    }
+    
+    .genre-filters {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+    }
+    
+    .explore-title {
+      font-size: 1.3rem;
+    }
+    
+    .section-title {
+      font-size: 1.2rem;
+    }
+    
+    #advancedSearchOptions .row {
+      margin-left: 0;
+      margin-right: 0;
+    }
+    
+    #advancedSearchOptions .col-md-4 {
+      padding: var(--spacing-sm) 0;
+    }
+  }
+  
+  /* Footer spacer */
+  .footer-spacer {
+    height: var(--footer-height);
+  }
+}
 </style>
 
 <script>
