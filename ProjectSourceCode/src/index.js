@@ -402,21 +402,79 @@ app.get('/findFriends', async (req, res) => {
 app.post('/users/follow', async (req, res) => {
   const requesterId = req.session.user.id;
   const receiverId = parseInt(req.body.following_id);
-  const requestedAt = new Date().toISOString();
+
+  // Validation
+  if (isNaN(receiverId) || receiverId <= 0) {
+    return res.status(400).send('Invalid user ID');
+  }
+  if (requesterId === receiverId) {
+    return res.status(400).send('Cannot follow yourself');
+  }
 
   try {
-    await db.none(
-      `INSERT INTO follow_requests (requester_id, receiver_id, status, requested_at)
-       VALUES ($1, $2, 'pending', $3)
-       ON CONFLICT DO NOTHING`, // prevent duplicates
-      [requesterId, receiverId, requestedAt]
-    );
+    await db.tx(async t => {
+      // Check if already friends
+      const alreadyFriends = await t.oneOrNone(
+        `SELECT 1 FROM friends 
+         WHERE following_user_id = $1 AND followed_user_id = $2`,
+        [requesterId, receiverId]
+      );
 
-    console.log(`Follow request sent from ${requesterId} to ${receiverId}`);
+      if (alreadyFriends) {
+        throw new Error('You are already following this user');
+      }
+
+      // Check for existing pending request
+      const existingRequest = await t.oneOrNone(
+        `SELECT 1 FROM follow_requests
+         WHERE requester_id = $1 AND receiver_id = $2`,
+        [requesterId, receiverId]
+      );
+
+      if (!existingRequest) {
+        // Create new follow request
+        await t.none(
+          `INSERT INTO follow_requests (requester_id, receiver_id, status, requested_at)
+           VALUES ($1, $2, 'pending', $3)`,
+          [requesterId, receiverId, new Date().toISOString()]
+        );
+      }
+
+      // If request was approved, add to friends table
+      const approvedRequest = await t.oneOrNone(
+        `SELECT 1 FROM follow_requests
+         WHERE requester_id = $1 AND receiver_id = $2 AND status = 'approved'`,
+        [requesterId, receiverId]
+      );
+
+      if (approvedRequest) {
+        await t.none(
+          `INSERT INTO friends (following_user_id, followed_user_id, friends_since)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (following_user_id, followed_user_id) DO NOTHING`,
+          [requesterId, receiverId, new Date().toISOString()]
+        );
+
+        // Update counts
+        await t.none(
+          `UPDATE users SET following_count = following_count + 1 WHERE id = $1`,
+          [requesterId]
+        );
+        await t.none(
+          `UPDATE users SET followers_count = followers_count + 1 WHERE id = $1`,
+          [receiverId]
+        );
+      }
+    });
+
     res.redirect('/findFriends');
   } catch (err) {
-    console.error('Error sending follow request:', err.message);
-    res.status(500).send('Internal server error');
+    console.error('Follow error:', err.message);
+    res.status(400).render('pages/findFriends', {
+      user: req.session.user,
+      error: true,
+      message: err.message
+    });
   }
 });
 
@@ -425,45 +483,50 @@ app.post('/users/unfollow', async (req, res) => {
   const followerId = req.session.user.id;
   const followingId = parseInt(req.body.following_id);
 
+  if (isNaN(followingId) || followingId <= 0) {
+    return res.status(400).send('Invalid user ID');
+  }
+
   try {
     await db.tx(async t => {
-      // Try to delete the relationship
-      const result = await t.result(
-        `DELETE FROM friends
+      // Delete from friends table
+      const deleted = await t.result(
+        `DELETE FROM friends 
          WHERE following_user_id = $1 AND followed_user_id = $2`,
         [followerId, followingId]
       );
 
-      if (result.rowCount > 0) {
-        // Only update counts if a row was actually deleted
+      if (deleted.rowCount > 0) {
+        // Update counts
         await t.none(
-          `UPDATE users SET following_count = following_count - 1 WHERE id = $1`,
+          `UPDATE users SET following_count = GREATEST(0, following_count - 1) 
+           WHERE id = $1`,
           [followerId]
         );
-
         await t.none(
-          `UPDATE users SET followers_count = followers_count - 1 WHERE id = $1`,
+          `UPDATE users SET followers_count = GREATEST(0, followers_count - 1) 
+           WHERE id = $1`,
           [followingId]
         );
-
-        console.log(`${req.session.user.username} unfollowed user ${followingId}`);
-      } else {
-        console.log(`${req.session.user.username} was not following user ${followingId} — no count change`);
       }
+
+      // Also delete any follow requests
+      await t.none(
+        `DELETE FROM follow_requests
+         WHERE requester_id = $1 AND receiver_id = $2`,
+        [followerId, followingId]
+      );
     });
 
     res.redirect('/findFriends');
-
   } catch (err) {
-    console.error('Error unfollowing user:', err.message);
-    res.render('pages/findFriends', {
+    console.error('Unfollow error:', err.message);
+    res.status(500).render('pages/findFriends', {
       user: req.session.user,
-      users: [],
       error: true,
-      message: 'Something went wrong while trying to unfollow this user.'
+      message: 'Failed to unfollow user'
     });
   }
-
 });
 
 //to unsend a follow request
@@ -1157,8 +1220,27 @@ app.get('/profile', async (req, res) => {
   }
   else {
     const profileUser = await db.one(
-      'SELECT * FROM users WHERE id = $1',
-      [profileUserID]
+      `SELECT u.id,
+        u.username,
+        u.profile_icon,
+        u.bio,
+        u.first_name,
+        u.last_name,
+        CASE
+          WHEN f.following_user_id IS NOT NULL THEN TRUE
+          ELSE FALSE
+        END AS is_following,
+        CASE
+          WHEN fr.status = 'pending' THEN TRUE
+          ELSE FALSE
+        END AS is_requested
+        FROM users u
+        LEFT JOIN friends f
+          ON f.following_user_id = $1 AND f.followed_user_id = u.id
+        LEFT JOIN follow_requests fr
+          ON fr.requester_id = $1 AND fr.receiver_id = u.id
+         WHERE u.id = $2`,
+      [loggedInUserID, profileUserID]
     );
     console.log(profileUser)
     res.render('pages/profile', {
