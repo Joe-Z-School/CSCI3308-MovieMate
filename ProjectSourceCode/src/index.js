@@ -496,7 +496,7 @@ app.get('/notifications', async (req, res) => {
   try {
     // Get incoming follow requests
     const followRequests = await db.any(
-      `SELECT fr.id AS request_id, u.username, u.profile_icon AS profile_pic, fr.requested_at
+      `SELECT fr.id AS request_id, fr.requester_id AS user_id, u.username, u.profile_icon AS profile_pic, fr.requested_at
        FROM follow_requests fr
        JOIN users u ON u.id = fr.requester_id
        WHERE fr.receiver_id = $1 AND fr.status = 'pending'
