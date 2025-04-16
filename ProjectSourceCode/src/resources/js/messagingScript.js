@@ -100,7 +100,7 @@ function updateFriendsListOnUI(friendsList) {
     recentMessage.className = "recent-message text-muted";
     const rawMessage = friend.latest_message || "No recent messages";
     // Check if recent message was an image upload, if so, display text and not URL
-    const imageMessage = rawMessage.startsWith("https://d32c7xmivzr8hg.cloudfront.net/") ? 'Image uploaded...' : rawMessage;
+    const imageMessage = rawMessage.startsWith("/chat/image/") ? 'Image uploaded...' : rawMessage;
 
     // Dont display more than 22 characters in recent messages area for formatting. Add ellipses if longer
     recentMessage.textContent = imageMessage.length > 22 ? imageMessage.slice(0, 22) + "..." : imageMessage;
@@ -309,7 +309,7 @@ socket.on('private-message', ({ senderId, content }) => {
     user: friendName,
     profileIcon: `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
     timestamp: new Date(),
-    isImage: content.startsWith("https://d32c7xmivzr8hg.cloudfront.net/")
+    isImage: content.startsWith("/chat/image/")
   });
 });
 
@@ -327,7 +327,7 @@ socket.on('load-messages', (messages) => {
         ? `/resources/img/${activeUser.profile_icon}`
         : `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
       timestamp,
-      isImage: content.startsWith("https://d32c7xmivzr8hg.cloudfront.net/")
+      isImage: content.startsWith("/chat/image/")
     });
   });
 
@@ -369,7 +369,7 @@ function appendMessage({ message, user, profileIcon = null, timestamp = new Date
   bubble.classList.add('chat-bubble');
 
   // Check if message sent/received is an image
-  if (isImage || message.startsWith("https://d32c7xmivzr8hg.cloudfront.net/")) {
+  if (isImage || message.startsWith("/chat/image/")) {
     const img = document.createElement('img');
     img.src = message;
     img.alt = "Sent image";
@@ -444,28 +444,43 @@ document.getElementById('file-input').addEventListener('change', async function 
 
   const formData = new FormData();
   formData.append('image', file);
+  formData.append('senderId', yourUserId);
+  formData.append('recipientId', friendId);
 
   try {
-    // POST image to chat
     const res = await fetch('/upload-chat-image', {
       method: 'POST',
       body: formData
     });
     const data = await res.json();
-    if (data.success) {
 
-      // Send image URL as message
-      sendMessage({ type: 'image', url: data.imageUrl });
-    }
-    else {
+    if (data.success) {
+      const imageUrl = `/chat/image/${data.imageId}`;
+
+      // Display in your own chat window
+      appendMessage({ 
+        message: imageUrl, 
+        user: 'You',
+        profileIcon: `/resources/img/${activeUser.profile_icon}`,
+        timestamp: new Date(),
+        isImage: true
+      });
+
+      // Emit to server
+      socket.emit('private-message', {
+        senderId: yourUserId,
+        recipientId: friendId,
+        content: imageUrl,
+        chatOpen: activeFriendId === friendId
+      });
+    } else {
       alert('Upload failed: ' + data.error);
     }
   } catch (err) {
-    console.error('Upload error:', err);
-    alert('An error occurred during upload. Please try again.');
+    console.error('Image upload error:', err);
+    alert('Upload failed');
   }
 });
-
 
 
 function sendMessage(messageObj) {
@@ -498,8 +513,6 @@ function sendMessage(messageObj) {
     messageInput.value = "";
   }
 }
-
-
 
 // Emojis hover effect
 const emojiIcons = [
