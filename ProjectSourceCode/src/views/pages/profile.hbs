@@ -246,25 +246,44 @@
     <div class="post-container">
         <h3>Recent Posts</h3>
         {{#each posts}}
-        <div class="post">
-            <div class="post-header">
-                <div class="post-author">{{../username}}</div>
-                <div class="post-date">{{this.date}}</div>
-            </div>
-            <div class="post-content">
-                <p>{{this.content}}</p>
-            </div>
-            <div class="post-actions">
-                <div class="post-action">❤️ {{this.likes}}</div>
-                <div class="post-action">💬 {{this.comments}}</div>
-            </div>
-        </div>
-        {{/each}}
+        <div class="card-body">
+            <h5 class="card-title mb-2">{{title}}</h5>
+            <p class="card-text mb-1"><strong>Review:</strong> {{review}}</p>
+            <p class="card-text mb-1"><strong>Description:</strong> {{description}}</p>
+            <p class="card-text mb-2"><strong>Where to Watch:</strong> {{whereToWatch}}</p>
 
-        {{#unless posts.length}}
-        <p>No posts yet.</p>
-        {{/unless}}
+
+            <!-- ❤️ Like Button -->
+            <button class="btn heart-button" data-post-id="{{id}}" aria-label="Like">
+                <i class="bi {{#if liked}}bi-heart-fill{{else}}bi-heart{{/if}}" style="color: white;"></i>
+                <span class="like-count ms-1" style="color: white;">{{like_count}}</span>
+            </button>
+
+            <!-- ➕ Add to Watchlist Button -->
+            <form action="/add-to-watchlist" method="POST" class="d-inline">
+                <input type="hidden" name="title" value="{{title}}">
+                <input type="hidden" name="cover" value="{{cover}}">
+                <input type="hidden" name="whereToWatch" value="{{whereToWatch}}">
+                <button type="submit" class="btn" aria-label="Add to Watchlist">
+                    <i class="bi bi-plus-circle" style="color: white;"></i>
+                </button>
+            </form>
+
+            <!-- 💬 Comment Form -->
+            <form action="/api/posts/{{id}}/comment" method="POST" class="comment-form mt-2">
+                <input type="text" name="comment" class="form-control comment-input" placeholder="Add a comment..."
+                    required>
+                <button type="submit" class="btn btn-sm btn-primary">Comment</button>
+            </form>
+        </div>
     </div>
+</div>
+{{/each}}
+
+{{#unless posts.length}}
+<p>No posts yet.</p>
+{{/unless}}
+</div>
 </div>
 {{#if isOwnProfile}}
 {{> edit-profile-modal}}
@@ -308,7 +327,7 @@
 
 <!-- Custom JS -->
 <script>
-    
+
     document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById('editProfileModal');
         const openBtn = document.getElementById('openEditModal');
