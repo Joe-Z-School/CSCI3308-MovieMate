@@ -280,26 +280,46 @@
                 <h5 class="modal-title" id="postModalLabel">Share Your Movie Thoughts</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
             <!-- Modal Body -->
-            <div class="modal-body">
-                <form id="moviePostForm" enctype="multipart/form-data">
-                    <!-- Movie Cover Upload -->
-                    <div class="mb-3">
-                        <label for="movieCover" class="form-label">Movie Cover</label>
-                        <input class="form-control" type="file" id="movieCover" accept="image/*">
-                    </div>
+<div class="modal-body">
+  <form id="moviePostForm" enctype="multipart/form-data">
+    <!-- Movie Title -->
+    <div class="mb-3">
+      <label for="movieTitle" class="form-label text-light">Movie Title</label>
+      <input type="text" class="form-control bg-dark text-light border-secondary" id="movieTitle" placeholder="Enter the movie title" required>
+    </div>
 
-                    <!-- Thoughts -->
-                    <div class="mb-3">
-                        <label for="movieThoughts" class="form-label">Your Thoughts</label>
-                        <textarea class="form-control" id="movieThoughts" rows="4"
-                            placeholder="Write your thoughts here..."></textarea>
-                    </div>
+    <!-- Movie Cover Upload -->
+    <div class="mb-3">
+      <label for="movieCover" class="form-label text-light">Movie Cover</label>
+      <input class="form-control bg-dark text-light border-secondary" type="file" id="movieCover" accept="image/*">
+    </div>
+    
+    <!-- Review -->
+    <div class="mb-3">
+      <label for="movieReview" class="form-label text-light">Review</label>
+      <input type="number" class="form-control bg-dark text-light border-secondary" id="movieReview" placeholder="Rate the movie (1-10)" min="1" max="10" required>
+    </div>
 
-                    <!-- Post Button -->
-                    <button type="submit" class="btn btn-purple">Post</button>
-            </div>
+    <!-- Where to Watch -->
+    <div class="mb-3">
+      <label for="movieWhereToWatch" class="form-label text-light">Where to Watch</label>
+      <input type="text" class="form-control bg-dark text-light border-secondary" id="movieWhereToWatch" placeholder="e.g. Netflix, Hulu, etc." required>
+    </div>
+
+    <!-- Thoughts -->
+    <div class="mb-3">
+      <label for="movieThoughts" class="form-label text-light">Your Thoughts</label>
+      <textarea class="form-control bg-dark text-light border-secondary" id="movieThoughts" rows="4"
+        placeholder="Write your thoughts here..."></textarea>
+    </div>
+
+    <!-- Post Button -->
+    <button type="submit" class="btn btn-purple">Post</button>
+
+  </form>
+</div>
+
 
         </div>
     </div>
