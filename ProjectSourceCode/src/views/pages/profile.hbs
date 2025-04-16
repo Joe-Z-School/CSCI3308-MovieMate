@@ -269,7 +269,7 @@
 {{#if isOwnProfile}}
 {{> edit-profile-modal}}
 {{/if}}
-
+{{>follow-modal}}
 <!-- Modal HTML for Posting Movie Review -->
 <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -304,68 +304,11 @@
         </div>
     </div>
 </div>
-<!-- Unfollow Confirmation Modal -->
-<div class="modal fade" id="unfollowModal" tabindex="-1" aria-labelledby="unfollowModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content p-3">
-            <div class="modal-header">
-                <h5 class="modal-title" id="unfollowModalLabel">Confirm Unfollow</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to unfollow <strong id="unfollowUsername"></strong>?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="unfollowForm" method="POST" action="/users/unfollow">
-                    <input type="hidden" name="following_id" id="unfollowUserId">
-                    <button type="submit" class="btn btn-danger">Unfollow</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Cancel Follow Request Modal -->
-<div class="modal fade" id="cancelRequestModal" tabindex="-1" aria-labelledby="cancelRequestModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content p-3">
-            <div class="modal-header">
-                <h5 class="modal-title" id="cancelRequestModalLabel">Cancel Follow Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to cancel your follow request to <strong id="cancelRequestUsername"></strong>?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nevermind</button>
-                <form id="cancelRequestForm" method="POST" action="/users/cancel-request">
-                    <input type="hidden" name="receiver_id" id="cancelRequestUserId">
-                    <button type="submit" class="btn btn-warning">Cancel Request</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Custom JS -->
 <script>
-    function showUnfollowModal(userId, username) {
-        document.getElementById('unfollowUserId').value = userId;
-        document.getElementById('unfollowUsername').textContent = username;
-
-        const modal = new bootstrap.Modal(document.getElementById('unfollowModal'));
-        modal.show();
-    }
-
-    function showCancelRequestModal(userId, username) {
-        document.getElementById('cancelRequestUserId').value = userId;
-        document.getElementById('cancelRequestUsername').textContent = username;
-
-        const modal = new bootstrap.Modal(document.getElementById('cancelRequestModal'));
-        modal.show();
-    }
+    
     document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById('editProfileModal');
         const openBtn = document.getElementById('openEditModal');
