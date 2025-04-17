@@ -1,0 +1,1330 @@
+{{> nav}}
+<script src="../resources/js/socialScript.js"></script>
+
+<div class="container-fluid explore-container">
+  <div class="row">
+    <!-- Left Sidebar for Filters -->
+    <div class="col-lg-2 filter-sidebar">
+      <h3 class="sidebar-title">Filter By</h3>
+      
+      <div class="filter-section">
+        <h5 class="filter-heading">Newest</h5>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="newestFilter" checked>
+          <label class="form-check-label" for="newestFilter">Show newest first</label>
+        </div>
+      </div>
+      
+      <div class="filter-section">
+        <h5 class="filter-heading">Genre</h5>
+        <div class="genre-filters">
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="actionFilter" value="action">
+            <label class="form-check-label" for="actionFilter">Action</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="comedyFilter" value="comedy">
+            <label class="form-check-label" for="comedyFilter">Comedy</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="dramaFilter" value="drama">
+            <label class="form-check-label" for="dramaFilter">Drama</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="fantasyFilter" value="fantasy">
+            <label class="form-check-label" for="fantasyFilter">Fantasy</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="horrorFilter" value="horror">
+            <label class="form-check-label" for="horrorFilter">Horror</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="mysteryFilter" value="mystery">
+            <label class="form-check-label" for="mysteryFilter">Mystery</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="romanceFilter" value="romance">
+            <label class="form-check-label" for="romanceFilter">Romance</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="scifiFilter" value="sci-fi">
+            <label class="form-check-label" for="scifiFilter">Sci-fi</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="thrillerFilter" value="thriller">
+            <label class="form-check-label" for="thrillerFilter">Thriller</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="westernFilter" value="western">
+            <label class="form-check-label" for="westernFilter">Western</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-section">
+        <h5 class="filter-heading">Year</h5>
+        <select id="yearFilter" class="form-select filter-select">
+          <option selected value="">All Years</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+          <option value="2021">2021</option>
+          <option value="2020">2020</option>
+          <option value="older">Before 2020</option>
+        </select>
+      </div>
+      
+      <div class="filter-section">
+        <h5 class="filter-heading">Type</h5>
+        <select id="typeFilter" class="form-select filter-select">
+          <option selected value="">All Types</option>
+          <option value="movie">Movies</option>
+          <option value="series">TV Series</option>
+          <option value="episode">Episodes</option>
+        </select>
+      </div>
+      
+      <button id="applyFiltersBtn" class="btn btn-primary apply-filters-btn">
+        <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+      </button>
+    </div>
+    
+    <!-- Main Content Area -->
+    <div class="col-lg-10 main-content">
+      <div class="content-wrapper">
+        <h1 class="explore-title">Explore Movies</h1>
+        
+        <!-- Search section -->
+        <div class="search-container bg-white p-4 rounded-4 shadow-sm mb-4 animate-fade-in">
+          <form id="searchForm" class="mb-3">
+            <div class="input-group">
+              <input 
+                type="text" 
+                id="searchInput" 
+                class="form-control"
+                placeholder="Search movies..." 
+                aria-label="Search movies">
+              <button class="btn search-btn" type="submit">
+                <i class="bi bi-search me-1"></i> Search
+              </button>
+            </div>
+          </form>
+          
+          <div class="d-flex justify-content-between align-items-center">
+            <button id="advancedSearchToggle" class="btn btn-outline-secondary">
+              <i class="bi bi-sliders me-1"></i> Advanced Filters
+            </button>
+          </div>
+          
+          <div id="advancedSearchOptions" class="mt-3 animate-slide" style="display: none; max-height: 0; overflow: hidden;">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="directorFilter" class="form-label">Director</label>
+                <input type="text" id="directorFilter" class="form-control" placeholder="Director name">
+              </div>
+              <div class="col-md-4">
+                <label for="actorFilter" class="form-label">Actor</label>
+                <input type="text" id="actorFilter" class="form-control" placeholder="Actor name">
+              </div>
+              <div class="col-md-4">
+                <label for="ratingFilter" class="form-label">Minimum Rating</label>
+                <select id="ratingFilter" class="form-select">
+                  <option selected value="">Any Rating</option>
+                  <option value="9">9+</option>
+                  <option value="8">8+</option>
+                  <option value="7">7+</option>
+                  <option value="6">6+</option>
+                  <option value="5">5+</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Popular searches / quick filters -->
+        <div class="quick-filters mb-4 animate-fade-in" style="animation-delay: 0.1s;">
+          <h5 class="mb-3">Popular Searches</h5>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn popular-search-pill" data-search="Top Gun: Maverick">Top Gun: Maverick</button>
+            <button class="btn popular-search-pill" data-search="Oppenheimer">Oppenheimer</button>
+            <button class="btn popular-search-pill" data-search="Barbie">Barbie</button>
+            <button class="btn popular-search-pill" data-search="Dune">Dune</button>
+            <button class="btn popular-search-pill" data-search="Inside Out">Inside Out</button>
+            <button class="btn popular-search-pill" data-search="Star Wars">Star Wars</button>
+          </div>
+        </div>
+        
+        <!-- Results section -->
+        <div id="resultsSection" class="results-container d-none animate-fade-in">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="results-title mb-0">Search Results</h2>
+            <div class="sort-by d-flex align-items-center">
+              <span class="me-2">Sort by:</span>
+              <select id="sortOptions" class="form-select">
+                <option value="relevance">Relevance</option>
+                <option value="year">Year</option>
+                <option value="title">Title</option>
+                <option value="rating">Rating</option>
+              </select>
+            </div>
+          </div>
+          
+          <div id="resultsContainer" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+            <!-- Search results will be inserted here -->
+          </div>
+          
+          <div id="loadingIndicator" class="text-center my-5 d-none pulse-animation">
+            <div class="spinner" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Searching for movies...</p>
+          </div>
+          
+          <div id="noResultsMessage" class="text-center py-5 d-none animate-fade-in">
+            <div class="no-results-icon mb-3">
+              <i class="bi bi-film"></i>
+            </div>
+            <h3>No movies found</h3>
+            <p class="text-muted">Try a different search term or adjust your filters</p>
+          </div>
+          
+          <div class="text-center mt-4 mb-5">
+            <button id="loadMoreBtn" class="btn btn-outline-primary d-none">
+              Load More Results
+            </button>
+          </div>
+        </div>
+        
+        <!-- Initial state / trending movies -->
+        <div id="trendingSection" class="animate-fade-in" style="animation-delay: 0.2s;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="section-title mb-0">Trending Now</h2>
+            <div class="trending-tabs">
+              <button class="tab-btn active" data-tab="popular">Popular</button>
+              <button class="tab-btn" data-tab="latest">Latest</button>
+              <button class="tab-btn" data-tab="recommended">For You</button>
+            </div>
+          </div>
+          
+          <div id="trendingContainer" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+            <!-- Trending movies will be loaded here -->
+            <div class="col">
+              <div class="movie-card skeleton">
+                <div class="movie-poster-placeholder"></div>
+                <div class="movie-info-placeholder">
+                  <div class="placeholder-title"></div>
+                  <div class="placeholder-year"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="movie-card skeleton">
+                <div class="movie-poster-placeholder"></div>
+                <div class="movie-info-placeholder">
+                  <div class="placeholder-title"></div>
+                  <div class="placeholder-year"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="movie-card skeleton">
+                <div class="movie-poster-placeholder"></div>
+                <div class="movie-info-placeholder">
+                  <div class="placeholder-title"></div>
+                  <div class="placeholder-year"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="movie-card skeleton">
+                <div class="movie-poster-placeholder"></div>
+                <div class="movie-info-placeholder">
+                  <div class="placeholder-title"></div>
+                  <div class="placeholder-year"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="movie-card skeleton">
+                <div class="movie-poster-placeholder"></div>
+                <div class="movie-info-placeholder">
+                  <div class="placeholder-title"></div>
+                  <div class="placeholder-year"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- The same structure can be used to display your actual posts from the first snippet -->
+          <div id="watchlist-items" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-4 d-none">
+            {{#each posts}}
+            <div class="col animate-fade-in">
+              <div class="movie-card">
+                <div class="poster-container">
+                  <img src="{{cover}}" alt="{{title}}" class="movie-poster">
+                  <button class="watchlist-btn" title="Add to watchlist" onclick="addToWatchlist('{{title}}', '{{cover}}', '{{whereToWatch}}')">
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+                <div class="movie-info">
+                  <div class="movie-title">{{title}}</div>
+                  <div class="movie-year-rating">
+                    <div class="movie-year">{{genre}}</div>
+                    <div class="movie-rating">
+                      <i class="bi bi-star-fill"></i> {{rating}}
+                    </div>
+                  </div>
+                  <p class="movie-description">{{description}}</p>
+                  <p class="movie-watch-on">Watch on: {{whereToWatch}}</p>
+                </div>
+              </div>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Purple color scheme based on existing app */
+  :root {
+    --primary-purple: #5F4B8B;
+    --secondary-purple: #C4C3E3;
+    --light-purple: #E9E8F7;
+    --dark-purple: #4a3a6d;
+    --accent-purple: #9683C3;
+  }
+  
+  body {
+    background-color: #121212;
+  }
+  
+  /* Explore container layout */
+  .explore-container {
+    padding: 20px;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+  }
+  
+  /* Left sidebar styles */
+  .filter-sidebar {
+    background-color: #1E1E1E;
+    border-radius: 12px;
+    padding: 20px;
+    position: sticky;
+    top: 85px;
+    height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  
+  .sidebar-title, .filter-heading {
+    color: #fff;
+    margin-bottom: 20px;
+  }
+  
+  .filter-section {
+    margin-bottom: 30px;
+  }
+  
+  .filter-heading {
+    border-bottom: 1px solid #333;
+    padding-bottom: 8px;
+    font-size: 1.1rem;
+  }
+  
+  .genre-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .genre-item {
+    display: flex;
+    align-items: center;
+  }
+  
+  .form-check-label {
+    color: #fff;
+    margin-left: 8px;
+  }
+  
+  .form-check-input {
+    cursor: pointer;
+  }
+  
+  .form-check-input:checked {
+    background-color: var(--primary-purple);
+    border-color: var(--primary-purple);
+  }
+  
+  .filter-select {
+    background-color: #2A2A2A;
+    color: #fff;
+    border-color: #444;
+  }
+  
+  .filter-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(150, 131, 195, 0.25);
+    border-color: var(--accent-purple);
+    background-color: #2A2A2A;
+    color: #fff;
+  }
+  
+  .apply-filters-btn {
+    background-color: var(--primary-purple);
+    border: none;
+    width: 100%;
+    margin-top: 15px;
+    transition: all 0.3s;
+  }
+  
+  .apply-filters-btn:hover {
+    background-color: var(--dark-purple);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Main content styles */
+  .main-content {
+    padding: 0 20px;
+    flex-grow: 1; /* Add this to make it take up available vertical space */
+    margin-bottom: 60px; /* Add a margin at the bottom for the fixed footer */
+  }
+  
+  .content-wrapper {
+    background-color: #1E1E1E;
+    border-radius: 12px;
+    padding: 25px;
+  }
+  
+  .explore-title {
+    color: #fff;
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-slide {
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+  }
+  
+  .animate-slide.show {
+    opacity: 1;
+    max-height: 300px !important;
+    padding: 15px;
+    border-top: 1px solid #333;
+  }
+  
+  /* Pulse animation for loading */
+  .pulse-animation {
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  /* Custom spinner */
+  .spinner {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(95, 75, 139, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary-purple);
+    animation: spin 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  /* No results icon */
+  .no-results-icon {
+    font-size: 3rem;
+    color: var(--primary-purple);
+    opacity: 0.5;
+  }
+  
+  /* Titles */
+  .section-title {
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-top: 40px;
+  }
+  
+  /* Search elements */
+  .search-container {
+    background-color: #2A2A2A !important;
+    border-radius: 12px;
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .search-container:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  .search-btn {
+    background-color: var(--primary-purple);
+    color: white;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding: 8px 20px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .search-btn:hover {
+    background-color: var(--dark-purple);
+    color: white;
+  }
+  
+  #searchInput {
+    background-color: #333;
+    border-color: #444;
+    color: #fff;
+  }
+  
+  #searchInput::placeholder {
+    color: #999;
+  }
+  
+  #searchInput:focus {
+    background-color: #333;
+    color: #fff;
+    box-shadow: none;
+    border-color: var(--accent-purple);
+  }
+  
+  #advancedSearchToggle {
+    color: #ddd;
+    border-color: #555;
+  }
+  
+  #advancedSearchToggle:hover {
+    background-color: var(--dark-purple);
+    color: white;
+    border-color: var(--accent-purple);
+  }
+  
+  #advancedSearchOptions {
+    background-color: #333;
+    border-radius: 8px;
+  }
+  
+  #advancedSearchOptions .form-label {
+    color: #ddd;
+  }
+  
+  #advancedSearchOptions .form-control, 
+  #advancedSearchOptions .form-select {
+    background-color: #444;
+    border-color: #555;
+    color: #fff;
+  }
+  
+  /* Popular search pills */
+  .popular-search-pill {
+    background-color: #2A2A2A;
+    color: var(--accent-purple);
+    border: 1px solid var(--accent-purple);
+    border-radius: 20px;
+    padding: 6px 16px;
+    transition: all 0.3s ease;
+  }
+  
+  .popular-search-pill:hover {
+    background-color: var(--accent-purple);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(95, 75, 139, 0.3);
+  }
+  
+  /* Trending tabs */
+  .trending-tabs {
+    display: flex;
+    gap: 5px;
+  }
+  
+  .tab-btn {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    color: #999;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+  
+  .tab-btn:hover {
+    color: #fff;
+  }
+  
+  .tab-btn.active {
+    background-color: var(--dark-purple);
+    color: #fff;
+    font-weight: 600;
+  }
+  
+  /* Movie cards */
+  .movie-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    height: 100%;
+    background-color: #2A2A2A;
+  }
+  
+  .movie-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25);
+  }
+  
+  .poster-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .movie-poster {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  
+  .movie-card:hover .movie-poster {
+    transform: scale(1.05);
+  }
+  
+  .movie-info {
+    padding: 15px;
+    position: relative;
+    background-color: #2A2A2A;
+  }
+  
+  .movie-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #fff;
+    transition: color 0.2s ease;
+  }
+  
+  .movie-card:hover .movie-title {
+    color: var(--accent-purple);
+  }
+  
+  .movie-year-rating {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .movie-year {
+    color: #999;
+    font-size: 0.8rem;
+  }
+  
+  .movie-rating {
+    background-color: var(--primary-purple);
+    color: white;
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+  }
+  
+  .movie-card:hover .movie-rating {
+    transform: scale(1.1);
+  }
+  
+  .movie-rating i {
+    color: #ffc107;
+    margin-right: 3px;
+    font-size: 0.85rem;
+  }
+  
+  .movie-description {
+    color: #bbb;
+    font-size: 0.85rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  
+  .movie-watch-on {
+    color: #999;
+    font-size: 0.8rem;
+    margin-bottom: 0;
+  }
+  
+  .watchlist-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .movie-card:hover .watchlist-btn {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .watchlist-btn:hover {
+    background-color: var(--primary-purple);
+    color: white;
+    transform: scale(1.1) !important;
+  }
+  
+  /* Skeleton loading animation */
+  .movie-card.skeleton .movie-poster-placeholder {
+    background: linear-gradient(110deg, #333 8%, #444 18%, #333 33%);
+    background-size: 200% 100%;
+    animation: shine 1.5s linear infinite;
+  }
+  
+  @keyframes shine {
+    to {
+      background-position-x: -200%;
+    }
+  }
+  
+  .movie-poster-placeholder {
+    background-color: #333;
+    width: 100%;
+    aspect-ratio: 2/3;
+  }
+  
+  .movie-info-placeholder {
+    padding: 15px;
+  }
+  
+  .placeholder-title {
+    height: 16px;
+    background-color: #444;
+    width: 85%;
+    margin-bottom: 8px;
+    border-radius: 4px;
+  }
+  
+  .placeholder-year {
+    height: 12px;
+    background-color: #444;
+    width: 40%;
+    border-radius: 4px;
+  }
+  
+  /* Buttons */
+  #loadMoreBtn {
+    color: var(--accent-purple);
+    border-color: var(--accent-purple);
+    border-radius: 8px;
+    padding: 8px 24px;
+    transition: all 0.3s ease;
+  }
+  
+  #loadMoreBtn:hover {
+    background-color: var(--primary-purple);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(95, 75, 139, 0.3);
+  }
+  
+  /* Sort by styles */
+  .sort-by .form-select {
+    background-color: #2A2A2A;
+    color: #fff;
+    border-color: #444;
+    max-width: 120px;
+  }
+  
+  .sort-by span {
+    color: #ddd;
+  }
+  
+  .results-title {
+    color: #fff;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 991.98px) {
+    .filter-sidebar {
+      position: static;
+      height: auto;
+      margin-bottom: 20px;
+    }
+    
+    .filter-section {
+      margin-bottom: 20px;
+    }
+    
+    .genre-filters {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 767.98px) {
+    .results-title {
+      font-size: 1.5rem;
+    }
+    
+    .sort-by span {
+      display: none;
+    }
+    
+    .trending-tabs {
+      display: flex;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 5px;
+      margin-left: -10px;
+      width: 100%;
+    }
+    
+    .tab-btn {
+      flex: 0 0 auto;
+    }
+    
+    .explore-title {
+      font-size: 1.8rem;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Variables for pagination and loading
+  let page = 1;
+  let isLoading = false;
+  let currentQuery = '';
+  let selectedGenres = [];
+
+  // Toggle advanced search options
+  const advancedSearchToggle = document.getElementById('advancedSearchToggle');
+  const advancedSearchOptions = document.getElementById('advancedSearchOptions');
+  
+  advancedSearchToggle.addEventListener('click', function() {
+    if (!advancedSearchOptions.classList.contains('show')) {
+      advancedSearchOptions.style.display = 'block';
+      setTimeout(() => {
+        advancedSearchOptions.classList.add('show');
+      }, 10);
+      advancedSearchToggle.innerHTML = '<i class="bi bi-x-lg me-1"></i> Hide Filters';
+    } else {
+      advancedSearchOptions.classList.remove('show');
+      setTimeout(() => {
+        advancedSearchOptions.style.display = 'none';
+      }, 300);
+      advancedSearchToggle.innerHTML = '<i class="bi bi-sliders me-1"></i> Advanced Filters';
+    }
+  });
+  
+  // Handle genre filter checkboxes
+  const genreCheckboxes = document.querySelectorAll('.genre-item input');
+  genreCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      if (this.checked) {
+        selectedGenres.push(this.value);
+      } else {
+        selectedGenres = selectedGenres.filter(genre => genre !== this.value);
+      }
+    });
+  });
+  
+  // Apply filters button
+  const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+  applyFiltersBtn.addEventListener('click', function() {
+    resetSearch();
+    
+    // If there's a search query, use that, otherwise show filtered trending
+    if (currentQuery) {
+      performSearch(currentQuery, 1);
+    } else {
+      // Hide trending and show filtered results
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      performFilteredSearch();
+    }
+  });
+  
+  // Handle tab switching
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Remove active class from all tabs
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      // Add active class to clicked tab
+      this.classList.add('active');
+      
+      // In a real app, you would load different content based on the tab
+      const tabType = this.getAttribute('data-tab');
+      console.log(`Loading ${tabType} movies...`);
+      
+      // For demo, we'll just reload the trending movies with a delay
+      const trendingContainer = document.getElementById('trendingContainer');
+      // Add skeleton loading effect
+      trendingContainer.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        trendingContainer.innerHTML += `
+          <div class="col">
+            <div class="movie-card skeleton">
+              <div class="movie-poster-placeholder"></div>
+              <div class="movie-info-placeholder">
+                <div class="placeholder-title"></div>
+                <div class="placeholder-year"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Load new trending movies after delay
+      setTimeout(() => loadTrendingMovies(tabType), 1000);
+    });
+  });
+  
+  // Handle popular search pills
+  const popularSearchButtons = document.querySelectorAll('.popular-search-pill');
+  popularSearchButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const searchTerm = this.getAttribute('data-search');
+      document.getElementById('searchInput').value = searchTerm;
+      resetSearch();
+      performSearch(searchTerm, 1);
+    });
+  });
+  
+  // Search form submission
+  const searchForm = document.getElementById('searchForm');
+  const searchInput = document.getElementById('searchInput');
+  
+  searchForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm) {
+      resetSearch();
+      performSearch(searchTerm, 1);
+    }
+  });
+  
+  // Load trending movies on page load
+  loadTrendingMovies('popular');
+  
+  // Reset search state
+  function resetSearch() {
+    page = 1;
+    currentQuery = searchInput.value.trim();
+    document.getElementById('resultsContainer').innerHTML = '';
+  }
+  
+  // Perform filtered search with no query term
+  function performFilteredSearch() {
+  if (isLoading) return;
+  
+  // Show loading state
+  isLoading = true;
+  document.getElementById('loadingIndicator').classList.remove('d-none');
+  document.getElementById('noResultsMessage').classList.add('d-none');
+  document.getElementById('loadMoreBtn').classList.add('d-none');
+  
+  // Get filter values
+  const yearFilter = document.getElementById('yearFilter').value;
+  const typeFilter = document.getElementById('typeFilter').value;
+  const directorFilter = document.getElementById('directorFilter')?.value || '';
+  const actorFilter = document.getElementById('actorFilter')?.value || '';
+  const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+  
+  // Build the API URL with query parameters
+  let apiUrl = `/api/movies/filter?page=${page}`;
+  
+  if (selectedGenres.length > 0) {
+    apiUrl += `&genres=${selectedGenres.join(',')}`;
+  }
+  
+  if (yearFilter) {
+    apiUrl += `&year=${yearFilter}`;
+  }
+  
+  if (typeFilter) {
+    apiUrl += `&type=${typeFilter}`;
+  }
+  
+  if (directorFilter) {
+    apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
+  }
+  
+  if (actorFilter) {
+    apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
+  }
+  
+  if (ratingFilter) {
+    apiUrl += `&minRating=${ratingFilter}`;
+  }
+  
+  fetch(apiUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok: ' + response.status);
+      }
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('loadingIndicator').classList.add('d-none');
+      isLoading = false;
+      
+      if (!data.success || !data.results || data.results.length === 0) {
+        document.getElementById('noResultsMessage').classList.remove('d-none');
+        return;
+      }
+      
+      // Render results
+      renderSearchResults(data.results);
+      
+      // Show Load More button if there are more results
+      if (data.totalResults > page * 10) {
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        loadMoreBtn.classList.remove('d-none');
+        loadMoreBtn.onclick = () => {
+          page++;
+          performFilteredSearch();
+        };
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching filtered results:', error);
+      document.getElementById('loadingIndicator').classList.add('d-none');
+      document.getElementById('noResultsMessage').classList.remove('d-none');
+      isLoading = false;
+    });
+}
+  
+  // Main search function
+function performSearch(query, currentPage = 1) {
+  if (isLoading) {
+    return; // Prevent multiple simultaneous searches
+  }
+  
+  const yearFilter = document.getElementById('yearFilter').value;
+  const typeFilter = document.getElementById('typeFilter').value;
+  const directorFilter = document.getElementById('directorFilter')?.value || '';
+  const actorFilter = document.getElementById('actorFilter')?.value || '';
+  
+  // Show loading state
+  isLoading = true;
+  document.getElementById('loadingIndicator').classList.remove('d-none');
+  document.getElementById('noResultsMessage').classList.add('d-none');
+  document.getElementById('loadMoreBtn').classList.add('d-none');
+  
+  // Hide trending section and show results section
+  document.getElementById('trendingSection').classList.add('d-none');
+  document.getElementById('resultsSection').classList.remove('d-none');
+  
+  // Build the API URL with query parameters
+  let apiUrl = `/api/movies/search?query=${encodeURIComponent(query)}&page=${currentPage}`;
+  
+  if (yearFilter) {
+    apiUrl += `&year=${yearFilter}`;
+  }
+  
+  if (typeFilter) {
+    apiUrl += `&type=${typeFilter}`;
+  }
+  
+  if (selectedGenres.length > 0) {
+    apiUrl += `&genres=${selectedGenres.join(',')}`;
+  }
+  
+  if (directorFilter) {
+    apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
+  }
+  
+  if (actorFilter) {
+    apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
+  }
+  
+  // Actually fetch from the API instead of using setTimeout
+  fetch(apiUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok: ' + response.status);
+      }
+      return response.json();
+    })
+    .then(data => {
+      document.getElementById('loadingIndicator').classList.add('d-none');
+      isLoading = false;
+      
+      if (!data.success || !data.results || data.results.length === 0) {
+        document.getElementById('noResultsMessage').classList.remove('d-none');
+        return;
+      }
+      
+      // Render results
+      renderSearchResults(data.results);
+      
+      // Show Load More button if there are more results
+      if (data.totalResults > currentPage * 10) {
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        loadMoreBtn.classList.remove('d-none');
+        loadMoreBtn.onclick = () => {
+          page++;
+          performSearch(query, page);
+        };
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching search results:', error);
+      document.getElementById('loadingIndicator').classList.add('d-none');
+      document.getElementById('noResultsMessage').classList.remove('d-none');
+      isLoading = false;
+    });
+}
+  
+  // Render search results
+  function renderSearchResults(movies) {
+    const resultsContainer = document.getElementById('resultsContainer');
+    
+    movies.forEach((movie, index) => {
+      const movieElement = document.createElement('div');
+      movieElement.className = 'col animate-fade-in';
+      movieElement.style.animationDelay = `${index * 0.05}s`;
+      
+      // Default poster image if not available
+      const posterUrl = movie.poster && movie.poster !== 'N/A' 
+        ? movie.poster 
+        : '/api/placeholder/300/450';
+      
+      movieElement.innerHTML = `
+        <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
+          <div class="poster-container">
+            <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
+            <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title}', '${posterUrl}')">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+          <div class="movie-info">
+            <div class="movie-title">${movie.title}</div>
+            <div class="movie-year-rating">
+              <div class="movie-year">${movie.year}</div>
+              <div class="movie-rating">
+                <i class="bi bi-star-fill"></i> ${movie.rating}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      resultsContainer.appendChild(movieElement);
+    });
+  }
+  
+  // Load trending movies
+  // Load trending movies
+function loadTrendingMovies(type = 'popular') {
+  // Clear the container and show loading state
+  const trendingContainer = document.getElementById('trendingContainer');
+  trendingContainer.innerHTML = '';
+  
+  // Add skeleton loading effect
+  for (let i = 0; i < 5; i++) {
+    trendingContainer.innerHTML += `
+      <div class="col">
+        <div class="movie-card skeleton">
+          <div class="movie-poster-placeholder"></div>
+          <div class="movie-info-placeholder">
+            <div class="placeholder-title"></div>
+            <div class="placeholder-year"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Fetch trending movies from the API
+  fetch(`/api/movies/trending?type=${type}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Clear placeholders
+      trendingContainer.innerHTML = '';
+      
+      if (!data.success || !data.results) {
+        console.error('Invalid trending data format');
+        return;
+      }
+      
+      // Render trending movies with staggered animation
+      data.results.forEach((movie, index) => {
+        const movieElement = document.createElement('div');
+        movieElement.className = 'col animate-fade-in';
+        movieElement.style.animationDelay = `${index * 0.05}s`;
+        
+        const posterUrl = movie.poster && movie.poster !== 'N/A' 
+          ? movie.poster 
+          : `/api/placeholder/300/450`;
+        
+        movieElement.innerHTML = `
+          <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
+            <div class="poster-container">
+              <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
+              <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title}', '${posterUrl}')">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+            <div class="movie-info">
+              <div class="movie-title">${movie.title}</div>
+              <div class="movie-year-rating">
+                <div class="movie-year">${movie.year}</div>
+                <div class="movie-rating">
+                  <i class="bi bi-star-fill"></i> ${movie.rating}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        trendingContainer.appendChild(movieElement);
+      });
+    })
+    .catch(error => {
+      console.error('Error loading trending movies:', error);
+      trendingContainer.innerHTML = `
+        <div class="col-12 text-center text-light">
+          <p>Unable to load trending movies. Please try again later.</p>
+        </div>
+      `;
+    });
+}
+    
+  // Implement scroll-based loading for infinite scroll effect
+  let debounceTimer;
+  window.onscroll = () => {
+    clearTimeout(debounceTimer); // Reset debounce timer
+    debounceTimer = setTimeout(() => {
+      if (!currentQuery || isLoading) return; // Skip if no active search or already loading
+      
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const pageHeight = Math.max(
+        document.body.scrollHeight, 
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight, 
+        document.documentElement.offsetHeight
+      );
+      
+      if (scrollPosition >= pageHeight - 500) {
+        // Load more results when user is near bottom
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (!loadMoreBtn.classList.contains('d-none')) {
+          loadMoreBtn.click();
+        }
+      }
+    }, 150);
+  };
+  
+  // Add to watchlist function
+  window.addToWatchlist = function(imdbId, title, posterUrl) {
+    // Get the button that was clicked
+    const watchlistBtn = event.target.closest('.watchlist-btn');
+    
+    // Show micro-interaction
+    watchlistBtn.innerHTML = '<i class="bi bi-check"></i>';
+    watchlistBtn.style.backgroundColor = 'var(--primary-purple)';
+    watchlistBtn.style.color = 'white';
+    
+    // Simulate API call
+    fetch('/api/movies/watchlist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        imdbId: imdbId,
+        title: title,
+        poster: posterUrl
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Keep the check mark
+        console.log('Added to watchlist:', title);
+      } else {
+        // Reset button on error
+        watchlistBtn.innerHTML = '<i class="bi bi-plus-lg"></i>';
+        watchlistBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        watchlistBtn.style.color = '#fff';
+        console.error('Error adding to watchlist');
+      }
+    })
+    .catch(error => {
+      // Reset button on error
+      watchlistBtn.innerHTML = '<i class="bi bi-plus-lg"></i>';
+      watchlistBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      watchlistBtn.style.color = '#fff';
+      console.error('Error adding to watchlist:', error);
+    });
+    
+    // Prevent click event from bubbling up to the movie card
+    event.stopPropagation();
+  };
+});
+</script>

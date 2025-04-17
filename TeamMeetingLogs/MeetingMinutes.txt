@@ -1,0 +1,205 @@
+
+Minutes of the Meeting Log File
+
+Week 1: March 21st
+    - Lizze:
+        - Created Wireframe
+        - Created the Case Diagram
+        - Created the index.js file with inital dependencies
+        - Added the initial login and register page rendering routes
+        - Setup main.hbs with initial partials
+
+    - Maeve:
+        - Created the register page
+        - Created the register forum html code
+
+    - Neha:
+        - Created and logged the Project Details information
+        - Created the preliminary Database creation
+        - Created and showed the Database ER Diagram
+
+    - Ella:
+        - Created the login page
+        - Added the POST route to index.js for the login page
+
+    - Conner:
+        - Added API key fetching
+        - Created starter API service class
+
+    - Joe:
+        - Created Github repository with file structure
+        - Created README file
+        - Created package.json file
+        - Created docker-compose file
+
+    - Additionals:
+        - AJ mentions how because the complexity of our design is not very high, we will be graded more heavily on the aesthetics and functionality of the application.
+
+------------------------------------------------------------------------------
+
+Week 2: April 4th
+    - Lizze:
+        - what have you done since the last meeting?
+            - Friends and followers feature
+            - Finding new friends, follow, unfollow code
+            - Notifications for requests
+            - Active followed and following counts
+
+        - what are you planning to do until the next meeting?
+            - Notifications page
+            - Collecting likes and comments
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Maeve:
+        - what have you done since the last meeting?
+            - Profile icons
+            - Added first name and last name to database and user creation
+            - Find Friends page update
+
+        - what are you planning to do until the next meeting?
+            - Visual design and layout of pages
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Neha:
+        - what have you done since the last meeting?
+            - Uniform layouts
+            - Profile page
+            - Edit Profile/Follow button feature
+            - Standardized on CSS styles
+
+        - what are you planning to do until the next meeting?
+            - Profile Page
+            - WatchList
+            - Watched List
+            - Visit friends pages
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Ella:
+        - what have you done since the last meeting?
+            - Logo creation
+            - Navbar dynamic
+            - Create posts creation code
+
+        - what are you planning to do until the next meeting?
+            - Create user posts from movie data to share with friends
+            
+        - what are the challenges you are facing?
+            - Implementing the posting feature
+
+    - Conner:
+        - what have you done since the last meeting?
+            - API integration into explorer page
+            - API backend loading of data 
+
+        - what are you planning to do until the next meeting?
+            - Pages detailing selected movie
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Joe:
+        - what have you done since the last meeting?
+            - Social Page layout and feature with pagination
+            - Responsive buttons
+            - Messaging page start
+            - Websockets
+
+        - what are you planning to do until the next meeting?
+            - Work on websockets for messaging feature
+            - Messaging page layout
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Additionals:
+        - None
+
+------------------------------------------------------------------------------
+
+Week 3: April 11th
+    - Lizze:
+        - what have you done since the last meeting?
+            - Updated Social page to work with Database
+            - Feature improvements on Social Page
+            - Notifications Page 
+            - Commenting on others Posts
+
+        - what are you planning to do until the next meeting?
+            - Server Side linking of Posts and Data
+            - 
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Maeve:
+        - what have you done since the last meeting?
+            - Updated followers/following pages UI
+            - Added card design for cleaner UI
+            - Created/Started work on Watch List page
+
+        - what are you planning to do until the next meeting?
+            - Implementation of Watch List
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Neha:
+        - what have you done since the last meeting?
+            - Added ability to edit Profile Page
+            - Update Database with profile changes
+            - See followers profiles from users profile
+            - See Followers/Following list on users Profile
+
+        - what are you planning to do until the next meeting?
+            - Continue Profile Edit Feature
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Ella:
+        - what have you done since the last meeting?
+            - Added Posting partial for Post Modal
+            - Updated UI color schemes of pages
+            - Created Footer Partial
+
+        - what are you planning to do until the next meeting?
+            - Continue work on Post Modal with file addition feature
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Conner:
+        - what have you done since the last meeting?
+            - Movies Details Page with YouTube API
+            - Add Movies to Watch/Watched List buttons
+            - Added Rating Feature to Movies Details page
+
+        - what are you planning to do until the next meeting?
+            - Linking Movie Data to Database for use in Posts
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Joe:
+        - what have you done since the last meeting?
+            - Messaging Page
+            - Create WebSockets for communication
+            - Dynamic Storing and Loading of message data
+
+        - what are you planning to do until the next meeting?
+            - Implement Notifications from messaging feature
+            - Better chat functionality
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Additionals:
+        - Look into Base64 or local download/hosting for file uploading if we want to house user uploaded images.
+
+------------------------------------------------------------------------------

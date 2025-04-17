@@ -1,0 +1,93 @@
+{{> nav}}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="../resources/css/messaging.css">
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="../../resources/js/messagingScript.js" defer></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+
+<pre>{{json allFriends}}</pre>
+<div class="container-fluid">
+  <!-- Friends List Section -->
+  <div class="col-md-3 col-sm-12 friends-list">
+    <h5>Friends List</h5> 
+    <div class="friends-list-content"> 
+      <!-- Friends List -->       
+      <ul class="list-group list-group-flush" id="friends">
+        {{#each allFriends}}
+          <li class="list-group-item friend d-flex align-items-center" data-user-id="{{this.id}}" data-user="{{this.name}}" data-user-unreadCount="{{this.unread_count}}">
+            <div class="position-relative me-3">
+              <img src="/resources/img/{{this.profile_icon}}" class="rounded-circle" alt="Profile Icon" width="50" height="50">
+            </div>
+            <div class="friend-info flex-grow-1">
+              <div class="friend-name">{{this.name}}</div>
+              <div class="recent-message text-muted">{{this.latest_message}}</div>
+            </div>
+            <div class="extra-info text-end">
+              <small class="text-muted">{{this.last_active}}</small>
+              {{#if this.unread_count}}
+                <span class="badge unread-badge">{{this.unread_count}}</span>
+              {{else}}
+                <span class="badge unread-badge" style="display: none;">0</span>
+              {{/if}}
+            </div>
+          </li>
+        {{else}}
+          <li class="list-group-item text-muted">No friends to display.</li>
+      {{/each}}
+      </ul>
+    </div>
+  </div>
+
+   <!-- Chat Area Section -->
+   <div class="col-md-9 col-sm-12 chat-area">
+    <div class="chat-header d-flex align-items-center">
+      <div id="chat-profile" class="me-3">
+        <img id="chat-profile-icon" src="" alt="Profile Icon" class="rounded-circle" width="40" height="40" style="display: none;">
+      </div>
+      <div class="flex-grow-1">
+        <h5 id="chat-user-name">Select A Friend To Start Chatting</h5>
+      </div>     
+    </div>
+    
+    <!-- New Messages Divider (hidden by default) -->
+    <div class="new-messages-divider" style="display: none;">
+        <span>----------------New Messages--------------------</span>
+    </div>
+
+    <div class="chat-body" id="chat-messages">
+      <!-- Messages will be loaded here -->
+    </div>
+    <div class="chat-footer">
+      <div class="d-flex">
+        <!-- Message Input -->
+        <input type="text" id="message-input" class="form-control me-2" placeholder="Type a message..." />
+        <!-- Emojis Button -->
+        <button id="emoji-btn" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Add Emoji">
+          <i class="bi bi-emoji-smile"></i>
+        </button>
+        <!-- File Upload Button -->
+        <label for="file-input" class="btn btn-primary me-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Add an Image">
+          <i class="bi bi-cloud-upload"></i>
+        </label>
+        <input type="file" id="file-input" class="d-none" accept="image/*" />
+        <!-- Send Button -->
+        <button id="send-btn" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Send Chat">
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+  // Pass data to messagingScript
+  const yourUserId = {{activeUser.id}};
+  const activeUser = {
+    id: {{activeUser.id}},
+    name: "{{activeUser.name}}",
+    profile_icon: "{{activeUser.profile_icon}}"
+  };
+</script>
+

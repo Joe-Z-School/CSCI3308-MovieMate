@@ -1,67 +1,147 @@
-<!DOCTYPE html>
-<html lang="en" class="h-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find and Follow Users</title>
+  <!-- Add Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Add Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+
+    /* Override Bootstrap Styles with Higher Specificity */
+    #bootstrap-overrides .table {
+      background-color: #333;
+      color: white;
+    }
+
+    #bootstrap-overrides .table thead {
+      background-color: #1e1e1e;
+      color: white;
+    }
+
+    #bootstrap-overrides .table tbody tr {
+      background-color: #2a2a2a;
+      color: white;
+    }
+
+    #bootstrap-overrides .table tbody tr:hover {
+      background-color: #C4C3E3;
+      cursor: pointer;
+    }
+
+    #bootstrap-overrides .table td,
+    #bootstrap-overrides .table th {
+      padding: 10px;
+      border-bottom: 1px solid #444;
+    }
+
+    #bootstrap-overrides .table tbody td:nth-child(2),
+    /* Username column */
+    #bootstrap-overrides .table tbody td:nth-child(3) {
+      /* Bio column */
+      color: #999 !important;
+      /* Force the text color to be white */
+    }
+
+    /* Custom Root Variables for Consistency */
+    :root {
+      --primary-purple: #5F4B8B;
+      --secondary-purple: #C4C3E3;
+      --light-purple: #E9E8F7;
+      --dark-purple: #4a3a6d;
+      --accent-purple: #9683C3;
+    }
+
+    /* Global Body Styling */
+    body {
+      background-color: #121212;
+      color: white;
+    }
+
+    /* Add a margin at the bottom to ensure space above the fixed footer */
+    .container.mt-4 {
+      flex-grow: 1;
+      margin-bottom: 60px; 
+    }
 
 
-<body>
- <div class="container mt-4">
+  </style>
+</head>
 
+<body id="bootstrap-overrides">
 
-   <h2 class="mb-4">Find and Follow Users</h2>
+  {{> nav}}
 
+  <div class="container mt-4">
+    <h2 class="mb-4">Find and Follow Users</h2>
 
-   <div class="input-group mb-4">
-     <input type="text" id="searchInput" class="form-control" placeholder="Search by username..." onkeyup="filterUsers()">
-   </div>
+    <div class="input-group mb-4">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search by username..."
+        onkeyup="filterUsers()">
+    </div>
 
+    <table class="table custom-table" id="userTable">
+      <thead>
+        <tr>
+          <th scope="col" style="color: white;">Profile</th>
+          <th scope="col" style="color: white;">Username</th>
+          <th scope="col" style="color: white;">Bio</th>
+          <th scope="col" style="color: white;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each users}}
+        <tr class="user-row">
+          <td>
+            <img src="../../resources/img/{{profile_icon}}" alt="Profile"
+              style="width: 50px; height: 50px; border-radius: 50%;">
+          </td>
+          <td>
+            <div> <a href="/profile?id={{id}}" style="text-decoration: none;">
+                <strong style="color: #5F4B8B">{{first_name}} {{last_name}}</strong>
+              </a></div>
+            <div>@{{username}}</div>
+          </td>
+          <td>{{bio}}</td>
+          <td>
+            {{#if is_following}}
+            <button type="button" class="btn btn-outline-danger" onclick="showUnfollowModal('{{id}}', '{{username}}')"
+              style="padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+              Unfollow
+            </button>
+            {{else if is_requested}}
+            <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')"
+              style="padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+              Requested
+            </button>
+            {{else}}
+            <form action="/users/follow" method="POST">
+              <input type="hidden" name="following_id" value="{{id}}">
+              <button type="submit"
+                style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+                Follow
+              </button>
+            </form>
+            {{/if}}
+          </td> 
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+{{>follow-modal}}
+  <!-- Custom JS -->
+  <script>
+    function filterUsers() {
+      const input = document.getElementById('searchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('.user-row');
 
-   <table class="table" id="userTable">
-     <thead>
-       <tr>
-         <th scope="col">Profile</th>
-         <th scope="col">Username</th>
-         <th scope="col">Bio</th>
-         <th scope="col">Action</th>
-       </tr>
-     </thead>
-     <tbody>
-       {{#each users}}
-         <tr class="user-row">
-           <td>
-             <!-- <img src="{{profile_icon}}" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%;">-->
-             <p> filler </p>
-           </td>
-           <td>{{username}}</td>
-           <td>{{bio}}</td>
-           <td>
-             <form action="{{#if is_following}}/users/unfollow{{else}}/users/follow{{/if}}" method="POST">
-                <input type="hidden" name="following_id" value="{{id}}">
-                    {{#if is_following}}
-                        <button type="submit" class="btn btn-outline-danger">Unfollow</button>
-                    {{else}}
-                        <button type="submit" class="btn btn-primary">Follow</button>
-                    {{/if}}
-</form>
-           </td>
-         </tr>
-       {{/each}}
-     </tbody>
-   </table>
- </div>
+      rows.forEach(row => {
+        const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        row.style.display = username.includes(input) ? '' : 'none';
+      });
+    }
 
- <script>
-   function filterUsers() {
-     const input = document.getElementById('searchInput').value.toLowerCase();
-     const rows = document.querySelectorAll('.user-row');
-
-
-     rows.forEach(row => {
-       const username = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-       row.style.display = username.includes(input) ? '' : 'none';
-     });
-   }
- </script>
-</body>
-</html>
-
-
-
+  </script>
