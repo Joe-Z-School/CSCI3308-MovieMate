@@ -15,50 +15,48 @@ const axios = require('axios'); // To make HTTP requests from our server. We'll 
 const movieController = require('./controllers/movieController'); // To handle movie-related API requests
 
 // *****************************************************
-// <!-- AWS S3 File Storage -->
+// <!-- Image File Storage -->
 // *****************************************************
-const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
 async function uploadPoster(posterUrl, imdbID) {
-  const BUCKET_NAME = 'moviemate-pictures';
-  const REGION = 'us-east-2';
-  const key = `${imdbID}.jpg`;  // Use IMDb ID as the S3 key
-  const imageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${key}`;
-
-  try {
-    // Check if poster already exists
-    await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
-    console.log('Poster already exists, using existing file.');
-    return imageUrl;
-  } catch (err) {
-    if (err.code !== 'NotFound') {
-      throw err;
-    }
-
-    // Download the image from the original source
-    const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
-    const buffer = Buffer.from(response.data, 'binary');
-
-    // Upload to S3
-    const uploadParams = {
-      Bucket: BUCKET_NAME,
-      Key: key,
-      Body: buffer,
-      ContentType: 'image/jpeg',
-    };
-
-    await s3.upload(uploadParams).promise();
-    console.log('Uploaded new poster to S3');
-    return imageUrl;
+  // Check if the poster already exists in the database
+  const existing = await db.query('SELECT * FROM images WHERE imdb_id = $1', [imdbID]);
+  if (existing.length > 0) {
+    console.log('Poster already exists in database.');
+    return `/image/${imdbID}`; // endpoint to serve the image
   }
+
+  // Fetch the image
+  console.log('Fetching image from:', posterUrl);
+  const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
+  console.log('Fetched image, content-type:', response.headers['content-type']);
+
+  const buffer = Buffer.from(response.data, 'binary');
+  const contentType = response.headers['content-type'];
+
+  // Insert into the database
+  await db.query(
+    `INSERT INTO images (imdb_id, image_data, content_type) VALUES ($1, $2, $3)`,
+    [imdbID, buffer, contentType]
+  );
+
+  console.log('Poster uploaded to database');
+  return `/image/${imdbID}`;
 }
+
+async function uploadChatImage(buffer, contentType, userId, senderId, recipientId) {
+  const id = uuidv4();
+
+  await db.query(
+    `INSERT INTO user_images (id, user_id, sender_id, recipient_id, image_data, content_type)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, userId, senderId, recipientId, buffer, contentType]
+  );
+
+  return id;
+}
+
 
 // *****************************************************
 // <!-- Socket.IO Server Creation -->
@@ -123,6 +121,15 @@ app.use(
     resave: false,
   })
 );
+/*
+app.get('/dev/login-as-11', (req, res) => {
+  req.session.user = {
+    id: 11,
+    username: 'test_user_11' // match your test user
+  };
+  res.send('✅ Logged in as user ID 11');
+});
+*/
 
 app.use(
   bodyParser.urlencoded({
@@ -797,7 +804,7 @@ app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async
   console.log("📥 Incoming comment:", { userId, postId, comment });
 
   if (!userId || !comment) {
-    return res.status(400).send("Missing user or comment");
+    return res.status(400).json({ success: false, message: "Missing user or comment" });
   }
 
   try {
@@ -806,24 +813,43 @@ app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async
       [userId, postId, comment]
     );
     await db.none("UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1", [postId]);
-    // 🔔 Create notification if the commenter is not the post owner
-    const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
 
+    const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
     if (postOwner && postOwner.user_id !== userId) {
       await db.none(
         `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
-     VALUES ($1, $2, $3, NOW())`,
+         VALUES ($1, $2, $3, NOW())`,
         [userId, postOwner.user_id, `commented on your post: "${comment}"`]
       );
     }
 
-    res.redirect("/social");
+    res.json({ success: true });
   } catch (err) {
-    console.error("💥 Comment DB error:", err);
-    res.status(500).send("Server error");
+    console.error("Comment DB error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
+// GET all comments for a specific post
+app.get("/api/posts/:id/comments", async (req, res) => {
+  const postId = req.params.id;
+
+  try {
+    const comments = await db.any(
+      `SELECT u.username, c.comment, c.created_at
+       FROM post_comments c
+       JOIN users u ON c.user_id = u.id
+       WHERE c.post_id = $1
+       ORDER BY c.created_at DESC`,
+      [postId]
+    );
+
+    res.json({ comments });
+  } catch (err) {
+    console.error("💥 Failed to fetch comments:", err);
+    res.status(500).json({ error: "Failed to load comments." });
+  }
+});
 
 
 // *****************************************************
@@ -869,9 +895,10 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 10 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
-      //{ follower_id: 11, followed_id: 12 }, // joe1 → joe2
-      //{ follower_id: 11, followed_id: 13 }, // joe1 → joe3
-      //{ follower_id: 11, followed_id: 14 }, // joe1 → joe4
+      { follower_id: 11, followed_id: 12 }, // joe1 → joe2
+      { follower_id: 12, followed_id: 11 }, // joe1 → joe2
+      { follower_id: 11, followed_id: 13 }, // joe1 → joe3
+      { follower_id: 11, followed_id: 14 }, // joe1 → joe4
       { follower_id: 11, followed_id: 4 }, // joe1 → matt
       { follower_id: 11, followed_id: 5 }, // joe1 → jessie
       { follower_id: 11, followed_id: 6 }, // joe1 → kay
@@ -1198,18 +1225,36 @@ app.get('/load-more', async (req, res) => {
 //   });
 // });
 
-// Temporary in-memory storage for the watchlist
+app.get('/image/:imdbID', async (req, res) => {
+  const { imdbID } = req.params;
+
+  const result = await db.query(
+    'SELECT image_data, content_type FROM images WHERE imdb_id = $1',
+    [imdbID]
+  );
+
+  // If no image found
+  if (!result || result.length === 0) {
+    return res.status(404).send('Image not found');
+  }
+
+  const image = result[0];
+  res.set('Content-Type', image.content_type);
+  res.send(image.image_data);
+});
+
 
 app.post('/add-to-watchlist', async (req, res) => {
   const userId = req.session.user?.id;
   const {imdbID, title, picture, description } = req.body;
 
   try {
-    const s3ImageURL = await uploadPoster(picture, imdbID); 
+    console.log('In add-to-watchlist with picture:', picture);
+    const imageUrl = await uploadPoster(picture, imdbID);
 
     await db.query(
       'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
-      [userId, title, s3ImageURL, description]
+      [userId, title, imageUrl, description]
     );
 
     res.json({ success: true });
@@ -1505,6 +1550,65 @@ app.get('/messaging', async (req, res) => {
   }
 });
 
+const multer = require('multer');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB limit
+});
+
+app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
+  console.log('Incoming request:', req.body);
+  console.log('File uploaded:', req.file);  // Log the uploaded file data
+
+  if (!req.file) {
+    return res.status(400).json({ success: false, error: 'No file uploaded' });
+  }
+
+  try {
+    const userId = req.session.user?.id;
+    const { senderId, recipientId} = req.body; // Ensure userId is passed in the request
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID is required' });
+    }
+
+    // Call the uploadChatImage function to insert the image data into the database
+    const imageId = await uploadChatImage(
+      req.file.buffer,
+      req.file.mimetype,
+      userId,
+      senderId,
+      recipientId
+    );
+    console.log('Image uploaded successfully, ID:', imageId);
+    return res.json({ success: true, imageId });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    return res.status(500).json({ success: false, error: 'Database error' });
+  }
+});
+
+app.get('/chat/image/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.query(
+      `SELECT image_data, content_type FROM user_images WHERE id = $1`,
+      [id]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).send('Image not found');
+    }
+
+    const image = result[0];
+    res.setHeader('Content-Type', image.content_type);
+    res.send(image.image_data);
+  } catch (err) {
+    console.error('Error retrieving image:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 // Track sockets and active chats
 const userSockets = new Map(); // { userId: socket }
