@@ -123,6 +123,15 @@ app.use(
     resave: false,
   })
 );
+/*
+app.get('/dev/login-as-11', (req, res) => {
+  req.session.user = {
+    id: 11,
+    username: 'test_user_11' // match your test user
+  };
+  res.send('✅ Logged in as user ID 11');
+});
+*/
 
 app.use(
   bodyParser.urlencoded({
@@ -797,7 +806,7 @@ app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async
   console.log("📥 Incoming comment:", { userId, postId, comment });
 
   if (!userId || !comment) {
-    return res.status(400).send("Missing user or comment");
+    return res.status(400).json({ success: false, message: "Missing user or comment" });
   }
 
   try {
@@ -806,24 +815,43 @@ app.post("/api/posts/:id/comment", express.urlencoded({ extended: true }), async
       [userId, postId, comment]
     );
     await db.none("UPDATE posts SET comment_count = comment_count + 1 WHERE id = $1", [postId]);
-    // 🔔 Create notification if the commenter is not the post owner
-    const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
 
+    const postOwner = await db.oneOrNone("SELECT user_id FROM posts WHERE id = $1", [postId]);
     if (postOwner && postOwner.user_id !== userId) {
       await db.none(
         `INSERT INTO notifications (sender_id, recipient_id, message, created_at)
-     VALUES ($1, $2, $3, NOW())`,
+         VALUES ($1, $2, $3, NOW())`,
         [userId, postOwner.user_id, `commented on your post: "${comment}"`]
       );
     }
 
-    res.redirect("/social");
+    res.json({ success: true });
   } catch (err) {
-    console.error("💥 Comment DB error:", err);
-    res.status(500).send("Server error");
+    console.error("Comment DB error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
+// GET all comments for a specific post
+app.get("/api/posts/:id/comments", async (req, res) => {
+  const postId = req.params.id;
+
+  try {
+    const comments = await db.any(
+      `SELECT u.username, c.comment, c.created_at
+       FROM post_comments c
+       JOIN users u ON c.user_id = u.id
+       WHERE c.post_id = $1
+       ORDER BY c.created_at DESC`,
+      [postId]
+    );
+
+    res.json({ comments });
+  } catch (err) {
+    console.error("💥 Failed to fetch comments:", err);
+    res.status(500).json({ error: "Failed to load comments." });
+  }
+});
 
 
 // *****************************************************
