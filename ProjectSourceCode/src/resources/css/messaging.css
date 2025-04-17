@@ -6,6 +6,12 @@
   --darkPurpleAccent: #5F4B8B;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden; /* Prevent entire page scroll */
+}
+
+
 /* Spacing for Navbar */
 .container-fluid {
     margin-top: 60px; /* Navbar height */
