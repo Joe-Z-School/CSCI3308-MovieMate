@@ -6,6 +6,7 @@ body {
     padding-bottom: 60px;   /* for fixed footer */
     display: flex;
     flex-direction: column;
+    padding-bottom: 60px; 
 }
 
 /* REGISTER AND LOGIN */
