@@ -323,7 +323,6 @@ body {
     color: #5F4B8B;
 }
 
-<<<<<<< HEAD
 /* Ensure the navbar takes full width */
 
 .navbar {
@@ -585,41 +584,4 @@ footer {
     border-color: #6f42c1; /* Optional: purple border on focus */
     background-color: #1a1a1a;
 
-=======
-
-/* Search Feature on explore page */
-
-.container-explore {
-    display: flex;
-    min-height: 100vh; 
-}
-
-.left-column-explore {
-    width: 250px;
-    padding: 25px;
-    background-color: #5F4B8B;
-    box-sizing: border-box;
-    flex-shrink: 0;
-}
-
-.main-content-explore {
-    flex-grow: 1;
-    padding: 20px;
-}
-
-
-.btn-outline-search-feature {
-    outline-color: #fff;
-    border-radius: 10px;
-    width: 30px;
-    height: 30px;
-    border: 1px solid #fff;
-    background-color: transparent;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.btn-outline-search-feature:focus {
-    background-color: #33294a; 
-    color: #fff; 
->>>>>>> c5e62d236c708513feb4c6b6662debec95def198
 }

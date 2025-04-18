@@ -948,7 +948,8 @@ document.addEventListener('DOMContentLoaded', function() {
   let isLoading = false;
   let currentQuery = '';
   let selectedGenres = [];
-
+  let currentSortBy = 'popularity'; // Default sort
+  
   // Toggle advanced search options
   const advancedSearchToggle = document.getElementById('advancedSearchToggle');
   const advancedSearchOptions = document.getElementById('advancedSearchOptions');
@@ -981,6 +982,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
+  // Handle sort selection
+  const sortOptions = document.getElementById('sortOptions');
+  if (sortOptions) {
+    sortOptions.addEventListener('change', function() {
+      currentSortBy = this.value;
+      resetSearch();
+      
+      // If there's a search query, use that, otherwise show filtered trending
+      if (currentQuery) {
+        performSearch(currentQuery, 1);
+      } else {
+        // Hide trending and show filtered results
+        document.getElementById('trendingSection').classList.add('d-none');
+        document.getElementById('resultsSection').classList.remove('d-none');
+        performFilteredSearch();
+      }
+    });
+  }
+  
   // Apply filters button
   const applyFiltersBtn = document.getElementById('applyFiltersBtn');
   applyFiltersBtn.addEventListener('click', function() {
@@ -997,6 +1017,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
+  // Clear filters button
+  const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener('click', function() {
+      // Clear all filter inputs
+      document.getElementById('yearFilter').value = '';
+      document.getElementById('typeFilter').value = '';
+      if (document.getElementById('directorFilter')) document.getElementById('directorFilter').value = '';
+      if (document.getElementById('actorFilter')) document.getElementById('actorFilter').value = '';
+      if (document.getElementById('ratingFilter')) document.getElementById('ratingFilter').value = '';
+      
+      // Clear genre checkboxes
+      genreCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      selectedGenres = [];
+      
+      // Reset sort to default
+      if (sortOptions) sortOptions.value = 'popularity';
+      currentSortBy = 'popularity';
+      
+      // If there was a search, redo it with cleared filters
+      if (currentQuery) {
+        resetSearch();
+        performSearch(currentQuery, 1);
+      } else {
+        // Otherwise go back to trending view
+        document.getElementById('resultsSection').classList.add('d-none');
+        document.getElementById('trendingSection').classList.remove('d-none');
+        loadTrendingMovies('popular');
+      }
+    });
+  }
+  
   // Handle tab switching
   const tabButtons = document.querySelectorAll('.tab-btn');
   tabButtons.forEach(button => {
@@ -1006,11 +1060,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Add active class to clicked tab
       this.classList.add('active');
       
-      // In a real app, you would load different content based on the tab
       const tabType = this.getAttribute('data-tab');
       console.log(`Loading ${tabType} movies...`);
       
-      // For demo, we'll just reload the trending movies with a delay
+      // Load the corresponding movie category
       const trendingContainer = document.getElementById('trendingContainer');
       // Add skeleton loading effect
       trendingContainer.innerHTML = '';
@@ -1029,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Load new trending movies after delay
-      setTimeout(() => loadTrendingMovies(tabType), 1000);
+      setTimeout(() => loadTrendingMovies(tabType), 500);
     });
   });
   
@@ -1069,166 +1122,177 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Perform filtered search with no query term
   function performFilteredSearch() {
-  if (isLoading) return;
-  
-  // Show loading state
-  isLoading = true;
-  document.getElementById('loadingIndicator').classList.remove('d-none');
-  document.getElementById('noResultsMessage').classList.add('d-none');
-  document.getElementById('loadMoreBtn').classList.add('d-none');
-  
-  // Get filter values
-  const yearFilter = document.getElementById('yearFilter').value;
-  const typeFilter = document.getElementById('typeFilter').value;
-  const directorFilter = document.getElementById('directorFilter')?.value || '';
-  const actorFilter = document.getElementById('actorFilter')?.value || '';
-  const ratingFilter = document.getElementById('ratingFilter')?.value || '';
-  
-  // Build the API URL with query parameters
-  let apiUrl = `/api/movies/filter?page=${page}`;
-  
-  if (selectedGenres.length > 0) {
-    apiUrl += `&genres=${selectedGenres.join(',')}`;
-  }
-  
-  if (yearFilter) {
-    apiUrl += `&year=${yearFilter}`;
-  }
-  
-  if (typeFilter) {
-    apiUrl += `&type=${typeFilter}`;
-  }
-  
-  if (directorFilter) {
-    apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
-  }
-  
-  if (actorFilter) {
-    apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
-  }
-  
-  if (ratingFilter) {
-    apiUrl += `&minRating=${ratingFilter}`;
-  }
-  
-  fetch(apiUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok: ' + response.status);
-      }
-      return response.json();
-    })
-    .then(data => {
-      document.getElementById('loadingIndicator').classList.add('d-none');
-      isLoading = false;
-      
-      if (!data.success || !data.results || data.results.length === 0) {
+    if (isLoading) return;
+    
+    // Show loading state
+    isLoading = true;
+    document.getElementById('loadingIndicator').classList.remove('d-none');
+    document.getElementById('noResultsMessage').classList.add('d-none');
+    document.getElementById('loadMoreBtn').classList.add('d-none');
+    
+    // Get filter values
+    const yearFilter = document.getElementById('yearFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    const directorFilter = document.getElementById('directorFilter')?.value || '';
+    const actorFilter = document.getElementById('actorFilter')?.value || '';
+    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+    
+    // Build the API URL with query parameters
+    let apiUrl = `/api/movies/filter?page=${page}`;
+    
+    if (selectedGenres.length > 0) {
+      apiUrl += `&genres=${selectedGenres.join(',')}`;
+    }
+    
+    if (yearFilter) {
+      apiUrl += `&year=${yearFilter}`;
+    }
+    
+    if (typeFilter) {
+      apiUrl += `&type=${typeFilter}`;
+    }
+    
+    if (directorFilter) {
+      apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
+    }
+    
+    if (actorFilter) {
+      apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
+    }
+    
+    if (ratingFilter) {
+      apiUrl += `&minRating=${ratingFilter}`;
+    }
+    
+    // Add sorting parameter
+    apiUrl += `&sortBy=${currentSortBy}`;
+    
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        isLoading = false;
+        
+        if (!data.success || !data.results || data.results.length === 0) {
+          document.getElementById('noResultsMessage').classList.remove('d-none');
+          return;
+        }
+        
+        // Render results
+        renderSearchResults(data.results);
+        
+        // Show Load More button if there are more results
+        if (data.totalResults > page * 10) {
+          const loadMoreBtn = document.getElementById('loadMoreBtn');
+          loadMoreBtn.classList.remove('d-none');
+          loadMoreBtn.onclick = () => {
+            page++;
+            performFilteredSearch();
+          };
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching filtered results:', error);
+        document.getElementById('loadingIndicator').classList.add('d-none');
         document.getElementById('noResultsMessage').classList.remove('d-none');
-        return;
-      }
-      
-      // Render results
-      renderSearchResults(data.results);
-      
-      // Show Load More button if there are more results
-      if (data.totalResults > page * 10) {
-        const loadMoreBtn = document.getElementById('loadMoreBtn');
-        loadMoreBtn.classList.remove('d-none');
-        loadMoreBtn.onclick = () => {
-          page++;
-          performFilteredSearch();
-        };
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching filtered results:', error);
-      document.getElementById('loadingIndicator').classList.add('d-none');
-      document.getElementById('noResultsMessage').classList.remove('d-none');
-      isLoading = false;
-    });
-}
+        isLoading = false;
+      });
+  }
   
   // Main search function
-function performSearch(query, currentPage = 1) {
-  if (isLoading) {
-    return; // Prevent multiple simultaneous searches
-  }
-  
-  const yearFilter = document.getElementById('yearFilter').value;
-  const typeFilter = document.getElementById('typeFilter').value;
-  const directorFilter = document.getElementById('directorFilter')?.value || '';
-  const actorFilter = document.getElementById('actorFilter')?.value || '';
-  
-  // Show loading state
-  isLoading = true;
-  document.getElementById('loadingIndicator').classList.remove('d-none');
-  document.getElementById('noResultsMessage').classList.add('d-none');
-  document.getElementById('loadMoreBtn').classList.add('d-none');
-  
-  // Hide trending section and show results section
-  document.getElementById('trendingSection').classList.add('d-none');
-  document.getElementById('resultsSection').classList.remove('d-none');
-  
-  // Build the API URL with query parameters
-  let apiUrl = `/api/movies/search?query=${encodeURIComponent(query)}&page=${currentPage}`;
-  
-  if (yearFilter) {
-    apiUrl += `&year=${yearFilter}`;
-  }
-  
-  if (typeFilter) {
-    apiUrl += `&type=${typeFilter}`;
-  }
-  
-  if (selectedGenres.length > 0) {
-    apiUrl += `&genres=${selectedGenres.join(',')}`;
-  }
-  
-  if (directorFilter) {
-    apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
-  }
-  
-  if (actorFilter) {
-    apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
-  }
-  
-  // Actually fetch from the API instead of using setTimeout
-  fetch(apiUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok: ' + response.status);
-      }
-      return response.json();
-    })
-    .then(data => {
-      document.getElementById('loadingIndicator').classList.add('d-none');
-      isLoading = false;
-      
-      if (!data.success || !data.results || data.results.length === 0) {
+  function performSearch(query, currentPage = 1) {
+    if (isLoading) {
+      return; // Prevent multiple simultaneous searches
+    }
+    
+    const yearFilter = document.getElementById('yearFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    const directorFilter = document.getElementById('directorFilter')?.value || '';
+    const actorFilter = document.getElementById('actorFilter')?.value || '';
+    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+    
+    // Show loading state
+    isLoading = true;
+    document.getElementById('loadingIndicator').classList.remove('d-none');
+    document.getElementById('noResultsMessage').classList.add('d-none');
+    document.getElementById('loadMoreBtn').classList.add('d-none');
+    
+    // Hide trending section and show results section
+    document.getElementById('trendingSection').classList.add('d-none');
+    document.getElementById('resultsSection').classList.remove('d-none');
+    
+    // Build the API URL with query parameters
+    let apiUrl = `/api/movies/search?query=${encodeURIComponent(query)}&page=${currentPage}`;
+    
+    if (yearFilter) {
+      apiUrl += `&year=${yearFilter}`;
+    }
+    
+    if (typeFilter) {
+      apiUrl += `&type=${typeFilter}`;
+    }
+    
+    if (selectedGenres.length > 0) {
+      apiUrl += `&genres=${selectedGenres.join(',')}`;
+    }
+    
+    if (directorFilter) {
+      apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
+    }
+    
+    if (actorFilter) {
+      apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
+    }
+    
+    if (ratingFilter) {
+      apiUrl += `&minRating=${ratingFilter}`;
+    }
+    
+    // Add sorting parameter
+    apiUrl += `&sortBy=${currentSortBy}`;
+    
+    // Actually fetch from the API
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        isLoading = false;
+        
+        if (!data.success || !data.results || data.results.length === 0) {
+          document.getElementById('noResultsMessage').classList.remove('d-none');
+          return;
+        }
+        
+        // Render results
+        renderSearchResults(data.results);
+        
+        // Show Load More button if there are more results
+        if (data.totalResults > currentPage * 10) {
+          const loadMoreBtn = document.getElementById('loadMoreBtn');
+          loadMoreBtn.classList.remove('d-none');
+          loadMoreBtn.onclick = () => {
+            page++;
+            performSearch(query, page);
+          };
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching search results:', error);
+        document.getElementById('loadingIndicator').classList.add('d-none');
         document.getElementById('noResultsMessage').classList.remove('d-none');
-        return;
-      }
-      
-      // Render results
-      renderSearchResults(data.results);
-      
-      // Show Load More button if there are more results
-      if (data.totalResults > currentPage * 10) {
-        const loadMoreBtn = document.getElementById('loadMoreBtn');
-        loadMoreBtn.classList.remove('d-none');
-        loadMoreBtn.onclick = () => {
-          page++;
-          performSearch(query, page);
-        };
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching search results:', error);
-      document.getElementById('loadingIndicator').classList.add('d-none');
-      document.getElementById('noResultsMessage').classList.remove('d-none');
-      isLoading = false;
-    });
-}
+        isLoading = false;
+      });
+  }
   
   // Render search results
   function renderSearchResults(movies) {
@@ -1257,7 +1321,7 @@ function performSearch(query, currentPage = 1) {
             <div class="movie-year-rating">
               <div class="movie-year">${movie.year}</div>
               <div class="movie-rating">
-                <i class="bi bi-star-fill"></i> ${movie.rating}
+                <i class="bi bi-star-fill"></i> ${movie.rating || 'N/A'}
               </div>
             </div>
           </div>
@@ -1269,93 +1333,97 @@ function performSearch(query, currentPage = 1) {
   }
   
   // Load trending movies
-  // Load trending movies
-function loadTrendingMovies(type = 'popular') {
-  // Clear the container and show loading state
-  const trendingContainer = document.getElementById('trendingContainer');
-  trendingContainer.innerHTML = '';
-  
-  // Add skeleton loading effect
-  for (let i = 0; i < 5; i++) {
-    trendingContainer.innerHTML += `
-      <div class="col">
-        <div class="movie-card skeleton">
-          <div class="movie-poster-placeholder"></div>
-          <div class="movie-info-placeholder">
-            <div class="placeholder-title"></div>
-            <div class="placeholder-year"></div>
+  function loadTrendingMovies(type = 'popular') {
+    // Clear the container and show loading state
+    const trendingContainer = document.getElementById('trendingContainer');
+    trendingContainer.innerHTML = '';
+    
+    // Add skeleton loading effect
+    for (let i = 0; i < 5; i++) {
+      trendingContainer.innerHTML += `
+        <div class="col">
+          <div class="movie-card skeleton">
+            <div class="movie-poster-placeholder"></div>
+            <div class="movie-info-placeholder">
+              <div class="placeholder-title"></div>
+              <div class="placeholder-year"></div>
+            </div>
           </div>
         </div>
-      </div>
-    `;
-  }
-  
-  // Fetch trending movies from the API
-  fetch(`/api/movies/trending?type=${type}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      // Clear placeholders
-      trendingContainer.innerHTML = '';
-      
-      if (!data.success || !data.results) {
-        console.error('Invalid trending data format');
-        return;
-      }
-      
-      // Render trending movies with staggered animation
-      data.results.forEach((movie, index) => {
-        const movieElement = document.createElement('div');
-        movieElement.className = 'col animate-fade-in';
-        movieElement.style.animationDelay = `${index * 0.05}s`;
+      `;
+    }
+    
+    // Fetch trending movies from the API
+    fetch(`/api/movies/trending?type=${type}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Clear placeholders
+        trendingContainer.innerHTML = '';
         
-        const posterUrl = movie.poster && movie.poster !== 'N/A' 
-          ? movie.poster 
-          : `/api/placeholder/300/450`;
+        if (!data.success || !data.results) {
+          console.error('Invalid trending data format');
+          return;
+        }
         
-        movieElement.innerHTML = `
-          <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
-            <div class="poster-container">
-              <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
-              <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title}', '${posterUrl}')">
-                <i class="bi bi-plus-lg"></i>
-              </button>
-            </div>
-            <div class="movie-info">
-              <div class="movie-title">${movie.title}</div>
-              <div class="movie-year-rating">
-                <div class="movie-year">${movie.year}</div>
-                <div class="movie-rating">
-                  <i class="bi bi-star-fill"></i> ${movie.rating}
+        // Render trending movies with staggered animation
+        data.results.forEach((movie, index) => {
+          const movieElement = document.createElement('div');
+          movieElement.className = 'col animate-fade-in';
+          movieElement.style.animationDelay = `${index * 0.05}s`;
+          
+          const posterUrl = movie.poster && movie.poster !== 'N/A' 
+            ? movie.poster 
+            : `/api/placeholder/300/450`;
+          
+          movieElement.innerHTML = `
+            <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
+              <div class="poster-container">
+                <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
+                <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title}', '${posterUrl}')">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+              <div class="movie-info">
+                <div class="movie-title">${movie.title}</div>
+                <div class="movie-year-rating">
+                  <div class="movie-year">${movie.year}</div>
+                  <div class="movie-rating">
+                    <i class="bi bi-star-fill"></i> ${movie.rating || 'N/A'}
+                  </div>
                 </div>
               </div>
             </div>
+          `;
+          
+          trendingContainer.appendChild(movieElement);
+        });
+      })
+      .catch(error => {
+        console.error('Error loading trending movies:', error);
+        trendingContainer.innerHTML = `
+          <div class="col-12 text-center text-light">
+            <p>Unable to load trending movies. Please try again later.</p>
           </div>
         `;
-        
-        trendingContainer.appendChild(movieElement);
       });
-    })
-    .catch(error => {
-      console.error('Error loading trending movies:', error);
-      trendingContainer.innerHTML = `
-        <div class="col-12 text-center text-light">
-          <p>Unable to load trending movies. Please try again later.</p>
-        </div>
-      `;
-    });
-}
-    
+  }
+  
   // Implement scroll-based loading for infinite scroll effect
   let debounceTimer;
   window.onscroll = () => {
     clearTimeout(debounceTimer); // Reset debounce timer
     debounceTimer = setTimeout(() => {
-      if (!currentQuery || isLoading) return; // Skip if no active search or already loading
+      // Skip if no active search or already loading
+      if (isLoading) return;
+      
+      // Check if we're in search results view
+      const resultsSection = document.getElementById('resultsSection');
+      if (resultsSection.classList.contains('d-none')) return;
       
       const scrollPosition = window.innerHeight + window.scrollY;
       const pageHeight = Math.max(
@@ -1385,7 +1453,7 @@ function loadTrendingMovies(type = 'popular') {
     watchlistBtn.style.backgroundColor = 'var(--primary-purple)';
     watchlistBtn.style.color = 'white';
     
-    // Simulate API call
+    // API call to add to watchlist 
     fetch('/api/movies/watchlist', {
       method: 'POST',
       headers: {
