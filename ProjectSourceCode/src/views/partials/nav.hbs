@@ -4,7 +4,7 @@
         <div class="container">
             <!-- Logo on the left side -->
             <a class="navbar-brand" href="/">
-                <img src="../../resources/img/MovieMate.png" alt="MovieMate Logo" class="navbar-logo">
+                <img src="../../resources/img/MovieMateCropped.png" alt="MovieMate Logo" class="navbar-logo">
             </a>
 
             <!-- Add navbar toggler for mobile -->
@@ -35,16 +35,16 @@
                 <!-- Profile and Logout section aligned -->
                 <ul class="navbar-nav ms-auto d-flex align-items-center">
                     <li class="nav-item">
+                        <!-- Logout button -->
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                    <li class="nav-item">
                         {{#if user}}
                         <!-- Profile icon -->
                         <a class="nav-link" href="/profile">
                             <img src="../../resources/img/{{user.profile_icon}}" alt="{{user.profile_icon}}"
                                 class="profile-img">
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <!-- Logout button -->
-                        <a class="nav-link" href="/logout">Logout</a>
                     </li>
                     {{/if}}
                 </ul>
