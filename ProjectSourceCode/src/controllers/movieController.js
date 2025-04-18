@@ -38,35 +38,137 @@ exports.getNewMovies = async (req, res) => {
 // Update searchMovies to format data for the new frontend
 exports.searchMovies = async (req, res) => {
   try {
-    const { query, year, type, page = 1 } = req.query;
+    const { 
+      query, 
+      year, 
+      type, 
+      genres, 
+      director, 
+      actor, 
+      minRating,
+      sort,
+      newestFirst,
+      page = 1 
+    } = req.query;
     
     if (!query) {
       return res.status(400).json({ success: false, error: 'Search query is required' });
     }
     
+    // Basic filters that OMDB API supports directly
     const filters = { y: year, type: type };
-    const apiResults = await omdbApi.searchMovies(query, filters, page);
     
-    console.log('OMDB API response:', apiResults); // Debug log
+    // Get search results from OMDB
+    const apiResults = await omdbApi.searchMovies(query, filters, page);
     
     if (!apiResults.success) {
       return res.status(404).json(apiResults);
     }
     
+    // Apply additional filters that OMDB doesn't support directly
+    let results = apiResults.results;
+    
+    // We'll need to fetch details for each movie to apply some filters
+    if (director || actor || minRating || genres) {
+      // This can be performance-intensive for large result sets
+      // Consider implementing pagination or limiting results
+      const detailPromises = results.map(movie => 
+        omdbApi.getMovieDetails(movie.imdbID)
+      );
+      
+      const detailResults = await Promise.all(detailPromises);
+      
+      // Filter by director
+      if (director) {
+        results = detailResults
+          .filter(result => result.success && 
+                  result.movie.Director && 
+                  result.movie.Director.toLowerCase().includes(director.toLowerCase()))
+          .map(result => result.movie);
+      }
+      
+      // Filter by actor
+      if (actor) {
+        results = detailResults
+          .filter(result => result.success && 
+                  result.movie.Actors && 
+                  result.movie.Actors.toLowerCase().includes(actor.toLowerCase()))
+          .map(result => result.movie);
+      }
+      
+      // Filter by minimum rating
+      if (minRating) {
+        const minRatingValue = parseFloat(minRating);
+        results = detailResults
+          .filter(result => result.success && 
+                  result.movie.imdbRating && 
+                  parseFloat(result.movie.imdbRating) >= minRatingValue)
+          .map(result => result.movie);
+      }
+      
+      // Filter by genres
+      if (genres) {
+        const genreArray = genres.split(',');
+        results = detailResults
+          .filter(result => {
+            if (!result.success || !result.movie.Genre) return false;
+            
+            const movieGenres = result.movie.Genre.split(', ');
+            return genreArray.some(genre => 
+              movieGenres.some(movieGenre => 
+                movieGenre.toLowerCase() === genre.toLowerCase()
+              )
+            );
+          })
+          .map(result => result.movie);
+      }
+    }
+    
+    // Sorting
+    if (sort) {
+      switch(sort) {
+        case 'year':
+          results.sort((a, b) => {
+            const yearA = parseInt(a.Year) || 0;
+            const yearB = parseInt(b.Year) || 0;
+            return newestFirst ? yearB - yearA : yearA - yearB;
+          });
+          break;
+        case 'title':
+          results.sort((a, b) => {
+            return a.Title.localeCompare(b.Title);
+          });
+          break;
+        case 'rating':
+          results.sort((a, b) => {
+            const ratingA = parseFloat(a.imdbRating) || 0;
+            const ratingB = parseFloat(b.imdbRating) || 0;
+            return newestFirst ? ratingB - ratingA : ratingA - ratingB;
+          });
+          break;
+        // Default is relevance, which is the API's default order
+      }
+    } else if (newestFirst) {
+      // If newestFirst is true but no sort option is specified
+      results.sort((a, b) => {
+        const yearA = parseInt(a.Year) || 0;
+        const yearB = parseInt(b.Year) || 0;
+        return yearB - yearA;
+      });
+    }
+    
     // Format the results to match frontend expectations
     const formattedResults = {
       success: true,
-      results: apiResults.results.map(movie => ({
+      results: results.map(movie => ({
         id: movie.imdbID,
         title: movie.Title,
         year: movie.Year,
         poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
         rating: movie.imdbRating || 'N/A'
       })),
-      totalResults: parseInt(apiResults.totalResults) || apiResults.results.length
+      totalResults: results.length
     };
-    
-    console.log('Formatted results:', formattedResults); // Debug log
     
     return res.json(formattedResults);
   } catch (error) {
@@ -319,10 +421,20 @@ exports.getMovieReviews = async (req, res) => {
 // filter movies (when no specific search query is provided)
 exports.filterMovies = async (req, res) => {
   try {
-    const { genres, year, type, director, actor, minRating, page = 1 } = req.query;
+    const { 
+      genres, 
+      year, 
+      type, 
+      director, 
+      actor, 
+      minRating, 
+      sort,
+      newestFirst,
+      page = 1 
+    } = req.query;
     
     // If no filters are provided, return trending movies
-    if (!genres && !year && !type && !director && !actor && !minRating) {
+    if (!genres && !year && !type && !director && !actor && !minRating && !sort && !newestFirst) {
       return exports.getTrendingMovies(req, res);
     }
     
@@ -343,7 +455,7 @@ exports.filterMovies = async (req, res) => {
       searchQuery = 'movie';
     }
     
-    // Add other filters
+    // Add other basic filters that OMDB supports directly
     if (year) {
       filters.y = year;
     }
@@ -352,38 +464,133 @@ exports.filterMovies = async (req, res) => {
       filters.type = type;
     }
     
-    // Use the existing search function
+    // Use the existing search function for the initial results
     const results = await omdbApi.searchMovies(searchQuery, filters, page);
     
-    // If a minimum rating filter is applied, we need to fetch details for each movie
-    if (minRating && results.success) {
-      const minRatingValue = parseFloat(minRating);
+    if (!results.success) {
+      return res.json(results);
+    }
+    
+    // Get the initial movie list
+    let filteredMovies = results.results;
+    
+    // If we need advanced filtering, we'll need to fetch details for each movie
+    if ((minRating && results.success) || 
+        (genres && genres.split(',').length > 1) || 
+        (director && searchQuery !== director) || 
+        (actor && searchQuery !== actor)) {
       
-      // Fetch details for each movie to get ratings
-      const detailPromises = results.results.map(movie => 
+      // Fetch details for each movie to filter by advanced criteria
+      const detailPromises = filteredMovies.map(movie => 
         omdbApi.getMovieDetails(movie.imdbID)
       );
       
       const detailResults = await Promise.all(detailPromises);
-      
-      // Filter movies by rating
-      const filteredMovies = detailResults
-        .filter(result => result.success && result.movie.imdbRating && 
-                parseFloat(result.movie.imdbRating) >= minRatingValue)
+      filteredMovies = detailResults
+        .filter(result => result.success)
         .map(result => result.movie);
       
-      return res.json({
-        success: true,
-        results: filteredMovies,
-        totalResults: filteredMovies.length,
-        page: parseInt(page)
+      // Apply additional filters
+      
+      // Filter by minimum rating
+      if (minRating) {
+        const minRatingValue = parseFloat(minRating);
+        filteredMovies = filteredMovies.filter(movie => 
+          movie.imdbRating && parseFloat(movie.imdbRating) >= minRatingValue
+        );
+      }
+      
+      // Filter by multiple genres (if more than one provided)
+      if (genres && genres.split(',').length > 1) {
+        const genreArray = genres.split(',');
+        filteredMovies = filteredMovies.filter(movie => {
+          if (!movie.Genre) return false;
+          
+          const movieGenres = movie.Genre.split(', ');
+          return genreArray.some(genre => 
+            movieGenres.some(movieGenre => 
+              movieGenre.toLowerCase() === genre.toLowerCase()
+            )
+          );
+        });
+      }
+      
+      // Filter by director (if not already used as search term)
+      if (director && searchQuery !== director) {
+        filteredMovies = filteredMovies.filter(movie => 
+          movie.Director && movie.Director.toLowerCase().includes(director.toLowerCase())
+        );
+      }
+      
+      // Filter by actor (if not already used as search term)
+      if (actor && searchQuery !== actor) {
+        filteredMovies = filteredMovies.filter(movie => 
+          movie.Actors && movie.Actors.toLowerCase().includes(actor.toLowerCase())
+        );
+      }
+    }
+    
+    // Sorting
+    if (sort) {
+      switch(sort) {
+        case 'year':
+          filteredMovies.sort((a, b) => {
+            const yearA = parseInt(a.Year) || 0;
+            const yearB = parseInt(b.Year) || 0;
+            return newestFirst ? yearB - yearA : yearA - yearB;
+          });
+          break;
+        case 'title':
+          filteredMovies.sort((a, b) => {
+            return a.Title.localeCompare(b.Title);
+          });
+          break;
+        case 'rating':
+          filteredMovies.sort((a, b) => {
+            const ratingA = parseFloat(a.imdbRating) || 0;
+            const ratingB = parseFloat(b.imdbRating) || 0;
+            return newestFirst ? ratingB - ratingA : ratingA - ratingB;
+          });
+          break;
+        // Default is relevance, which is the API's default order
+      }
+    } else if (newestFirst === 'true' || newestFirst === true) {
+      // If newestFirst is true but no sort option is specified
+      filteredMovies.sort((a, b) => {
+        const yearA = parseInt(a.Year) || 0;
+        const yearB = parseInt(b.Year) || 0;
+        return yearB - yearA;
       });
     }
     
-    return res.json(results);
+    // Format the movies for the frontend
+    const formattedMovies = filteredMovies.map(movie => ({
+      id: movie.imdbID,
+      title: movie.Title,
+      year: movie.Year,
+      poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
+      rating: movie.imdbRating || 'N/A',
+      type: movie.Type || type,
+      genre: movie.Genre || genres
+    }));
+    
+    // Implement pagination
+    const resultsPerPage = 10;
+    const startIndex = (parseInt(page) - 1) * resultsPerPage;
+    const paginatedMovies = formattedMovies.slice(startIndex, startIndex + resultsPerPage);
+    
+    return res.json({
+      success: true,
+      results: paginatedMovies,
+      totalResults: formattedMovies.length,
+      page: parseInt(page)
+    });
   } catch (error) {
     console.error('Error filtering movies:', error);
-    return res.status(500).json({ success: false, error: 'Internal server error' });
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error'
+    });
   }
 };
 

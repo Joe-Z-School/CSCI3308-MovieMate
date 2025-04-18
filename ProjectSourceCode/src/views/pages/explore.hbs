@@ -98,6 +98,10 @@
         <button id="applyFiltersBtn" class="btn btn-primary apply-filters-btn">
           <i class="bi bi-funnel-fill me-1"></i> Apply Filters
         </button>
+        
+        <button id="clearFiltersBtn" class="btn btn-outline-secondary mt-3 w-100">
+          <i class="bi bi-x-circle me-1"></i> Clear Filters
+        </button>
       </div>
     </div>
     
@@ -286,9 +290,6 @@
                   <div class="movie-title">{{title}}</div>
                   <div class="movie-year-rating">
                     <div class="movie-year">{{genre}}</div>
-                    <div class="movie-rating">
-                      <i class="bi bi-star-fill"></i> {{rating}}
-                    </div>
                   </div>
                   <p class="movie-description">{{description}}</p>
                   <p class="movie-watch-on">Watch on: {{whereToWatch}}</p>
@@ -693,7 +694,7 @@
   
   .movie-year-rating {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     margin-top: 5px;
     margin-bottom: 10px;
@@ -702,28 +703,6 @@
   .movie-year {
     color: var(--text-muted);
     font-size: 0.8rem;
-  }
-  
-  .movie-rating {
-    background-color: var(--primary-purple);
-    color: white;
-    font-size: 0.75rem;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    transition: transform 0.2s ease;
-  }
-  
-  .movie-card:hover .movie-rating {
-    transform: scale(1.1);
-  }
-  
-  .movie-rating i {
-    color: #ffc107;
-    margin-right: 3px;
-    font-size: 0.85rem;
   }
   
   .movie-description {
@@ -940,7 +919,6 @@
   .footer-spacer {
     height: var(--footer-height);
   }
-}
 </style>
 
 <script>
@@ -950,7 +928,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let isLoading = false;
   let currentQuery = '';
   let selectedGenres = [];
-  let currentSortBy = 'popularity'; // Default sort
+  let currentSortBy = 'relevance'; // Default sort
   
   // Toggle advanced search options
   const advancedSearchToggle = document.getElementById('advancedSearchToggle');
@@ -989,15 +967,16 @@ document.addEventListener('DOMContentLoaded', function() {
   if (sortOptions) {
     sortOptions.addEventListener('change', function() {
       currentSortBy = this.value;
+      if (document.getElementById('resultsSection').classList.contains('d-none')) {
+        // If we're currently in trending section, let's not refresh yet
+        return;
+      }
       resetSearch();
       
       // If there's a search query, use that, otherwise show filtered trending
       if (currentQuery) {
         performSearch(currentQuery, 1);
       } else {
-        // Hide trending and show filtered results
-        document.getElementById('trendingSection').classList.add('d-none');
-        document.getElementById('resultsSection').classList.remove('d-none');
         performFilteredSearch();
       }
     });
@@ -1008,14 +987,34 @@ document.addEventListener('DOMContentLoaded', function() {
   applyFiltersBtn.addEventListener('click', function() {
     resetSearch();
     
+    // Collect all filter values
+    const yearFilter = document.getElementById('yearFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    const directorFilter = document.getElementById('directorFilter')?.value || '';
+    const actorFilter = document.getElementById('actorFilter')?.value || '';
+    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+    const newestFirst = document.getElementById('newestFilter').checked;
+    
+    // Create a filters object
+    const filters = {
+      year: yearFilter,
+      type: typeFilter,
+      genres: selectedGenres,
+      director: directorFilter,
+      actor: actorFilter,
+      minRating: ratingFilter,
+      sort: currentSortBy,
+      newestFirst: newestFirst
+    };
+    
     // If there's a search query, use that, otherwise show filtered trending
     if (currentQuery) {
-      performSearch(currentQuery, 1);
+      performSearch(currentQuery, 1, filters);
     } else {
       // Hide trending and show filtered results
       document.getElementById('trendingSection').classList.add('d-none');
       document.getElementById('resultsSection').classList.remove('d-none');
-      performFilteredSearch();
+      performFilteredSearch(filters);
     }
   });
   
@@ -1029,6 +1028,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (document.getElementById('directorFilter')) document.getElementById('directorFilter').value = '';
       if (document.getElementById('actorFilter')) document.getElementById('actorFilter').value = '';
       if (document.getElementById('ratingFilter')) document.getElementById('ratingFilter').value = '';
+      document.getElementById('newestFilter').checked = true;
       
       // Clear genre checkboxes
       genreCheckboxes.forEach(checkbox => {
@@ -1037,8 +1037,8 @@ document.addEventListener('DOMContentLoaded', function() {
       selectedGenres = [];
       
       // Reset sort to default
-      if (sortOptions) sortOptions.value = 'popularity';
-      currentSortBy = 'popularity';
+      if (sortOptions) sortOptions.value = 'relevance';
+      currentSortBy = 'relevance';
       
       // If there was a search, redo it with cleared filters
       if (currentQuery) {
@@ -1123,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Perform filtered search with no query term
-  function performFilteredSearch() {
+  function performFilteredSearch(filters = {}) {
     if (isLoading) return;
     
     // Show loading state
@@ -1132,43 +1132,65 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('noResultsMessage').classList.add('d-none');
     document.getElementById('loadMoreBtn').classList.add('d-none');
     
-    // Get filter values
-    const yearFilter = document.getElementById('yearFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
-    const directorFilter = document.getElementById('directorFilter')?.value || '';
-    const actorFilter = document.getElementById('actorFilter')?.value || '';
-    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
-    
     // Build the API URL with query parameters
     let apiUrl = `/api/movies/filter?page=${page}`;
     
-    if (selectedGenres.length > 0) {
+    // Add filter parameters
+    if (filters.genres && filters.genres.length > 0) {
+      apiUrl += `&genres=${filters.genres.join(',')}`;
+    } else if (selectedGenres.length > 0) {
       apiUrl += `&genres=${selectedGenres.join(',')}`;
     }
     
-    if (yearFilter) {
-      apiUrl += `&year=${yearFilter}`;
+    if (filters.year) {
+      apiUrl += `&year=${filters.year}`;
+    } else {
+      const yearFilter = document.getElementById('yearFilter').value;
+      if (yearFilter) apiUrl += `&year=${yearFilter}`;
     }
     
-    if (typeFilter) {
-      apiUrl += `&type=${typeFilter}`;
+    if (filters.type) {
+      apiUrl += `&type=${filters.type}`;
+    } else {
+      const typeFilter = document.getElementById('typeFilter').value;
+      if (typeFilter) apiUrl += `&type=${typeFilter}`;
     }
     
-    if (directorFilter) {
-      apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
+    if (filters.director) {
+      apiUrl += `&director=${encodeURIComponent(filters.director)}`;
+    } else {
+      const directorFilter = document.getElementById('directorFilter')?.value;
+      if (directorFilter) apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
     }
     
-    if (actorFilter) {
-      apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
+    if (filters.actor) {
+      apiUrl += `&actor=${encodeURIComponent(filters.actor)}`;
+    } else {
+      const actorFilter = document.getElementById('actorFilter')?.value;
+      if (actorFilter) apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
     }
     
-    if (ratingFilter) {
-      apiUrl += `&minRating=${ratingFilter}`;
+    if (filters.minRating) {
+      apiUrl += `&minRating=${filters.minRating}`;
+    } else {
+      const ratingFilter = document.getElementById('ratingFilter')?.value;
+      if (ratingFilter) apiUrl += `&minRating=${ratingFilter}`;
     }
     
-    // Add sorting parameter
-    apiUrl += `&sortBy=${currentSortBy}`;
+    if (filters.sort) {
+      apiUrl += `&sort=${filters.sort}`;
+    } else if (currentSortBy && currentSortBy !== 'relevance') {
+      apiUrl += `&sort=${currentSortBy}`;
+    }
     
+    const newestFirst = document.getElementById('newestFilter').checked;
+    if (filters.newestFirst !== undefined) {
+      apiUrl += `&newestFirst=${filters.newestFirst}`;
+    } else if (newestFirst) {
+      apiUrl += `&newestFirst=true`;
+    }
+    
+    // Send the request
     fetch(apiUrl)
       .then(response => {
         if (!response.ok) {
@@ -1194,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', function() {
           loadMoreBtn.classList.remove('d-none');
           loadMoreBtn.onclick = () => {
             page++;
-            performFilteredSearch();
+            performFilteredSearch(filters);
           };
         }
       })
@@ -1207,16 +1229,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Main search function
-  function performSearch(query, currentPage = 1) {
-    if (isLoading) {
-      return; // Prevent multiple simultaneous searches
-    }
-    
-    const yearFilter = document.getElementById('yearFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
-    const directorFilter = document.getElementById('directorFilter')?.value || '';
-    const actorFilter = document.getElementById('actorFilter')?.value || '';
-    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+  function performSearch(query, currentPage = 1, filters = {}) {
+    if (isLoading) return;
     
     // Show loading state
     isLoading = true;
@@ -1231,34 +1245,62 @@ document.addEventListener('DOMContentLoaded', function() {
     // Build the API URL with query parameters
     let apiUrl = `/api/movies/search?query=${encodeURIComponent(query)}&page=${currentPage}`;
     
-    if (yearFilter) {
-      apiUrl += `&year=${yearFilter}`;
+    // Add filter parameters
+    if (filters.year) {
+      apiUrl += `&year=${filters.year}`;
+    } else {
+      const yearFilter = document.getElementById('yearFilter').value;
+      if (yearFilter) apiUrl += `&year=${yearFilter}`;
     }
     
-    if (typeFilter) {
-      apiUrl += `&type=${typeFilter}`;
+    if (filters.type) {
+      apiUrl += `&type=${filters.type}`;
+    } else {
+      const typeFilter = document.getElementById('typeFilter').value;
+      if (typeFilter) apiUrl += `&type=${typeFilter}`;
     }
     
-    if (selectedGenres.length > 0) {
+    if (filters.genres && filters.genres.length > 0) {
+      apiUrl += `&genres=${filters.genres.join(',')}`;
+    } else if (selectedGenres.length > 0) {
       apiUrl += `&genres=${selectedGenres.join(',')}`;
     }
     
-    if (directorFilter) {
-      apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
+    if (filters.director) {
+      apiUrl += `&director=${encodeURIComponent(filters.director)}`;
+    } else {
+      const directorFilter = document.getElementById('directorFilter')?.value;
+      if (directorFilter) apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
     }
     
-    if (actorFilter) {
-      apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
+    if (filters.actor) {
+      apiUrl += `&actor=${encodeURIComponent(filters.actor)}`;
+    } else {
+      const actorFilter = document.getElementById('actorFilter')?.value;
+      if (actorFilter) apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
     }
     
-    if (ratingFilter) {
-      apiUrl += `&minRating=${ratingFilter}`;
+    if (filters.minRating) {
+      apiUrl += `&minRating=${filters.minRating}`;
+    } else {
+      const ratingFilter = document.getElementById('ratingFilter')?.value;
+      if (ratingFilter) apiUrl += `&minRating=${ratingFilter}`;
     }
     
-    // Add sorting parameter
-    apiUrl += `&sortBy=${currentSortBy}`;
+    if (filters.sort) {
+      apiUrl += `&sort=${filters.sort}`;
+    } else if (currentSortBy && currentSortBy !== 'relevance') {
+      apiUrl += `&sort=${currentSortBy}`;
+    }
     
-    // Actually fetch from the API
+    const newestFirst = document.getElementById('newestFilter').checked;
+    if (filters.newestFirst !== undefined) {
+      apiUrl += `&newestFirst=${filters.newestFirst}`;
+    } else if (newestFirst) {
+      apiUrl += `&newestFirst=true`;
+    }
+  
+    // Send the request
     fetch(apiUrl)
       .then(response => {
         if (!response.ok) {
@@ -1284,7 +1326,7 @@ document.addEventListener('DOMContentLoaded', function() {
           loadMoreBtn.classList.remove('d-none');
           loadMoreBtn.onclick = () => {
             page++;
-            performSearch(query, page);
+            performSearch(query, page, filters);
           };
         }
       })
@@ -1322,9 +1364,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="movie-title">${movie.title}</div>
             <div class="movie-year-rating">
               <div class="movie-year">${movie.year}</div>
-              <div class="movie-rating">
-                <i class="bi bi-star-fill"></i> ${movie.rating || 'N/A'}
-              </div>
             </div>
           </div>
         </div>
@@ -1394,9 +1433,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="movie-title">${movie.title}</div>
                 <div class="movie-year-rating">
                   <div class="movie-year">${movie.year}</div>
-                  <div class="movie-rating">
-                    <i class="bi bi-star-fill"></i> ${movie.rating || 'N/A'}
-                  </div>
                 </div>
               </div>
             </div>
@@ -1420,8 +1456,7 @@ document.addEventListener('DOMContentLoaded', function() {
   window.onscroll = () => {
     clearTimeout(debounceTimer); // Reset debounce timer
     debounceTimer = setTimeout(() => {
-      // Skip if no active search or already loading
-      if (isLoading) return;
+      if (isLoading) return; // Skip if already loading
       
       // Check if we're in search results view
       const resultsSection = document.getElementById('resultsSection');
