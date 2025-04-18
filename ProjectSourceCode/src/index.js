@@ -633,7 +633,7 @@ app.get('/notifications', async (req, res) => {
   }
 });
 
-/*
+
 // *****************************************************
 // <!-- Logout -->
 // *****************************************************
@@ -705,7 +705,7 @@ app.post('/follow-request/decline/:id', async (req, res) => {
     res.status(500).send('Something went wrong.');
   }
 });
-*/
+
 //dismissing notifications:
 app.post('/notifications/dismiss/:id', async (req, res) => {
   const notifId = parseInt(req.params.id);
@@ -746,7 +746,7 @@ app.post('/messages-notifications/dismiss/:id', async (req, res) => {
 // *****************************************************
 // POST /api/posts/:id/like
 //allows the user to like and unlike a post
-/*
+
 app.post("/api/posts/:id/like", async (req, res) => {
   const userId = req.session.user?.id;
   const postId = parseInt(req.params.id);
@@ -873,7 +873,7 @@ app.get("/api/posts/:id/comments", async (req, res) => {
     res.status(500).json({ error: "Failed to load comments." });
   }
 });
-*/
+
 
 // *****************************************************
 // <!-- Data base info to add for testing-->
@@ -1335,15 +1335,17 @@ app.get('/watchlist', async (req, res) => {
     res.status(500).send('Error loading watchlist');
   }
 });
-
+*/
 
 // *****************************************************
 //  <!-- Profile Page --!>
 // *****************************************************
+
 app.get('/profile', async (req, res) => {
   const profileUserID = req.query.id ? Number(req.query.id) : req.session.user.id;
   const loggedInUserID = req.session.user.id ? req.session.user.id : null;
   const isOwnProfile = loggedInUserID === profileUserID;
+  const showEdit = req.query.edit === 'true';
   const counts = await db.one(`
     SELECT 
       (SELECT COUNT(*) FROM friends WHERE followed_user_id = $1) AS followers_count,
@@ -1361,7 +1363,7 @@ app.get('/profile', async (req, res) => {
     });
   }
   else {
-    const profileUser = await db.one(
+    const profileUser = await db.oneOrNone(
       `SELECT u.id,
         u.username,
         u.profile_icon,
@@ -1384,6 +1386,9 @@ app.get('/profile', async (req, res) => {
          WHERE u.id = $2`,
       [loggedInUserID, profileUserID]
     );
+    if (!profileUser) {
+      return res.status(500).send('Something went wrong');
+    }
     console.log(profileUser)
     res.render('pages/profile', {
       user: req.session.user,
@@ -1399,10 +1404,8 @@ app.get('/profile', async (req, res) => {
 
 app.get('/profile/edit', (req, res) => {
   const user = req.session.user;
-  res.render('pages/profile-edit', {
-    user: user
-  });
-})
+  res.redirect('/profile?edit=true');
+});
 
 app.post('/profile/edit', async (req, res) => {
   const userId = req.session.user.id;
@@ -1410,6 +1413,12 @@ app.post('/profile/edit', async (req, res) => {
   console.log(profile_icon)
 
   try {
+    if (!first_name || !last_name || !email) {
+      return res.render('pages/profile-edit', {
+        user: req.session.user,
+        error: 'Failed to update profile. Please try again.'
+      });
+    }
     // Update database
     await db.none(
       `UPDATE users 
@@ -1430,25 +1439,19 @@ app.post('/profile/edit', async (req, res) => {
 
     // Update session with the new object
     req.session.user = updatedUser;
-
     req.session.save(err => {
       if (err) {
         console.error('Error saving session:', err);
-        return res.render('pages/profile-edit', {
-          user: req.session.user,
-          error: 'Failed to update profile. Please try again.'
-        });
+        return res.redirect('/profile?edit=true&error=1');
       }
       res.redirect('/profile');
     });
   } catch (err) {
     console.error('Error updating profile:', err);
-    res.render('pages/profile-edit', {
-      user: req.session.user,
-      error: 'Failed to update profile. Please try again.'
-    });
+    res.redirect('/profile?edit=true&error=1');
   }
 });
+/*
 //Profile Watchlist Route
 app.get('/profile/watchlist', async (req, res) => {
   const userId = req.query.userId || req.session.user.id;
@@ -1488,7 +1491,7 @@ app.post('/remove-from-watchlist', async (req, res) => {
     res.status(500).send('Error removing item from watchlist');
   }
 });
-
+*/
 // Profile Followers/Following Routes
 app.get('/profile/followers', async (req, res) => {
   const userId = req.query.userId || req.session.user.id;
@@ -1535,7 +1538,7 @@ app.get('/profile/following', async (req, res) => {
 // *****************************************************
 // <!-- Messages Page -->
 // *****************************************************
-
+/*
 const { formatDistanceToNow } = require('date-fns');
 
 app.get('/messaging', async (req, res) => {
