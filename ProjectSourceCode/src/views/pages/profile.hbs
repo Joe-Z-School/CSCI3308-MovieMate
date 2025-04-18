@@ -4,7 +4,8 @@
         justify-content: center;
         align-items: center;
         flex-direction: column;
-
+        display: block !important;
+        justify-content: unset !important;
     }
 
     /* Purple buttons */
@@ -19,12 +20,14 @@
         color: white !important;
     }
 
-    /* Styling for post content */
     .post-content {
         background-color: #222;
         color: #fff;
         padding: 10px;
         border-radius: 8px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
     }
 
     .post-actions {
@@ -34,6 +37,16 @@
     .post-action {
         margin-right: 10px;
         cursor: pointer;
+    }
+
+   .post-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* Exactly 2 columns */
+        gap: 20px;
+        margin-top: 20px;
+        width: 100%;
+        max-width: 1000px;
+        padding: 20px;
     }
 
     /* Style for "Add Post" button */
@@ -124,6 +137,7 @@
 </style>
 
 {{> nav}}
+
 <div class="profile-container">
     <div class="profile-header">
         <img src="../../resources/img/{{profile.profile_icon}}" alt="Profile Picture" class="profile-pic">
@@ -182,31 +196,27 @@
     <button type="button" class="btn btn-purple mt-4" data-bs-toggle="modal" data-bs-target="#postModal">
         Add Post
     </button>
-
     {{/if}}
 
+    <h3 style="margin-top: 30px;">Recent Posts</h3>
     <div class="post-container">
-        <h3>Recent Posts</h3>
-        {{#each posts}}
-        <div class="post">
-            <div class="post-header">
-                <div class="post-author">{{../username}}</div>
-                <div class="post-date">{{this.date}}</div>
-            </div>
-            <div class="post-content">
-                <p>{{this.content}}</p>
-            </div>
-            <div class="post-actions">
-                <div class="post-action">❤️ {{this.likes}}</div>
-                <div class="post-action">💬 {{this.comments}}</div>
-            </div>
+       {{#each posts}}
+       <div class="post-content">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#postDetailsModal" onclick="showPostDetails('{{id}}')">
+                <img src="{{cover}}" alt="{{title}} cover" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 10px;">
+            </a>
         </div>
-        {{/each}}
-
-        {{#unless posts.length}}
-        <p>No posts yet.</p>
-        {{/unless}}
+    {{/each}}
     </div>
+
+    {{> postDetailsModal}}  <!-- Include post details modal -->
+
+</div>
+
+{{#unless posts.length}}
+<p>No posts yet.</p>
+{{/unless}}
+</div>
 </div>
 {{#if isOwnProfile}}
 {{> edit-profile-modal}}
@@ -364,4 +374,26 @@
             }
         });
     });
+
+
+// js for post details modal:
+
+
+// Show post details in the modal
+function showPostDetails(postId) {
+    // Find the post details for the given postId (you can get this from your post data)
+    const post = posts.find(post => post.id === postId);
+
+    // Populate modal with post data
+    if (post) {
+        document.getElementById('postDetailCover').src = "../../resources/img/" + post.cover;
+        document.getElementById('postDetailTitle').innerText = post.title;
+        document.getElementById('postDetailReview').innerText = 'Review: ' + post.review;
+        document.getElementById('postDetailDescription').innerText = 'Description: ' + post.description;
+        document.getElementById('postDetailWhereToWatch').innerText = 'Where to Watch: ' + post.whereToWatch;
+    }
+}
+
+
+
 </script>
