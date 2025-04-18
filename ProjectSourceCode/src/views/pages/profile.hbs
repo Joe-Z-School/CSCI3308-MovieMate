@@ -8,64 +8,6 @@
         justify-content: unset !important;
     }
 
-    /* Dark theme modal */
-    /* Make the close button "X" white */
-    .modal-content .btn-close {
-        color: white !important;
-        /* Set the text (icon) color to white */
-        background-color: transparent !important;
-        /* Ensure the background is transparent */
-        border: none !important;
-        /* Remove border */
-    }
-
-    /* If the icon itself isn't white yet, target the SVG directly */
-    .modal-content .btn-close svg {
-        fill: white !important;
-        /* Set the SVG "X" icon color to white */
-    }
-
-    /* Optional: Close button hover effect */
-    .modal-content .btn-close:hover {
-        color: #ccc !important;
-        /* Slightly gray when hovered */
-    }
-
-    .modal-content {
-        background-color: #222 !important;
-        /* Dark background */
-        color: #fff;
-        /* Light text */
-    }
-
-    .modal-header {
-        border-bottom: 1px solid #111;
-        /* Dark border */
-    }
-
-    .modal-body {
-        background-color: #222;
-        /* Darker background for the body */
-    }
-
-    .modal-title {
-        color: #fff;
-        /* White text for modal title */
-    }
-
-    .modal-header .btn-close {
-        color: #fff;
-        /* White close button */
-        opacity: 1;
-        /* Ensure it's visible */
-    }
-
-    /* Dark theme for the modal close button hover */
-    .modal-header .btn-close:hover {
-        background-color: #555;
-        /* Slightly darker hover background */
-    }
-
     /* Purple buttons */
     .btn-purple {
         background-color: #5F4B8B !important;
@@ -290,26 +232,50 @@
                 <h5 class="modal-title" id="postModalLabel">Share Your Movie Thoughts</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
             <!-- Modal Body -->
             <div class="modal-body">
                 <form id="moviePostForm" enctype="multipart/form-data">
+                    <!-- Movie Title -->
+                    <div class="mb-3">
+                        <label for="movieTitle" class="form-label text-light">Movie Title</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="movieTitle"
+                            placeholder="Enter the movie title" required>
+                    </div>
+
                     <!-- Movie Cover Upload -->
                     <div class="mb-3">
-                        <label for="movieCover" class="form-label">Movie Cover</label>
-                        <input class="form-control" type="file" id="movieCover" accept="image/*">
+                        <label for="movieCover" class="form-label text-light">Movie Cover</label>
+                        <input class="form-control bg-dark text-light border-secondary" type="file" id="movieCover"
+                            accept="image/*">
+                    </div>
+
+                    <!-- Review -->
+                    <div class="mb-3">
+                        <label for="movieReview" class="form-label text-light">Review</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="movieReview"
+                            placeholder="Rate the movie (1-10)" min="1" max="10" required>
+                    </div>
+
+                    <!-- Where to Watch -->
+                    <div class="mb-3">
+                        <label for="movieWhereToWatch" class="form-label text-light">Where to Watch</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary"
+                            id="movieWhereToWatch" placeholder="e.g. Netflix, Hulu, etc." required>
                     </div>
 
                     <!-- Thoughts -->
                     <div class="mb-3">
-                        <label for="movieThoughts" class="form-label">Your Thoughts</label>
-                        <textarea class="form-control" id="movieThoughts" rows="4"
+                        <label for="movieThoughts" class="form-label text-light">Your Thoughts</label>
+                        <textarea class="form-control bg-dark text-light border-secondary" id="movieThoughts" rows="4"
                             placeholder="Write your thoughts here..."></textarea>
                     </div>
 
                     <!-- Post Button -->
                     <button type="submit" class="btn btn-purple">Post</button>
+
+                </form>
             </div>
+
 
         </div>
     </div>
