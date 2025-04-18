@@ -1,6 +1,7 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/775117b4-4703-4ce8-bf61-f58cf2a50539" alt="MovieMate" />
+  <img src="https://github.com/user-attachments/assets/775117b4-4703-4ce8-bf61-f58cf2a50539" alt="MovieMate" width="350"/>
 </p>
+
 
 # 🎥 MovieMate
 
