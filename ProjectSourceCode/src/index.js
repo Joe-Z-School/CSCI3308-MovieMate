@@ -1544,6 +1544,7 @@ app.get('/messaging', async (req, res) => {
     res.render('pages/messaging', {
       activeUser,
       allFriends: formattedFriends,
+      user: req.session.user 
     });
   } catch (error) {
     console.error('Error loading messaging page:', error.message);

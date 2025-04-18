@@ -356,7 +356,7 @@ body {
 }
 
 .nav-link {
-    font-weight: 500;
+    font-weight: 500 !important;
     color: #999 !important;
     transition: color 0.3s ease;
 }
@@ -385,6 +385,8 @@ body {
 }
 
 .navbar-nav.ms-auto .nav-item {
+    display: flex;
+    align-items: center;
     margin-left: 20px;
     /* Adds space between profile and logout */
 }
@@ -400,10 +402,10 @@ body {
 
 
 .profile-img {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    border: 3px solid #5F4B8B;
+    border: none;
     object-fit: cover;
 }
 
