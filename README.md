@@ -20,7 +20,7 @@
 - [📁 Project Structure](#-project-structure)
 - [📡 API Overview](#-api-overview)
 - [👨‍💼 Contributors](#-contributors)
-- [👨‍💼 Deployed Application](#-deployed-application)
+- [📱 Deployed Application](#-deployed-application)
 
 ---
 
