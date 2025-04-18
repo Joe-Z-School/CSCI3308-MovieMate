@@ -1,36 +1,204 @@
-# CSCI3308-MovieMate
-Repository for CSCI3308 Software Development Final Project of a Social Movie application
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/775117b4-4703-4ce8-bf61-f58cf2a50539" alt="MovieMate" />
+</p>
 
+# 🎥 MovieMate
 
-# Description
-- MovieMates is a social media styled application that aims to bring movie fanatics together in one place to share recently watched movies, how they would rate the movie, and a small description of their thoughts on the movies they have seen. MovieMates will allow users to create personal profiles where they can share their recently watched movies, connect with friends and other movie fanatics, and build a list of movies they want to see at some point. A page dedicated to the recently top rated and new movie releases will provide users the ability to search for specific movies based on genres incase they have a specific preference for movie types, or just want to venture into a genre new to the user.
+**MovieMate** is a full-featured social media platform for movie lovers. Create a profile, connect with friends, review films, and explore trending movies — all in one place.
 
-# Contributors
+---
 
-<br>
+## 📚 Table of Contents
+
+- [✨ Features](#-features)
+- [🛠 Technologies Used](#-technologies-used)
+- [📦 Installation](#-installation)
+- [🔑 API Keys](#-api-keys)
+- [🗃 Database Setup](#-database-setup)
+- [🚀 Running the Application](#-running-the-application)
+- [📁 Project Structure](#-project-structure)
+- [📡 API Overview](#-api-overview)
+- [👨‍💼 Contributors](#-contributors)
+- [👨‍💼 Deployed Application](#-deployed-application)
+
+---
+
+## ✨ Features
+
+### 👤 User Management
+- **Register & Authenticate**: Sign up with a username, password, and profile info.
+- **Edit Profiles**: Update bios, profile images, and account details.
+- **Follow System**: Send/receive follow requests and build your movie circle.
+
+### 🎥 Movie Discovery & Interaction
+- **Explore Movies**: Browse popular, trending, and new movie releases.
+- **Smart Search**: Filter by title, genre, cast, or director.
+- **Detailed View**: Dive into cast, plot, ratings, and trailers.
+- **Watchlist**: Keep track of movies you plan to watch.
+- **Reviews & Ratings**: Share personal takes and see what others thought.
+
+### 📱 Social Features
+- **News Feed**: See what your friends are watching and reviewing.
+- **Comments & Likes**: Interact on movie posts.
+- **Notifications**: Stay updated on social activity.
+- **Real-time Chat**: Talk movies with friends instantly via built-in messaging.
+
+---
+
+## 🛠 Technologies Used
+
+### Frontend
+- Handlebars (HBS)
+- JavaScript
+- Bootstrap 5
+- CSS
+- Socket.IO (client)
+
+### Backend
+- Node.js
+- Express.js
+- PostgreSQL (via `pg-promise`)
+- Socket.IO (server)
+- bcryptjs (secure password hashing)
+- express-session (authentication session handling)
+
+### External APIs
+- **OMDb API** – for movie metadata
+- **YouTube Data API** – for trailers
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+- Node.js (v14+)
+- PostgreSQL
+- Docker + Docker Compose *(optional but recommended)*
+
+### Setup Steps
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/yourusername/moviemate.git
+   cd moviemate
+   ```
+
+2. **Install Node.js Dependencies**
+   ```bash
+   npm install
+   ```
+
+---
+
+## ⚙️ Configuration
+
+Create a `.env` file at the root with the following content:
+
+```env
+# PostgreSQL Config
+POSTGRES_USER=your_postgres_user
+POSTGRES_PASSWORD=your_postgres_password
+POSTGRES_DB=moviemate_db
+HOST=db
+
+# Session Config
+SESSION_SECRET=your_session_secret
+
+# External API Keys
+OMDB_API_KEY=your_omdb_api_key
+YOUTUBE_API_KEY=your_youtube_api_key
+```
+
+---
+
+## 🔑 API Keys
+
+### OMDb API
+1. Visit [OMDb API Key Request](https://www.omdbapi.com/apikey.aspx)
+2. Add your key to `.env` under `OMDB_API_KEY`
+
+### YouTube Data API
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable **YouTube Data API v3**
+3. Generate an API key and add to `.env` under `YOUTUBE_API_KEY`
+
+---
+
+## 🗃 Database Setup
+
+The schema and initial data are located in:
+- `src/init_data/create.sql`
+- `src/init_data/insert.sql`
+
+If using Docker Compose, these scripts will be executed automatically.
+
+---
+
+## 🚀 Running the Application
+
+### 🔧 Option 1: Docker Compose (Recommended)
+
+```bash
+docker-compose up
+```
+
+Then visit: [http://localhost:3000](http://localhost:3000)
+
+### 💻 Option 2: Manual Setup
+
+1. Start PostgreSQL and ensure credentials match `.env`
+2. Start the app:
+   ```bash
+   npm start
+   ```
+3. App will run at [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 📁 Project Structure
+
+```
+moviemate/
+├── docker-compose.yaml         # Docker config
+├── package.json                # App metadata and scripts
+├── src/
+│   ├── api/                    # External API integrations (OMDb, YouTube)
+│   ├── config/                 # Configuration files
+│   ├── controllers/            # Route handlers and logic
+│   ├── init_data/              # SQL schema and seed data
+│   ├── resources/              # Static assets (JS, CSS, images)
+│   ├── views/                  # Handlebars templates
+│   │   ├── layouts/            # HTML layout templates
+│   │   ├── pages/              # Page-specific HBS templates
+│   │   └── partials/           # Reusable UI components
+│   └── index.js                # Entry point for server
+```
+
+---
+
+## 📡 API Overview
+
+MovieMate includes a robust set of RESTful API routes that power features like user authentication, movie discovery, reviews, and messaging.
+
+**Key API groups:**
+- `/api/movies/` – Search, details, watchlists, reviews, and trailers
+- `/api/users/` – Register, login, logout, profile management
+- `/api/social/` – Follow users, post reviews, and real-time messaging
+---
+
+## 👨‍💼 Contributors
 
 | NAME | CU-EMAIL | GITHUB USERNAME |
 | ---- | -------- | --------------- |
-| Neha Ramachandra | nera4157@colorado.edu | nehabykadi |
-| Conner Groth | conner.groth@colorado.edu | connergroth |
-| Joe Zakrzewski | joe.zakrzewski@colorado.edu | joe-z-school |
-| Lizzie Ruff | lizzie.ruff@colorado.edu | liru4345 |
-| Maeve Pettey | maeve.pettey@colorado.edu | maevePettey |
-| Ella Pasternak | ella.pasternak@colorado.edu | elpaster |
+| Neha Ramachandra | nera4157@colorado.edu | [nehabykadi](https://github.com/nehabykadi) |
+| Conner Groth | conner.groth@colorado.edu | [connergroth](https://github.com/connergroth) |
+| Joe Zakrzewski | joe.zakrzewski@colorado.edu | [joe-z-school](https://github.com/joe-z-school) |
+| Lizzie Ruff | lizzie.ruff@colorado.edu | [liru4345](https://github.com/liru4345) |
+| Maeve Pettey | maeve.pettey@colorado.edu | [maevePettey](https://github.com/maevePettey) |
+| Ella Pasternak | ella.pasternak@colorado.edu | [elpaster](https://github.com/elpaster) |
 
-<br>
+---
 
-# Technology Stack Utilized
-- List of technology used on project
+## 📱 Deployed Application
 
-# Prerequisites
-- List of software needed to run application
-
-# Locally Run Instructions
-- Instructions on how to install/run application in a local setting
-
-# Running Tests
-- Instructions on how to run the tests found in /ProjectSourceCode/test
-
-# Application Deployment Link
-- Link leading to deployed application
+You can try MovieMate at https://csci3308-moviemate.onrender.com
