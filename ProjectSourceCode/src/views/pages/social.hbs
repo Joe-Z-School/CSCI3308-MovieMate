@@ -52,13 +52,13 @@
                 </button>
               </form>
             <!-- View Comments Button -->
-<button 
-  class="btn btn-link text-light p-0 mt-2 view-comments-btn" 
-  data-post-id="{{id}}" 
-  data-bs-toggle="modal" 
-  data-bs-target="#commentsModal">
-  View all comments
-</button>
+            <button 
+              class="btn btn-link text-light p-0 mt-2 view-comments-btn" 
+              data-post-id="{{id}}" 
+              data-bs-toggle="modal" 
+              data-bs-target="#commentsModal">
+              View all comments
+            </button>
               <!-- 💬 Comment Form -->
               <form action="/api/posts/{{id}}/comment" method="POST" class="comment-form mt-2">
                 <input type="text" name="comment" class="form-control comment-input" placeholder="Add a comment..."
@@ -88,9 +88,9 @@
         <p>Loading comments...</p>
       </div>
       <div class="modal-footer">
-        <form id="addCommentForm" class="w-100 d-flex">
-          <input type="text" class="form-control me-2" id="newCommentText" placeholder="Add a comment..." required>
-          <button type="submit" class="btn btn-primary">Post</button>
+        <form id="addCommentForm" class="w-100 d-flex" data-post-id="">
+          <input type="text" name="comment" class="form-control me-2" id="newCommentText" placeholder="Add a comment..." required>
+          <button type="submit" class="btn btn-primary">Comment</button>
         </form>
       </div>
     </div>
@@ -98,190 +98,227 @@
 </div>
 
   <script>
-    let currentPage = 1;
-    let isLoading = false;
-    let hasMorePosts = true;
+  let currentPage = 1;
+  let isLoading = false;
+  let hasMorePosts = true;
 
-    window.addEventListener('scroll', async () => {
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+  window.addEventListener('scroll', async () => {
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
 
-      if (!isLoading && hasMorePosts && scrollTop + clientHeight >= scrollHeight - 10) {
-        isLoading = true;
-        currentPage++;
-        document.getElementById('loading').style.display = 'block';
+    if (!isLoading && hasMorePosts && scrollTop + clientHeight >= scrollHeight - 10) {
+      isLoading = true;
+      currentPage++;
+      document.getElementById('loading').style.display = 'block';
 
-        try {
-          const res = await fetch(`/load-more?page=${currentPage}`);
-          const data = await res.json();
+      try {
+        const res = await fetch(`/load-more?page=${currentPage}`);
+        const data = await res.json();
 
-          if (data.posts && data.posts.length > 0) {
-            const container = document.getElementById("movie-container");
+        if (data.posts && data.posts.length > 0) {
+          const container = document.getElementById("movie-container");
 
-        data.posts.forEach(post => {
-          const postHtml = `
-            <div class="col-md-6 col-lg-4 mb-4 d-flex">
-                <div class="card post-card bg-dark text-light rounded shadow-sm w-100" style="border: 1px solid #444; max-width: 100%;">
-                    <!-- Header: User Info -->
-                    <div class="card-header d-flex align-items-center justify-content-between border-bottom border-secondary bg-dark">
+          data.posts.forEach(post => {
+            const postHtml = `
+              <div class="col-md-6 col-lg-4 mb-4 d-flex">
+                <div class="card post-card bg-dark text-light rounded shadow-sm w-100" style="border: 1px solid #444;">
+                  <div class="card-header d-flex align-items-center justify-content-between border-bottom border-secondary bg-dark">
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-person-circle fs-4 me-2 text-secondary"></i>
-                        <strong class="text-light">@${post.user}</strong>
+                      <i class="bi bi-person-circle fs-4 me-2 text-secondary"></i>
+                      <strong class="text-light">@${post.user}</strong>
                     </div>
-                    </div>
-
-                    <!-- Image -->
-                    <div class="ratio ratio-1x1" style="overflow: hidden;">
+                  </div>
+                  <div class="ratio ratio-1x1" style="overflow: hidden;">
                     <img src="${post.cover}" alt="${post.title}" class="w-100 h-100" style="object-fit: cover;">
-                    </div>
-
-                    <!-- Content Body -->
-                    <div class="card-body">
+                  </div>
+                  <div class="card-body">
                     <h5 class="card-title mb-2">${post.title}</h5>
                     <p class="card-text mb-1"><strong>Review:</strong> ${post.review}</p>
                     <p class="card-text mb-1"><strong>Description:</strong> ${post.description}</p>
                     <p class="card-text mb-2"><strong>Where to Watch:</strong> ${post.where_to_watch}</p>
 
-                  <!-- ❤️ Like Button -->
-                  <button class="btn heart-button" data-post-id="${post.id}" aria-label="Like">
-                    <i class="bi ${post.liked ? 'bi-heart-fill' : 'bi-heart'}" style="color: white;"></i>
-                    <span class="like-count ms-1" style="color: white;">${post.like_count}</span>
-                  </button>
-
-                  <!-- ➕ Add to Watchlist Button (optional) -->
-                  <form action="/add-to-watchlist" method="POST" class="d-inline">
-                    <input type="hidden" name="title" value="${post.title}">
-                    <input type="hidden" name="cover" value="${post.cover}">
-                    <input type="hidden" name="whereToWatch" value="${post.where_to_watch}">
-                    <button type="submit" class="btn" aria-label="Add to Watchlist">
-                      <i class="bi bi-plus-circle" style="color: white;"></i>
+                    <button class="btn heart-button" data-post-id="${post.id}" aria-label="Like">
+                      <i class="bi ${post.liked ? 'bi-heart-fill' : 'bi-heart'}" style="color: white;"></i>
+                      <span class="like-count ms-1" style="color: white;">${post.like_count}</span>
                     </button>
-                  </form>
 
-                  <!-- 💬 Comment Form -->
-                  <form action="/api/posts/${post.id}/comment" method="POST" class="comment-form mt-2">
-                    <input type="text" name="comment" class="form-control comment-input" placeholder="Add a comment..." required>
-                    <button type="submit" class="btn btn-sm btn-primary">Comment</button>
-                  </form>
+                    <form action="/add-to-watchlist" method="POST" class="d-inline">
+                      <input type="hidden" name="title" value="${post.title}">
+                      <input type="hidden" name="cover" value="${post.cover}">
+                      <input type="hidden" name="whereToWatch" value="${post.where_to_watch}">
+                      <button type="submit" class="btn" aria-label="Add to Watchlist">
+                        <i class="bi bi-plus-circle" style="color: white;"></i>
+                      </button>
+                    </form>
+
+                    <button 
+                      class="btn btn-link text-light p-0 mt-2 view-comments-btn" 
+                      data-post-id="${post.id}" 
+                      data-bs-toggle="modal" 
+                      data-bs-target="#commentsModal">
+                      View all comments
+                    </button>
+
+                    <form action="/api/posts/${post.id}/comment" method="POST" class="comment-form mt-2">
+                      <input type="text" name="comment" class="form-control comment-input" placeholder="Add a comment..." required>
+                      <button type="submit" class="btn btn-sm btn-primary">Comment</button>
+                    </form>
+                  </div>
                 </div>
-              </div>
-            </div>
-          `;
-              container.insertAdjacentHTML("beforeend", postHtml);
-            });
+              </div>`;
+            container.insertAdjacentHTML("beforeend", postHtml);
+          });
 
-            attachLikeListeners();
-            attachCommentListeners();
-          } else {
-            hasMorePosts = false;
-            document.getElementById('loading').innerHTML = "<p>No more posts to show.</p>";
-          }
-        } catch (err) {
-          console.error("Error loading more posts:", err);
-        } finally {
-          if (hasMorePosts) document.getElementById('loading').style.display = 'none';
-          isLoading = false;
-        }
-      }
-    });
-
-    function attachLikeListeners() {
-      document.querySelectorAll('.heart-button').forEach(button => {
-        const cloned = button.cloneNode(true);
-        button.replaceWith(cloned);
-
-        cloned.addEventListener('click', async () => {
-          const postId = cloned.dataset.postId;
-          try {
-            const res = await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
-            if (res.ok) {
-              const data = await res.json();
-              const icon = cloned.querySelector('i');
-              const countSpan = cloned.querySelector('.like-count');
-
-              icon.classList.toggle('bi-heart');
-              icon.classList.toggle('bi-heart-fill');
-
-              if (countSpan) {
-                countSpan.textContent = data.likeCount;
-              }
-            } else {
-              alert("Failed to like/unlike.");
-            }
-          } catch (err) {
-            console.error("Like toggle error:", err);
-          }
-        });
-      });
-    }
-
-    function attachCommentListeners() {
-      document.querySelectorAll('.comment-form').forEach(form => {
-        const cloned = form.cloneNode(true);
-        form.replaceWith(cloned);
-
-        cloned.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          /*console.log("Comment form submitted");*/
-          const formData = new FormData(cloned);
-          const comment = formData.get('comment');
-          const action = cloned.getAttribute('action');
-
-          try {
-            const res = await fetch(action, {
-              method: 'POST',
-              body: new URLSearchParams({ comment }),
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            });
-
-            if (res.ok) {
-              cloned.querySelector('.comment-input').value = '';
-              alert("Comment submitted!");
-            } else {
-              alert("Failed to submit comment.");
-            }
-          } catch (err) {
-            console.error("Comment submission error:", err);
-          }
-        });
-      });
-    }
-
-    // Initial page load
-    document.addEventListener('DOMContentLoaded', () => {
-    attachLikeListeners();
-    attachCommentListeners();
-    attachViewCommentsListeners(); 
-    });
-
-    function attachViewCommentsListeners() {
-  document.querySelectorAll('.view-comments-btn').forEach(button => {
-    button.addEventListener('click', async () => {
-      const postId = button.dataset.postId;
-      const modalBody = document.getElementById('commentsModalBody');
-      modalBody.innerHTML = "<p>Loading comments...</p>";
-
-      try {
-        const res = await fetch(`/api/posts/${postId}/comments`);
-        const data = await res.json();
-
-        if (data.comments.length === 0) {
-          modalBody.innerHTML = "<p>No comments yet.</p>";
+          attachLikeListeners();
+          attachCommentListeners();
+          attachViewCommentsListeners();
         } else {
-          modalBody.innerHTML = data.comments.map(comment => `
-            <div class="mb-2 border-bottom pb-2">
-              <strong>@${comment.username}</strong><br>
-              <span>${comment.comment}</span><br>
-              <small class="text-muted">${new Date(comment.created_at).toLocaleString()}</small>
-            </div>
-          `).join('');
+          hasMorePosts = false;
+          document.getElementById('loading').innerHTML = "<p>No more posts to show.</p>";
         }
       } catch (err) {
-        console.error("Failed to load comments:", err);
-        modalBody.innerHTML = "<p class='text-danger'>Failed to load comments.</p>";
+        console.error("Error loading more posts:", err);
+      } finally {
+        if (hasMorePosts) document.getElementById('loading').style.display = 'none';
+        isLoading = false;
+      }
+    }
+  });
+
+  function attachLikeListeners() {
+    document.querySelectorAll('.heart-button').forEach(button => {
+      const cloned = button.cloneNode(true);
+      button.replaceWith(cloned);
+
+      cloned.addEventListener('click', async () => {
+        const postId = cloned.dataset.postId;
+        try {
+          const res = await fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+          if (res.ok) {
+            const data = await res.json();
+            const icon = cloned.querySelector('i');
+            const countSpan = cloned.querySelector('.like-count');
+
+            icon.classList.toggle('bi-heart');
+            icon.classList.toggle('bi-heart-fill');
+            if (countSpan) countSpan.textContent = data.likeCount;
+          } else {
+            alert("Failed to like/unlike.");
+          }
+        } catch (err) {
+          console.error("Like toggle error:", err);
+        }
+      });
+    });
+  }
+
+function attachCommentListeners() {
+  document.querySelectorAll('.comment-form, #addCommentForm').forEach(form => {
+    const cloned = form.cloneNode(true);
+    form.replaceWith(cloned);
+
+    cloned.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(cloned);
+      const comment = formData.get('comment') || document.getElementById('newCommentText')?.value;
+      const action = cloned.getAttribute('action');
+      const postId = action?.split('/')[3]; // /api/posts/:id/comment
+
+      try {
+        const res = await fetch(action, {
+          method: 'POST',
+          body: new URLSearchParams({ comment }),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
+
+        if (res.ok) {
+          // Clear the comment box
+          if (cloned.querySelector('input')) {
+            cloned.querySelector('input').value = '';
+          } else {
+            document.getElementById('newCommentText').value = '';
+          }
+
+          // ✅ Only refresh comments
+          await loadCommentsIntoModal(postId);
+        } else {
+          alert("Failed to submit comment.");
+        }
+      } catch (err) {
+        console.error("Comment submission error:", err);
       }
     });
   });
 }
-  </script>
+
+
+  function attachViewCommentsListeners() {
+    document.querySelectorAll('.view-comments-btn').forEach(button => {
+      button.addEventListener('click', async () => {
+        const postId = button.dataset.postId;
+        const modalBody = document.getElementById('commentsModalBody');
+        modalBody.innerHTML = "<p>Loading comments...</p>";
+
+        // Set form action dynamically in modal
+        const modalForm = document.getElementById('addCommentForm');
+      modalForm.setAttribute('action', `/api/posts/${postId}/comment`);
+
+        try {
+          const res = await fetch(`/api/posts/${postId}/comments`);
+          const data = await res.json();
+
+          if (data.comments.length === 0) {
+            modalBody.innerHTML = "<p>No comments yet.</p>";
+          } else {
+            modalBody.innerHTML = data.comments.map(comment => `
+              <div class="mb-2 border-bottom pb-2">
+                <strong>@${comment.username}</strong><br>
+                <span>${comment.comment}</span><br>
+                <small class="text-muted">${new Date(comment.created_at).toLocaleString()}</small>
+              </div>
+            `).join('');
+          }
+        } catch (err) {
+          console.error("Failed to load comments:", err);
+          modalBody.innerHTML = "<p class='text-danger'>Failed to load comments.</p>";
+        }
+      });
+    });
+  }
+
+async function loadCommentsIntoModal(postId) {
+  const modalBody = document.getElementById('commentsModalBody');
+
+  try {
+    const res = await fetch(`/api/posts/${postId}/comments`);
+    const data = await res.json();
+
+    if (data.comments.length === 0) {
+      modalBody.innerHTML = "<p>No comments yet.</p>";
+    } else {
+      modalBody.innerHTML = data.comments.map(comment => `
+      <div class="mb-2 border-bottom pb-2">
+        <strong>@${comment.username}</strong><br>
+        <span>${comment.comment}</span><br>
+        <small class="text-muted">${new Date(comment.created_at).toLocaleString()}</small>
+      </div>
+    `).join('');
+    }
+  } catch (err) {
+    console.error("Failed to load comments:", err);
+    modalBody.innerHTML = "<p class='text-danger'>Failed to load comments.</p>";
+  }
+}
+
+
+
+
+  // Initial load
+  document.addEventListener('DOMContentLoaded', () => {
+    attachLikeListeners();
+    attachCommentListeners();
+    attachViewCommentsListeners();
+  });
+</script>
