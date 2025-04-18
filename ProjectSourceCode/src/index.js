@@ -1282,22 +1282,6 @@ app.post('/remove-from-watchlist', async (req, res) => {
   });
 });
 
-app.get('/watchlist', async (req, res) => {
-  const userId = req.session.user?.id;
-
-  try {
-    const result = await db.query(
-      'SELECT title, poster_picture, description FROM watchlist WHERE user_id = $1',
-      [userId]
-    );
-    const watchlist = result.rows;
-    res.render('pages/watchlist', { watchlist });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Error loading watchlist');
-  }
-});
-
 
 // *****************************************************
 //  <!-- Profile Page --!>
@@ -1421,7 +1405,7 @@ app.get('/profile/watchlist', async (req, res) => {
 
   try {
     const watchlist = await db.any(`
-      SELECT id, title, poster_picture, where_to_watch 
+      SELECT id, title, poster_picture, where_to_watch, description
       FROM watchlist 
       WHERE user_id = $1
       ORDER BY id DESC
