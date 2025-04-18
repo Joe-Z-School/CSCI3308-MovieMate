@@ -1,5 +1,5 @@
 {{> nav}}
-<script src="../resources/js/socialScript.js"></script>
+<script src="../resources/js/exploreScript.js"></script>
 
 <div class="container-fluid movie-container">
   <div class="row">
@@ -173,8 +173,11 @@
         <!-- Popular searches / quick filters -->
         <div class="quick-filters mb-4 animate-fade-in" style="animation-delay: 0.1s;">
           <h5 class="mb-3">Popular Searches</h5>
-          <div class="d-flex flex-wrap gap-2">
+          <div id="popularSearchesContainer" class="d-flex flex-wrap gap-2">
             <!-- Popular searches will be loaded dynamically -->
+            <div class="spinner-border spinner-border-sm text-light" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
           </div>
         </div>
         
@@ -214,11 +217,12 @@
         <!-- Initial state / trending movies -->
         <div id="trendingSection" class="animate-fade-in" style="animation-delay: 0.2s;">
           <div class="section-header mb-3">
-            <h2 class="section-title">Trending Now</h2>
+            <h2 class="section-title">Discover Movies</h2>
             <div class="trending-tabs">
               <button class="tab-btn" data-tab="popular">Popular</button>
               <button class="tab-btn active" data-tab="latest">Latest</button>
               <button class="tab-btn" data-tab="recommended">For You</button>
+              <button class="tab-btn" data-tab="highest-rated">Highest Rated</button>
             </div>
           </div>
           
@@ -615,6 +619,7 @@
   .trending-tabs {
     display: flex;
     gap: 5px;
+    flex-wrap: wrap;
   }
   
   .tab-btn {
@@ -938,6 +943,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentSortBy = 'relevance'; // Default sort
   let hasMoreResults = true;
   let totalResults = 0;
+  let activeTab = 'latest'; // Default active tab
   
   // DOM Elements
   const elements = {
@@ -961,7 +967,8 @@ document.addEventListener('DOMContentLoaded', function() {
     newestFilter: document.getElementById('newestFilter'),
     directorFilter: document.getElementById('directorFilter'),
     actorFilter: document.getElementById('actorFilter'),
-    ratingFilter: document.getElementById('ratingFilter')
+    ratingFilter: document.getElementById('ratingFilter'),
+    popularSearchesContainer: document.getElementById('popularSearchesContainer')
   };
   
   // Initialize Intersection Observer for infinite scrolling
@@ -1118,7 +1125,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Otherwise go back to trending view
         elements.resultsSection.classList.add('d-none');
         elements.trendingSection.classList.remove('d-none');
-        loadTrendingMovies('latest');
+        loadTrendingMovies(activeTab);
       }
     });
   }
@@ -1132,14 +1139,17 @@ document.addEventListener('DOMContentLoaded', function() {
       // Add active class to clicked tab
       this.classList.add('active');
       
-      const tabType = this.getAttribute('data-tab');
-      console.log(`Loading ${tabType} movies...`);
+      activeTab = this.getAttribute('data-tab');
+      console.log(`Loading ${activeTab} movies...`);
       
       // Load the corresponding movie category
       showSkeletonLoading(elements.trendingContainer, 5);
       
+      // Reset pagination for new tab
+      page = 1;
+      
       // Load new trending movies after delay
-      setTimeout(() => loadTrendingMovies(tabType), 300);
+      setTimeout(() => loadTrendingMovies(activeTab), 300);
     });
   });
   
@@ -1147,8 +1157,7 @@ document.addEventListener('DOMContentLoaded', function() {
   loadPopularSearches();
   
   // Handle popular search clicks
-  const popularSearchContainer = document.querySelector('.quick-filters .d-flex');
-  popularSearchContainer.addEventListener('click', function(e) {
+  elements.popularSearchesContainer.addEventListener('click', function(e) {
     const button = e.target.closest('.popular-search-pill');
     if (button) {
       const searchTerm = button.getAttribute('data-search');
@@ -1356,16 +1365,14 @@ document.addEventListener('DOMContentLoaded', function() {
     } 
     // If we're in trending view, load more trending movies
     else if (!elements.trendingSection.classList.contains('d-none')) {
-      const activeTab = document.querySelector('.tab-btn.active');
-      if (activeTab) {
-        loadTrendingMovies(activeTab.getAttribute('data-tab'));
-      }
+      loadTrendingMovies(activeTab);
     }
   }
   
   // Render movies to a container
   function renderMovies(movies, container) {
     movies.forEach((movie, index) => {
+      // Create the list area for all movies
       const movieElement = document.createElement('div');
       movieElement.className = 'col animate-fade-in';
       movieElement.style.animationDelay = `${index * 0.05}s`;
@@ -1387,6 +1394,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="movie-title">${movie.title}</div>
             <div class="movie-year-rating">
               <div class="movie-year">${movie.year}</div>
+              ${movie.rating !== 'N/A' ? `<span class="separator ms-2 me-2">•</span><div class="movie-rating"><i class="bi bi-star-fill me-1" style="color: #ffc107;"></i>${movie.rating}</div>` : ''}
             </div>
           </div>
         </div>
@@ -1485,8 +1493,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Load popular searches dynamically
   function loadPopularSearches() {
-    const popularSearchContainer = document.querySelector('.quick-filters .d-flex');
-    popularSearchContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-light" role="status"><span class="visually-hidden">Loading...</span></div>';
+    const popularSearchesContainer = elements.popularSearchesContainer;
     
     fetch('/api/movies/popular-searches')
       .then(response => {
@@ -1496,36 +1503,82 @@ document.addEventListener('DOMContentLoaded', function() {
         return response.json();
       })
       .then(data => {
-        popularSearchContainer.innerHTML = '';
+        popularSearchesContainer.innerHTML = '';
         
+        // Use returned data or fallback to these if API doesn't return anything
         const searches = data.success && data.searches && data.searches.length > 0 
           ? data.searches 
-          : ['Top Gun: Maverick', 'Oppenheimer', 'Barbie', 'Dune', 'Inside Out', 'Star Wars'];
+          : fetchTrendingSearchTerms();
         
         searches.forEach(search => {
           const button = document.createElement('button');
           button.className = 'btn popular-search-pill';
           button.setAttribute('data-search', search);
           button.textContent = search;
-          popularSearchContainer.appendChild(button);
+          popularSearchesContainer.appendChild(button);
         });
       })
       .catch(error => {
         console.error('Error loading popular searches:', error);
-        // Fallback to default popular searches on error
-        popularSearchContainer.innerHTML = '';
-        const defaultSearches = ['Top Gun: Maverick', 'Oppenheimer', 'Barbie', 'Dune', 'Inside Out', 'Star Wars'];
+        // Fallback to trending terms
+        popularSearchesContainer.innerHTML = '';
+        const defaultSearches = fetchTrendingSearchTerms();
         defaultSearches.forEach(search => {
           const button = document.createElement('button');
           button.className = 'btn popular-search-pill';
           button.setAttribute('data-search', search);
           button.textContent = search;
-          popularSearchContainer.appendChild(button);
+          popularSearchesContainer.appendChild(button);
         });
       });
   }
   
-  // Add to watchlist function
+  // Get trending search terms from actual API data
+  function fetchTrendingSearchTerms() {
+    // Make this dynamic by fetching latest movies and extracting terms
+    fetch('/api/movies/trending?type=latest&page=1')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.results && data.results.length > 0) {
+          // Extract movie titles for trending searches
+          const searchTerms = data.results.slice(0, 6).map(movie => movie.title);
+          updatePopularSearchTerms(searchTerms);
+          return searchTerms;
+        }
+        return defaultSearchTerms();
+      })
+      .catch(() => {
+        return defaultSearchTerms();
+      });
+    
+    // Return default searches while waiting for API
+    return defaultSearchTerms();
+  }
+  
+  // Update popular search pills with new terms
+  function updatePopularSearchTerms(terms) {
+    const container = elements.popularSearchesContainer;
+    if (container.children.length > 1) {
+      // Already populated, no need to update
+      return;
+    }
+    
+    container.innerHTML = '';
+    terms.forEach(term => {
+      const button = document.createElement('button');
+      button.className = 'btn popular-search-pill';
+      button.setAttribute('data-search', term);
+      button.textContent = term;
+      container.appendChild(button);
+    });
+  }
+  
+  // Default search terms as a fallback
+  function defaultSearchTerms() {
+    return ['Dune: Part Two', 'Deadpool & Wolverine', 'Twisters', 'Inside Out 2', 'Kingdom of the Planet of the Apes', 'A Quiet Place: Day One'];
+  }
+  
+  // Add to watchlist function (global to be called from inline onclick)
   window.addToWatchlist = function(imdbId, title, posterUrl) {
     // Get the button that was clicked
     const watchlistBtn = event.target.closest('.watchlist-btn');

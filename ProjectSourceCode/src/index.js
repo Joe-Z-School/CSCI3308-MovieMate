@@ -167,6 +167,7 @@ app.get('/api/movies/new', movieController.getNewMovies);
 // Routes for the enhanced explore page
 app.get('/api/movies/filter', movieController.filterMovies);
 app.get('/api/movies/trending', movieController.getTrendingMovies);
+app.get('/api/movies/popular-searches', movieController.getPopularSearches);
 app.get('/api/placeholder/:width/:height', movieController.getPlaceholderImage);
 
 // Details page
