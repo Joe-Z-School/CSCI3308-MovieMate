@@ -9,6 +9,8 @@ DROP TABLE IF EXISTS movies;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS images;
+DROP TABLE IF EXISTS user_images;
 
 
 CREATE TABLE users (
@@ -156,8 +158,27 @@ CREATE TABLE watchlist (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL,
   title VARCHAR(255) NOT NULL,
-  poster_picture VARCHAR(255) NOT NULL,
+  poster_picture VARCHAR(40),
   where_to_watch VARCHAR(255),
   description TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE images (
+  id SERIAL PRIMARY KEY,
+  imdb_id VARCHAR(20) UNIQUE NOT NULL,
+  image_data BYTEA NOT NULL,
+  content_type VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_images (
+  id UUID PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  sender_id INTEGER,
+  recipient_id INTEGER,
+  image_data BYTEA NOT NULL,
+  content_type VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

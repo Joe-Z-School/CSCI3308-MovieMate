@@ -4,65 +4,8 @@
         justify-content: center;
         align-items: center;
         flex-direction: column;
-
-    }
-
-    /* Dark theme modal */
-    /* Make the close button "X" white */
-    .modal-content .btn-close {
-        color: white !important;
-        /* Set the text (icon) color to white */
-        background-color: transparent !important;
-        /* Ensure the background is transparent */
-        border: none !important;
-        /* Remove border */
-    }
-
-    /* If the icon itself isn't white yet, target the SVG directly */
-    .modal-content .btn-close svg {
-        fill: white !important;
-        /* Set the SVG "X" icon color to white */
-    }
-
-    /* Optional: Close button hover effect */
-    .modal-content .btn-close:hover {
-        color: #ccc !important;
-        /* Slightly gray when hovered */
-    }
-
-    .modal-content {
-        background-color: #222 !important;
-        /* Dark background */
-        color: #fff;
-        /* Light text */
-    }
-
-    .modal-header {
-        border-bottom: 1px solid #111;
-        /* Dark border */
-    }
-
-    .modal-body {
-        background-color: #222;
-        /* Darker background for the body */
-    }
-
-    .modal-title {
-        color: #fff;
-        /* White text for modal title */
-    }
-
-    .modal-header .btn-close {
-        color: #fff;
-        /* White close button */
-        opacity: 1;
-        /* Ensure it's visible */
-    }
-
-    /* Dark theme for the modal close button hover */
-    .modal-header .btn-close:hover {
-        background-color: #555;
-        /* Slightly darker hover background */
+        display: block !important;
+        justify-content: unset !important;
     }
 
     /* Purple buttons */
@@ -77,12 +20,14 @@
         color: white !important;
     }
 
-    /* Styling for post content */
     .post-content {
         background-color: #222;
         color: #fff;
         padding: 10px;
         border-radius: 8px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
     }
 
     .post-actions {
@@ -92,6 +37,16 @@
     .post-action {
         margin-right: 10px;
         cursor: pointer;
+    }
+
+   .post-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* Exactly 2 columns */
+        gap: 20px;
+        margin-top: 20px;
+        width: 100%;
+        max-width: 1000px;
+        padding: 20px;
     }
 
     /* Style for "Add Post" button */
@@ -182,6 +137,7 @@
 </style>
 
 {{> nav}}
+
 <div class="profile-container">
     <div class="profile-header">
         <img src="../../resources/img/{{profile.profile_icon}}" alt="Profile Picture" class="profile-pic">
@@ -240,31 +196,27 @@
     <button type="button" class="btn btn-purple mt-4" data-bs-toggle="modal" data-bs-target="#postModal">
         Add Post
     </button>
-
     {{/if}}
 
+    <h3 style="margin-top: 30px;">Recent Posts</h3>
     <div class="post-container">
-        <h3>Recent Posts</h3>
-        {{#each posts}}
-        <div class="post">
-            <div class="post-header">
-                <div class="post-author">{{../username}}</div>
-                <div class="post-date">{{this.date}}</div>
-            </div>
-            <div class="post-content">
-                <p>{{this.content}}</p>
-            </div>
-            <div class="post-actions">
-                <div class="post-action">❤️ {{this.likes}}</div>
-                <div class="post-action">💬 {{this.comments}}</div>
-            </div>
+       {{#each posts}}
+       <div class="post-content">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#postDetailsModal" onclick="showPostDetails('{{id}}')">
+                <img src="{{cover}}" alt="{{title}} cover" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 10px;">
+            </a>
         </div>
-        {{/each}}
-
-        {{#unless posts.length}}
-        <p>No posts yet.</p>
-        {{/unless}}
+    {{/each}}
     </div>
+
+    {{> postDetailsModal}}  <!-- Include post details modal -->
+
+</div>
+
+{{#unless posts.length}}
+<p>No posts yet.</p>
+{{/unless}}
+</div>
 </div>
 {{#if isOwnProfile}}
 {{> edit-profile-modal}}
@@ -281,44 +233,48 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <!-- Modal Body -->
-<div class="modal-body">
-  <form id="moviePostForm" enctype="multipart/form-data">
-    <!-- Movie Title -->
-    <div class="mb-3">
-      <label for="movieTitle" class="form-label text-light">Movie Title</label>
-      <input type="text" class="form-control bg-dark text-light border-secondary" id="movieTitle" placeholder="Enter the movie title" required>
-    </div>
+            <div class="modal-body">
+                <form id="moviePostForm" enctype="multipart/form-data">
+                    <!-- Movie Title -->
+                    <div class="mb-3">
+                        <label for="movieTitle" class="form-label text-light">Movie Title</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="movieTitle"
+                            placeholder="Enter the movie title" required>
+                    </div>
 
-    <!-- Movie Cover Upload -->
-    <div class="mb-3">
-      <label for="movieCover" class="form-label text-light">Movie Cover</label>
-      <input class="form-control bg-dark text-light border-secondary" type="file" id="movieCover" accept="image/*">
-    </div>
-    
-    <!-- Review -->
-    <div class="mb-3">
-      <label for="movieReview" class="form-label text-light">Review</label>
-      <input type="number" class="form-control bg-dark text-light border-secondary" id="movieReview" placeholder="Rate the movie (1-10)" min="1" max="10" required>
-    </div>
+                    <!-- Movie Cover Upload -->
+                    <div class="mb-3">
+                        <label for="movieCover" class="form-label text-light">Movie Cover</label>
+                        <input class="form-control bg-dark text-light border-secondary" type="file" id="movieCover"
+                            accept="image/*">
+                    </div>
 
-    <!-- Where to Watch -->
-    <div class="mb-3">
-      <label for="movieWhereToWatch" class="form-label text-light">Where to Watch</label>
-      <input type="text" class="form-control bg-dark text-light border-secondary" id="movieWhereToWatch" placeholder="e.g. Netflix, Hulu, etc." required>
-    </div>
+                    <!-- Review -->
+                    <div class="mb-3">
+                        <label for="movieReview" class="form-label text-light">Review</label>
+                        <input type="number" class="form-control bg-dark text-light border-secondary" id="movieReview"
+                            placeholder="Rate the movie (1-10)" min="1" max="10" required>
+                    </div>
 
-    <!-- Thoughts -->
-    <div class="mb-3">
-      <label for="movieThoughts" class="form-label text-light">Your Thoughts</label>
-      <textarea class="form-control bg-dark text-light border-secondary" id="movieThoughts" rows="4"
-        placeholder="Write your thoughts here..."></textarea>
-    </div>
+                    <!-- Where to Watch -->
+                    <div class="mb-3">
+                        <label for="movieWhereToWatch" class="form-label text-light">Where to Watch</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary"
+                            id="movieWhereToWatch" placeholder="e.g. Netflix, Hulu, etc." required>
+                    </div>
 
-    <!-- Post Button -->
-    <button type="submit" class="btn btn-purple">Post</button>
+                    <!-- Thoughts -->
+                    <div class="mb-3">
+                        <label for="movieThoughts" class="form-label text-light">Your Thoughts</label>
+                        <textarea class="form-control bg-dark text-light border-secondary" id="movieThoughts" rows="4"
+                            placeholder="Write your thoughts here..."></textarea>
+                    </div>
 
-  </form>
-</div>
+                    <!-- Post Button -->
+                    <button type="submit" class="btn btn-purple">Post</button>
+
+                </form>
+            </div>
 
         </div>
     </div>
@@ -327,7 +283,7 @@
 
 <!-- Custom JS -->
 <script>
-    
+
     document.addEventListener('DOMContentLoaded', function () {
         const modal = document.getElementById('editProfileModal');
         const openBtn = document.getElementById('openEditModal');
@@ -417,4 +373,26 @@
             }
         });
     });
+
+
+// js for post details modal:
+
+
+// Show post details in the modal
+function showPostDetails(postId) {
+    // Find the post details for the given postId (you can get this from your post data)
+    const post = posts.find(post => post.id === postId);
+
+    // Populate modal with post data
+    if (post) {
+        document.getElementById('postDetailCover').src = "../../resources/img/" + post.cover;
+        document.getElementById('postDetailTitle').innerText = post.title;
+        document.getElementById('postDetailReview').innerText = 'Review: ' + post.review;
+        document.getElementById('postDetailDescription').innerText = 'Description: ' + post.description;
+        document.getElementById('postDetailWhereToWatch').innerText = 'Where to Watch: ' + post.whereToWatch;
+    }
+}
+
+
+
 </script>

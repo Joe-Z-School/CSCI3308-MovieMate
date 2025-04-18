@@ -6,6 +6,12 @@
   --darkPurpleAccent: #5F4B8B;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden; /* Prevent entire page scroll */
+}
+
+
 /* Spacing for Navbar */
 .container-fluid {
     margin-top: 60px; /* Navbar height */
@@ -26,7 +32,7 @@
   body {
     margin: 0;
     padding: 0;
-    font-family: 'Arial', sans-serif;
+    /* font-family: 'Arial', sans-serif; */
     background-color: var(--darkBackground); /* Dark background */
     color: #e0e0e0; /* Light text color */
   }
@@ -335,3 +341,82 @@
       opacity: 1;
     }
   }
+
+
+  /*navbar specific styling*/
+
+
+  
+.navbar {
+  width: 100%;
+  position: fixed;
+  /* Fix navbar to the top */
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+/* Logo styles */
+.navbar-logo {
+  height: 50px;
+  width: auto;
+}
+
+/* Navbar styles */
+.navbar-custom {
+  background-color: #1E1E1E !important;
+}
+
+.nav-link {
+  font-weight: 500;
+  color: #999 !important;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #5F4B8B;
+}
+
+/* Ensure the navbar items stretch across the full width */
+.navbar-collapse {
+  width: 100%;
+}
+
+/* Align navbar items horizontally */
+.navbar-nav {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* Align the profile and logout section properly */
+.navbar-nav.ms-auto {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.navbar-nav.ms-auto .nav-item {
+  display: flex;
+  align-items: center;
+  margin-left: 20px;
+  /* Adds space between profile and logout */
+}
+
+/* Mobile navbar toggler */
+.navbar-toggler {
+  border: none;
+}
+
+.navbar-toggler-icon {
+  background-color: #5F4B8B;
+}
+
+
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  object-fit: cover;
+}

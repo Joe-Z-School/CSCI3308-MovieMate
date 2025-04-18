@@ -15,50 +15,48 @@ const axios = require('axios'); // To make HTTP requests from our server. We'll 
 const movieController = require('./controllers/movieController'); // To handle movie-related API requests
 
 // *****************************************************
-// <!-- AWS S3 File Storage -->
+// <!-- Image File Storage -->
 // *****************************************************
-const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
 async function uploadPoster(posterUrl, imdbID) {
-  const BUCKET_NAME = 'moviemate-pictures';
-  const REGION = 'us-east-2';
-  const key = `${imdbID}.jpg`;  // Use IMDb ID as the S3 key
-  const imageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${key}`;
-
-  try {
-    // Check if poster already exists
-    await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
-    console.log('Poster already exists, using existing file.');
-    return imageUrl;
-  } catch (err) {
-    if (err.code !== 'NotFound') {
-      throw err;
-    }
-
-    // Download the image from the original source
-    const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
-    const buffer = Buffer.from(response.data, 'binary');
-
-    // Upload to S3
-    const uploadParams = {
-      Bucket: BUCKET_NAME,
-      Key: key,
-      Body: buffer,
-      ContentType: 'image/jpeg',
-    };
-
-    await s3.upload(uploadParams).promise();
-    console.log('Uploaded new poster to S3');
-    return imageUrl;
+  // Check if the poster already exists in the database
+  const existing = await db.query('SELECT * FROM images WHERE imdb_id = $1', [imdbID]);
+  if (existing.length > 0) {
+    console.log('Poster already exists in database.');
+    return `/image/${imdbID}`; // endpoint to serve the image
   }
+
+  // Fetch the image
+  console.log('Fetching image from:', posterUrl);
+  const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
+  console.log('Fetched image, content-type:', response.headers['content-type']);
+
+  const buffer = Buffer.from(response.data, 'binary');
+  const contentType = response.headers['content-type'];
+
+  // Insert into the database
+  await db.query(
+    `INSERT INTO images (imdb_id, image_data, content_type) VALUES ($1, $2, $3)`,
+    [imdbID, buffer, contentType]
+  );
+
+  console.log('Poster uploaded to database');
+  return `/image/${imdbID}`;
 }
+
+async function uploadChatImage(buffer, contentType, userId, senderId, recipientId) {
+  const id = uuidv4();
+
+  await db.query(
+    `INSERT INTO user_images (id, user_id, sender_id, recipient_id, image_data, content_type)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, userId, senderId, recipientId, buffer, contentType]
+  );
+
+  return id;
+}
+
 
 // *****************************************************
 // <!-- Socket.IO Server Creation -->
@@ -82,7 +80,7 @@ const hbs = handlebars.create({
 
 // database configuration
 const dbConfig = {
-  host: 'db', // the database server
+  host: process.env.HOST, // the database server
   port: 5432, // the database port
   database: process.env.POSTGRES_DB, // the database name
   user: process.env.POSTGRES_USER, // the user account to connect with
@@ -243,9 +241,10 @@ app.post('/login', async (req, res) => {
       console.log('user logged in');
       req.session.user = user;
       req.session.save();
-      res.redirect('/findFriends');
+      res.redirect('/profile');
     }
   } catch (err) {
+    console.log('An error ocurred', err);
     req.session.Message = 'An error occurred';
     res.redirect('/register');
 
@@ -527,7 +526,7 @@ app.post('/users/unfollow', async (req, res) => {
       );
     });
 
-    res.redirect('/findFriends');
+    res.redirect('back');
   } catch (err) {
     console.error('Unfollow error:', err.message);
     res.status(500).render('pages/findFriends', {
@@ -551,7 +550,7 @@ app.post('/users/cancel-request', async (req, res) => {
     );
 
     console.log(`User ${requesterId} canceled follow request to ${receiverId}`);
-    res.redirect('/findFriends');
+    res.redirect('back');
   } catch (err) {
     console.error('Error cancelling follow request:', err.message);
     res.status(500).send('Error cancelling request');
@@ -897,9 +896,10 @@ app.get('/dev/create-friends', async (req, res) => {
       { follower_id: 11, followed_id: 10 }, // Youruser → sara_sky
       { follower_id: 4, followed_id: 11 }, // code_matt → yourUser
       { follower_id: 5, followed_id: 11 }, // jessie_writer → yourUser
-      //{ follower_id: 11, followed_id: 12 }, // joe1 → joe2
-      //{ follower_id: 11, followed_id: 13 }, // joe1 → joe3
-      //{ follower_id: 11, followed_id: 14 }, // joe1 → joe4
+      { follower_id: 11, followed_id: 12 }, // joe1 → joe2
+      { follower_id: 12, followed_id: 11 }, // joe1 → joe2
+      { follower_id: 11, followed_id: 13 }, // joe1 → joe3
+      { follower_id: 11, followed_id: 14 }, // joe1 → joe4
       { follower_id: 11, followed_id: 4 }, // joe1 → matt
       { follower_id: 11, followed_id: 5 }, // joe1 → jessie
       { follower_id: 11, followed_id: 6 }, // joe1 → kay
@@ -993,7 +993,7 @@ app.get('/dev/create-notifications', async (req, res) => {
         message: 'Just saw your review, loved it!'
       }
     ];
-  
+
     for (const notif of messageNotifs) {
       await db.none(
         `INSERT INTO messages_notifications (recipient_id, sender_id, message, created_at)
@@ -1001,7 +1001,7 @@ app.get('/dev/create-notifications', async (req, res) => {
         [notif.recipient_id, notif.sender_id, notif.message]
       );
     }
-  
+
     console.log("✅ Sample message notifications inserted.");
   } catch (err) {
     console.error("❌ Failed to insert message notifications:", err);
@@ -1226,18 +1226,36 @@ app.get('/load-more', async (req, res) => {
 //   });
 // });
 
-// Temporary in-memory storage for the watchlist
+app.get('/image/:imdbID', async (req, res) => {
+  const { imdbID } = req.params;
+
+  const result = await db.query(
+    'SELECT image_data, content_type FROM images WHERE imdb_id = $1',
+    [imdbID]
+  );
+
+  // If no image found
+  if (!result || result.length === 0) {
+    return res.status(404).send('Image not found');
+  }
+
+  const image = result[0];
+  res.set('Content-Type', image.content_type);
+  res.send(image.image_data);
+});
+
 
 app.post('/add-to-watchlist', async (req, res) => {
   const userId = req.session.user?.id;
-  const {imdbID, title, picture, description } = req.body;
+  const { imdbID, title, picture, description } = req.body;
 
   try {
-    const s3ImageURL = await uploadPoster(picture, imdbID); 
+    console.log('In add-to-watchlist with picture:', picture);
+    const imageUrl = await uploadPoster(picture, imdbID);
 
     await db.query(
       'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
-      [userId, title, s3ImageURL, description]
+      [userId, title, imageUrl, description]
     );
 
     res.json({ success: true });
@@ -1251,16 +1269,16 @@ app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
 
   if (!title) {
-    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400 });
+    res.render('pages/profile', { layout: 'Main', message: 'Movie title is required', status: 400 });
     return;
   }
 
   db.tx(async remove => {
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
+    res.render('pages/profile', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
   }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
+    res.render('pages/profile', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
   });
 });
 
@@ -1272,8 +1290,7 @@ app.get('/watchlist', async (req, res) => {
       'SELECT title, poster_picture, description FROM watchlist WHERE user_id = $1',
       [userId]
     );
-
-    const watchlist = result;
+    const watchlist = result.rows;
     res.render('pages/watchlist', { watchlist });
   } catch (err) {
     console.error(err);
@@ -1295,6 +1312,9 @@ app.get('/profile', async (req, res) => {
       (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
       (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
   `, [profileUserID]);
+  posts = await db.any(
+    `SELECT * FROM posts WHERE user_id = $1`, [profileUserID]
+  );
   if (isOwnProfile) {
     res.render('pages/profile', {
       user: req.session.user,
@@ -1302,6 +1322,7 @@ app.get('/profile', async (req, res) => {
       followersCount: counts.followers_count,
       followingCount: counts.following_count,
       watchlistCount: counts.watchlist_count,
+      posts: posts,
       isOwnProfile: isOwnProfile
     });
   }
@@ -1416,23 +1437,23 @@ app.get('/profile/watchlist', async (req, res) => {
   }
 });
 
-app.post('/remove-from-watchlist', async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).send('Unauthorized');
-  }
+// app.post('/remove-from-watchlist', async (req, res) => {
+//   if (!req.session.user) {
+//     return res.status(401).send('Unauthorized');
+//   }
 
-  try {
-    await db.none(`
-      DELETE FROM watchlist 
-      WHERE id = $1 AND user_id = $2
-    `, [req.body.watchlistId, req.session.user.id]);
+//   try {
+//     await db.none(`
+//       DELETE FROM watchlist 
+//       WHERE id = $1 AND user_id = $2
+//     `, [req.body.watchlistId, req.session.user.id]);
 
-    res.redirect('/profile/watchlist');
-  } catch (err) {
-    console.error('Error removing from watchlist:', err);
-    res.status(500).send('Error removing item from watchlist');
-  }
-});
+//     res.redirect('/profile/watchlist');
+//   } catch (err) {
+//     console.error('Error removing from watchlist:', err);
+//     res.status(500).send('Error removing item from watchlist');
+//   }
+// });
 
 // Profile Followers/Following Routes
 app.get('/profile/followers', async (req, res) => {
@@ -1526,6 +1547,7 @@ app.get('/messaging', async (req, res) => {
     res.render('pages/messaging', {
       activeUser,
       allFriends: formattedFriends,
+      user: req.session.user 
     });
   } catch (error) {
     console.error('Error loading messaging page:', error.message);
@@ -1533,6 +1555,65 @@ app.get('/messaging', async (req, res) => {
   }
 });
 
+const multer = require('multer');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB limit
+});
+
+app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
+  console.log('Incoming request:', req.body);
+  console.log('File uploaded:', req.file);  // Log the uploaded file data
+
+  if (!req.file) {
+    return res.status(400).json({ success: false, error: 'No file uploaded' });
+  }
+
+  try {
+    const userId = req.session.user?.id;
+    const { senderId, recipientId } = req.body; // Ensure userId is passed in the request
+
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'User ID is required' });
+    }
+
+    // Call the uploadChatImage function to insert the image data into the database
+    const imageId = await uploadChatImage(
+      req.file.buffer,
+      req.file.mimetype,
+      userId,
+      senderId,
+      recipientId
+    );
+    console.log('Image uploaded successfully, ID:', imageId);
+    return res.json({ success: true, imageId });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    return res.status(500).json({ success: false, error: 'Database error' });
+  }
+});
+
+app.get('/chat/image/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await db.query(
+      `SELECT image_data, content_type FROM user_images WHERE id = $1`,
+      [id]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).send('Image not found');
+    }
+
+    const image = result[0];
+    res.setHeader('Content-Type', image.content_type);
+    res.send(image.image_data);
+  } catch (err) {
+    console.error('Error retrieving image:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 // Track sockets and active chats
 const userSockets = new Map(); // { userId: socket }
@@ -1613,7 +1694,7 @@ io.on('connection', (socket) => {
               unread_count = unread_count + 1
           WHERE following_user_id = $2 AND followed_user_id = $3
         `, [content, rId, sId]);
-        
+
         // Insert a new notification if the user is not currently chatting
         await db.none(`
           INSERT INTO messages_notifications (recipient_id, sender_id, message)
