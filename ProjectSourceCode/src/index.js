@@ -241,9 +241,10 @@ app.post('/login', async (req, res) => {
       console.log('user logged in');
       req.session.user = user;
       req.session.save();
-      res.redirect('/findFriends');
+      res.redirect('/profile');
     }
   } catch (err) {
+    console.log('An error ocurred', err);
     req.session.Message = 'An error occurred';
     res.redirect('/register');
 
@@ -525,7 +526,7 @@ app.post('/users/unfollow', async (req, res) => {
       );
     });
 
-    res.redirect('/findFriends');
+    res.redirect('back');
   } catch (err) {
     console.error('Unfollow error:', err.message);
     res.status(500).render('pages/findFriends', {
@@ -549,7 +550,7 @@ app.post('/users/cancel-request', async (req, res) => {
     );
 
     console.log(`User ${requesterId} canceled follow request to ${receiverId}`);
-    res.redirect('/findFriends');
+    res.redirect('back');
   } catch (err) {
     console.error('Error cancelling follow request:', err.message);
     res.status(500).send('Error cancelling request');
@@ -992,7 +993,7 @@ app.get('/dev/create-notifications', async (req, res) => {
         message: 'Just saw your review, loved it!'
       }
     ];
-  
+
     for (const notif of messageNotifs) {
       await db.none(
         `INSERT INTO messages_notifications (recipient_id, sender_id, message, created_at)
@@ -1000,7 +1001,7 @@ app.get('/dev/create-notifications', async (req, res) => {
         [notif.recipient_id, notif.sender_id, notif.message]
       );
     }
-  
+
     console.log("✅ Sample message notifications inserted.");
   } catch (err) {
     console.error("❌ Failed to insert message notifications:", err);
@@ -1246,7 +1247,7 @@ app.get('/image/:imdbID', async (req, res) => {
 
 app.post('/add-to-watchlist', async (req, res) => {
   const userId = req.session.user?.id;
-  const {imdbID, title, picture, description } = req.body;
+  const { imdbID, title, picture, description } = req.body;
 
   try {
     console.log('In add-to-watchlist with picture:', picture);
@@ -1566,7 +1567,7 @@ app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
 
   try {
     const userId = req.session.user?.id;
-    const { senderId, recipientId} = req.body; // Ensure userId is passed in the request
+    const { senderId, recipientId } = req.body; // Ensure userId is passed in the request
 
     if (!userId) {
       return res.status(400).json({ success: false, error: 'User ID is required' });
@@ -1689,7 +1690,7 @@ io.on('connection', (socket) => {
               unread_count = unread_count + 1
           WHERE following_user_id = $2 AND followed_user_id = $3
         `, [content, rId, sId]);
-        
+
         // Insert a new notification if the user is not currently chatting
         await db.none(`
           INSERT INTO messages_notifications (recipient_id, sender_id, message)
