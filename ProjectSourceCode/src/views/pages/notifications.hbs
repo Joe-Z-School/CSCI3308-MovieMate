@@ -11,12 +11,34 @@
       }
     });
   </script>
+  
+  <style>
+  .btn-close {
+    background: none;
+    border: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .btn-close::before {
+    content: '×';
+    font-size: 1.3rem;
+    color: black;
+    line-height: 1;
+  }
+</style>
+
 
   <body>
     {{> nav}}
 
     <div class="container py-3" style="margin-top: 80px;"> 
-      <h3 class="mb-5">Notifications</h3>
+      <h3 class="mb-5 notification-title">Notifications</h3>
 
       <!-- Tabs -->
       <ul class="nav nav-tabs mb-3" id="notificationTabs" role="tablist">
@@ -30,6 +52,11 @@
             Requests
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab">
+          Messages
+          </button>
+        </li>
       </ul>
 
       <!-- Tab content -->
@@ -40,13 +67,13 @@
           <div class="card notification-card mb-2 p-3" id="notification-{{this.id}}">
             <div class="d-flex justify-content-between align-items-start">
               <div class="d-flex align-items-center">
-                <img src="{{this.profile_icon}}" alt="profile" class="profile-img me-3 rounded-circle" style="width: 40px; height: 40px;">
+                <img src="../../resources/img/{{this.profile_icon}}" alt="profile" class="profile-img me-3 rounded-circle" style="width: 40px; height: 40px;">
                 <div>
                   <strong>{{this.sender_username}}</strong> {{this.message}}<br>
                   <small class="text-muted">{{this.created_at}}</small>
                 </div>
               </div>
-              <button type="button" class="btn-close ms-3" aria-label="Close" onclick="dismissNotification({{this.id}})"></button>
+              <button type="button" class="btn-close ms-3" aria-label="Close" onclick="dismissNotification({{this.id}})"> </button>
             </div>
           </div>
           {{/each}}
@@ -56,13 +83,15 @@
         <div class="tab-pane fade" id="requests" role="tabpanel">
           {{#each followRequests}}
           <div class="card notification-card d-flex flex-row align-items-center justify-content-between mb-2 p-3" id="request-card-{{this.request_id}}">
+            <a href="/profile?id={{this.user_id}}" style="text-decoration: none;">
             <div class="d-flex align-items-center">
-              <img src="{{this.profile_pic}}" alt="profile" class="profile-img me-3" style="width: 40px; height: 40px; border-radius: 50%;">
+              <img src="../../resources/img/{{this.profile_pic}}" alt="profile" class="profile-img me-3" style="width: 40px; height: 40px; border-radius: 50%;">
               <div>
                 <strong>{{this.username}}</strong> requested to follow you.<br>
                 <small class="text-muted">{{this.requested_at}}</small>
               </div>
             </div>
+            </a>
             <div class="d-flex gap-2">
               <button type="button" class="btn btn-sm btn-primary"
                 onclick="handleFollowAction('{{this.request_id}}', 'approve')">
@@ -75,8 +104,32 @@
           </div>
           {{/each}}
         </div>
+
+            <!-- Messaging Notifications -->
+        <div class="tab-pane fade" id="messages" role="tabpanel">
+          {{#each messagesNotifications}}
+          <a href="/messaging" class="text-decoration-none text-reset">
+          <div class="card notification-card mb-2 p-3" id="notification-{{this.id}}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="d-flex align-items-center">
+                <img src="../../resources/img/{{profile_icon}}" alt="profile" class="profile-img me-3 rounded-circle" style="width: 40px; height: 40px;">
+                <div>
+                  <strong>{{this.sender_username}}</strong> sent you a message<br>
+                  <small class="text-muted">{{this.created_at}}</small>
+                </div>
+              </div>
+               </a>
+              <button type="button" class="btn-close" aria-label="Close" onclick="dismissMessageNotification({{this.id}})"> </button>
+            </div>
+          </div>
+      
+          {{/each}}
+        </div>
+
       </div>
     </div>
+
+   
 
     <!-- Bootstrap JS (for tab functionality) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -122,6 +175,26 @@
         })
         .catch(err => {
           console.error("Dismiss error:", err);
+        });
+      }
+      function dismissMessageNotification(notificationId) {
+        fetch(`/messages-notifications/dismiss/${notificationId}`, {
+          method: 'POST'
+        })
+        .then(response => {
+          if (response.ok) {
+            const notif = document.getElementById(`notification-${notificationId}`);
+            if (notif) {
+              notif.style.transition = 'opacity 0.4s ease';
+              notif.style.opacity = '0';
+              setTimeout(() => notif.remove(), 400);
+            }
+          } else {
+            alert("Couldn't dismiss message notification.");
+          }
+        })
+        .catch(err => {
+          console.error("Dismiss message notification error:", err);
         });
       }
     </script>

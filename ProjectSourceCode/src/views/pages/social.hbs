@@ -7,13 +7,13 @@
       <h1 class="friends-post-title">Friends Posts</h1>
     </div>
     <div class="col-4 text-end">
-      <a class="btn-social" href="/findfriends" style="text-decoration: none; color: inherit;">Find Friends</a>
+      <a class="btn-social" href="/findfriends" style="text-decoration: none; color: white;">Find Friends</a>
     </div>
   </div>
 
   <div id="movie-container" class="row">
     {{#each posts}}
-    <div class="col-12 mb-4">
+    <div class="col-md-6 col-lg-4 mb-4">
   <div class="card post-card bg-dark text-light rounded shadow-sm" style="border: 1px solid #444;">
     <!-- Header: User Info -->
     <div class="card-header d-flex align-items-center justify-content-between border-bottom border-secondary bg-dark">
@@ -51,7 +51,14 @@
                   <i class="bi bi-plus-circle" style="color: white;"></i>
                 </button>
               </form>
-
+            <!-- View Comments Button -->
+<button 
+  class="btn btn-link text-light p-0 mt-2 view-comments-btn" 
+  data-post-id="{{id}}" 
+  data-bs-toggle="modal" 
+  data-bs-target="#commentsModal">
+  View all comments
+</button>
               <!-- 💬 Comment Form -->
               <form action="/api/posts/{{id}}/comment" method="POST" class="comment-form mt-2">
                 <input type="text" name="comment" class="form-control comment-input" placeholder="Add a comment..."
@@ -69,6 +76,26 @@
     </div>
     <br>
   </div>
+<!-- Comments Modal -->
+<div class="modal fade" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title" id="commentsModalLabel">Comments</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="commentsModalBody">
+        <p>Loading comments...</p>
+      </div>
+      <div class="modal-footer">
+        <form id="addCommentForm" class="w-100 d-flex">
+          <input type="text" class="form-control me-2" id="newCommentText" placeholder="Add a comment..." required>
+          <button type="submit" class="btn btn-primary">Post</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
   <script>
     let currentPage = 1;
@@ -92,8 +119,8 @@
 
         data.posts.forEach(post => {
           const postHtml = `
-            <div class="col-12 mb-4">
-                <div class="card post-card bg-dark text-light rounded shadow-sm" style="border: 1px solid #444;">
+            <div class="col-md-6 col-lg-4 mb-4 d-flex">
+                <div class="card post-card bg-dark text-light rounded shadow-sm w-100" style="border: 1px solid #444; max-width: 100%;">
                     <!-- Header: User Info -->
                     <div class="card-header d-flex align-items-center justify-content-between border-bottom border-secondary bg-dark">
                     <div class="d-flex align-items-center">
@@ -194,6 +221,7 @@
 
         cloned.addEventListener('submit', async (e) => {
           e.preventDefault();
+          /*console.log("Comment form submitted");*/
           const formData = new FormData(cloned);
           const comment = formData.get('comment');
           const action = cloned.getAttribute('action');
@@ -222,7 +250,38 @@
 
     // Initial page load
     document.addEventListener('DOMContentLoaded', () => {
-      attachLikeListeners();
-      attachCommentListeners();
+    attachLikeListeners();
+    attachCommentListeners();
+    attachViewCommentsListeners(); 
     });
+
+    function attachViewCommentsListeners() {
+  document.querySelectorAll('.view-comments-btn').forEach(button => {
+    button.addEventListener('click', async () => {
+      const postId = button.dataset.postId;
+      const modalBody = document.getElementById('commentsModalBody');
+      modalBody.innerHTML = "<p>Loading comments...</p>";
+
+      try {
+        const res = await fetch(`/api/posts/${postId}/comments`);
+        const data = await res.json();
+
+        if (data.comments.length === 0) {
+          modalBody.innerHTML = "<p>No comments yet.</p>";
+        } else {
+          modalBody.innerHTML = data.comments.map(comment => `
+            <div class="mb-2 border-bottom pb-2">
+              <strong>@${comment.username}</strong><br>
+              <span>${comment.comment}</span><br>
+              <small class="text-muted">${new Date(comment.created_at).toLocaleString()}</small>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error("Failed to load comments:", err);
+        modalBody.innerHTML = "<p class='text-danger'>Failed to load comments.</p>";
+      }
+    });
+  });
+}
   </script>
