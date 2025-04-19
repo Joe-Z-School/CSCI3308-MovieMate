@@ -45,7 +45,7 @@ async function uploadPoster(posterUrl, imdbID) {
   return `/image/${imdbID}`;
 }
 
-async function uploadChatImage(buffer, contentType, userId, senderId, recipientId) {
+async function uploadUserImage(buffer, contentType, userId, senderId, recipientId) {
   const id = uuidv4();
 
   await db.query(
@@ -1421,6 +1421,28 @@ app.get('/profile/watchlist', async (req, res) => {
   }
 });
 
+app.get('/profile/watchlist/data', async (req, res) => {
+  const userId = req.query.userId || req.session.user.id;  // Get the userId either from the query or session
+  try {
+    const watchlist = await db.any(`
+      SELECT id, title, poster_picture, description FROM watchlist
+      WHERE user_id = $1
+      ORDER BY id DESC
+    `, [userId]);
+    
+    // Ensure watchlist is an array before sending it as JSON
+    if (Array.isArray(watchlist)) {
+      res.json(watchlist);  // Send the watchlist as a JSON response
+    } else {
+      throw new Error('Watchlist is not an array');
+    }
+  } catch (err) {
+    console.error('Error fetching watchlist:', err);
+    res.status(500).json({ error: 'Failed to fetch watchlist' });
+  }
+});
+
+
 // app.post('/remove-from-watchlist', async (req, res) => {
 //   if (!req.session.user) {
 //     return res.status(401).send('Unauthorized');
@@ -1561,8 +1583,8 @@ app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'User ID is required' });
     }
 
-    // Call the uploadChatImage function to insert the image data into the database
-    const imageId = await uploadChatImage(
+    // Call the uploadUserImage function to insert the image data into the database
+    const imageId = await uploadUserImage(
       req.file.buffer,
       req.file.mimetype,
       userId,
