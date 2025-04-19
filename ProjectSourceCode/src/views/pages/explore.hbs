@@ -1,130 +1,111 @@
 {{> nav}}
-<script src="../resources/js/exploreScript.js"></script>
+<script src="../resources/js/socialScript.js"></script>
 
-<div class="container-fluid movie-container">
+<div class="container-fluid explore-container">
   <div class="row">
     <!-- Left Sidebar for Filters -->
-    <div class="col-lg-3 col-xl-2 filter-sidebar">
-      <div class="filter-content">
-        <h3 class="sidebar-title">Filter By</h3>
-        
-        <div class="filter-section">
-          <h5 class="filter-heading">Sort Order</h5>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="newestFilter">
-            <label class="form-check-label" for="newestFilter">Show newest first</label>
-          </div>
+    <div class="col-lg-2 filter-sidebar">
+      <h3 class="sidebar-title">Filter By</h3>
+      
+      <div class="filter-section">
+        <h5 class="filter-heading">Newest</h5>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="newestFilter" checked>
+          <label class="form-check-label" for="newestFilter">Show newest first</label>
         </div>
-        
-        <div class="filter-section">
-          <h5 class="filter-heading">Genre</h5>
-          <div class="genre-filters">
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="actionFilter" value="action">
-              <label class="form-check-label" for="actionFilter">Action</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="comedyFilter" value="comedy">
-              <label class="form-check-label" for="comedyFilter">Comedy</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="dramaFilter" value="drama">
-              <label class="form-check-label" for="dramaFilter">Drama</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="fantasyFilter" value="fantasy">
-              <label class="form-check-label" for="fantasyFilter">Fantasy</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="horrorFilter" value="horror">
-              <label class="form-check-label" for="horrorFilter">Horror</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="mysteryFilter" value="mystery">
-              <label class="form-check-label" for="mysteryFilter">Mystery</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="romanceFilter" value="romance">
-              <label class="form-check-label" for="romanceFilter">Romance</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="scifiFilter" value="sci-fi">
-              <label class="form-check-label" for="scifiFilter">Sci-fi</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="thrillerFilter" value="thriller">
-              <label class="form-check-label" for="thrillerFilter">Thriller</label>
-            </div>
-            
-            <div class="genre-item">
-              <input class="form-check-input" type="checkbox" id="westernFilter" value="western">
-              <label class="form-check-label" for="westernFilter">Western</label>
-            </div>
-          </div>
-        </div>
-        
-        <div class="filter-section">
-          <h5 class="filter-heading">Year</h5>
-          <select id="yearFilter" class="form-select filter-select">
-            <option selected value="">All Years</option>
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-            <option value="older">Before 2020</option>
-          </select>
-        </div>
-        
-        <div class="filter-section">
-          <h5 class="filter-heading">Type</h5>
-          <select id="typeFilter" class="form-select filter-select">
-            <option selected value="">All Types</option>
-            <option value="movie">Movies</option>
-            <option value="series">TV Series</option>
-            <option value="episode">Episodes</option>
-          </select>
-        </div>
-        
-        <button id="applyFiltersBtn" class="btn btn-primary apply-filters-btn">
-          <i class="bi bi-funnel-fill me-1"></i> Apply Filters
-        </button>
-        
-        <button id="clearFiltersBtn" class="btn btn-outline-secondary mt-3 w-100">
-          <i class="bi bi-x-circle me-1"></i> Clear Filters
-        </button>
       </div>
+      
+      <div class="filter-section">
+        <h5 class="filter-heading">Genre</h5>
+        <div class="genre-filters">
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="actionFilter" value="action">
+            <label class="form-check-label" for="actionFilter">Action</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="comedyFilter" value="comedy">
+            <label class="form-check-label" for="comedyFilter">Comedy</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="dramaFilter" value="drama">
+            <label class="form-check-label" for="dramaFilter">Drama</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="fantasyFilter" value="fantasy">
+            <label class="form-check-label" for="fantasyFilter">Fantasy</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="horrorFilter" value="horror">
+            <label class="form-check-label" for="horrorFilter">Horror</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="mysteryFilter" value="mystery">
+            <label class="form-check-label" for="mysteryFilter">Mystery</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="romanceFilter" value="romance">
+            <label class="form-check-label" for="romanceFilter">Romance</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="scifiFilter" value="sci-fi">
+            <label class="form-check-label" for="scifiFilter">Sci-fi</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="thrillerFilter" value="thriller">
+            <label class="form-check-label" for="thrillerFilter">Thriller</label>
+          </div>
+          
+          <div class="genre-item">
+            <input class="form-check-input" type="checkbox" id="westernFilter" value="western">
+            <label class="form-check-label" for="westernFilter">Western</label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-section">
+        <h5 class="filter-heading">Year</h5>
+        <select id="yearFilter" class="form-select filter-select">
+          <option selected value="">All Years</option>
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+          <option value="2021">2021</option>
+          <option value="2020">2020</option>
+          <option value="older">Before 2020</option>
+        </select>
+      </div>
+      
+      <div class="filter-section">
+        <h5 class="filter-heading">Type</h5>
+        <select id="typeFilter" class="form-select filter-select">
+          <option selected value="">All Types</option>
+          <option value="movie">Movies</option>
+          <option value="series">TV Series</option>
+          <option value="episode">Episodes</option>
+        </select>
+      </div>
+      
+      <button id="applyFiltersBtn" class="btn btn-primary apply-filters-btn">
+        <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+      </button>
     </div>
     
     <!-- Main Content Area -->
-    <div class="col-lg-9 col-xl-10 main-content">
+    <div class="col-lg-10 main-content">
       <div class="content-wrapper">
-        <!-- Header: title + controls -->
-        <div class="explore-header mb-4">
-          <h1 class="explore-title">Explore Movies</h1>
-          
-          <div class="d-flex align-items-center">
-            <label class="mb-0 fw-semibold me-2" for="sortOptions">Sort by:</label>
-            <select id="sortOptions" class="form-select form-select-sm" style="min-width:130px">
-              <option value="relevance" selected>Relevance</option>
-              <option value="year">Year</option>
-              <option value="title">Title</option>
-              <option value="rating">Rating</option>
-            </select>
-          </div>
-        </div>
-
+        <h1 class="explore-title">Explore Movies</h1>
+        
         <!-- Search section -->
-        <div class="search-container mb-4 animate-fade-in">
+        <div class="search-container bg-white p-4 rounded-4 shadow-sm mb-4 animate-fade-in">
           <form id="searchForm" class="mb-3">
             <div class="input-group">
               <input 
@@ -139,13 +120,13 @@
             </div>
           </form>
           
-          <div class="d-flex justify-content-end">
+          <div class="d-flex justify-content-between align-items-center">
             <button id="advancedSearchToggle" class="btn btn-outline-secondary">
               <i class="bi bi-sliders me-1"></i> Advanced Filters
             </button>
           </div>
           
-          <div id="advancedSearchOptions" class="mt-3 animate-slide">
+          <div id="advancedSearchOptions" class="mt-3 animate-slide" style="display: none; max-height: 0; overflow: hidden;">
             <div class="row g-3">
               <div class="col-md-4">
                 <label for="directorFilter" class="form-label">Director</label>
@@ -173,22 +154,32 @@
         <!-- Popular searches / quick filters -->
         <div class="quick-filters mb-4 animate-fade-in" style="animation-delay: 0.1s;">
           <h5 class="mb-3">Popular Searches</h5>
-          <div id="popularSearchesContainer" class="d-flex flex-wrap gap-2">
-            <!-- Popular searches will be loaded dynamically -->
-            <div class="spinner-border spinner-border-sm text-light" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn popular-search-pill" data-search="Top Gun: Maverick">Top Gun: Maverick</button>
+            <button class="btn popular-search-pill" data-search="Oppenheimer">Oppenheimer</button>
+            <button class="btn popular-search-pill" data-search="Barbie">Barbie</button>
+            <button class="btn popular-search-pill" data-search="Dune">Dune</button>
+            <button class="btn popular-search-pill" data-search="Inside Out">Inside Out</button>
+            <button class="btn popular-search-pill" data-search="Star Wars">Star Wars</button>
           </div>
         </div>
         
         <!-- Results section -->
         <div id="resultsSection" class="results-container d-none animate-fade-in">
-          <div class="section-header mb-3">
-            <h2 class="results-title">Search Results</h2>
-            <div id="resultsCount" class="text-muted"></div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="results-title mb-0">Search Results</h2>
+            <div class="sort-by d-flex align-items-center">
+              <span class="me-2">Sort by:</span>
+              <select id="sortOptions" class="form-select">
+                <option value="relevance">Relevance</option>
+                <option value="year">Year</option>
+                <option value="title">Title</option>
+                <option value="rating">Rating</option>
+              </select>
+            </div>
           </div>
           
-          <div id="resultsContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-4">
+          <div id="resultsContainer" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
             <!-- Search results will be inserted here -->
           </div>
           
@@ -216,17 +207,16 @@
         
         <!-- Initial state / trending movies -->
         <div id="trendingSection" class="animate-fade-in" style="animation-delay: 0.2s;">
-          <div class="section-header mb-3">
-            <h2 class="section-title">Discover Movies</h2>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="section-title mb-0">Trending Now</h2>
             <div class="trending-tabs">
-              <button class="tab-btn" data-tab="popular">Popular</button>
-              <button class="tab-btn active" data-tab="latest">Latest</button>
+              <button class="tab-btn active" data-tab="popular">Popular</button>
+              <button class="tab-btn" data-tab="latest">Latest</button>
               <button class="tab-btn" data-tab="recommended">For You</button>
-              <button class="tab-btn" data-tab="highest-rated">Highest Rated</button>
             </div>
           </div>
           
-          <div id="trendingContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-4">
+          <div id="trendingContainer" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
             <!-- Trending movies will be loaded here -->
             <div class="col">
               <div class="movie-card skeleton">
@@ -275,8 +265,8 @@
             </div>
           </div>
           
-          <!-- The same structure can be used to display your actual posts -->
-          <div id="watchlist-items" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-4 mt-4 d-none">
+          <!-- The same structure can be used to display your actual posts from the first snippet -->
+          <div id="watchlist-items" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4 mt-4 d-none">
             {{#each posts}}
             <div class="col animate-fade-in">
               <div class="movie-card">
@@ -290,6 +280,9 @@
                   <div class="movie-title">{{title}}</div>
                   <div class="movie-year-rating">
                     <div class="movie-year">{{genre}}</div>
+                    <div class="movie-rating">
+                      <i class="bi bi-star-fill"></i> {{rating}}
+                    </div>
                   </div>
                   <p class="movie-description">{{description}}</p>
                   <p class="movie-watch-on">Watch on: {{whereToWatch}}</p>
@@ -304,8 +297,6 @@
   </div>
 </div>
 
-<div class="footer-spacer"></div>
-
 <style>
   /* Purple color scheme based on existing app */
   :root {
@@ -314,77 +305,50 @@
     --light-purple: #E9E8F7;
     --dark-purple: #4a3a6d;
     --accent-purple: #9683C3;
-    --bg-dark: #121212;
-    --bg-card: #1E1E1E;
-    --bg-element: #2A2A2A;
-    --bg-input: #333;
-    --border-color: #444;
-    --text-light: #fff;
-    --text-muted: #999;
-    --text-dim: #bbb;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 20px;
-    --navbar-height: 70px;
-    --footer-height: 60px;
-    --sidebar-width: 280px;
   }
   
   body {
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    min-height: 100vh;
-    position: relative;
-    padding-bottom: var(--footer-height);
+    background-color: #121212;
   }
   
-  /* Main container layout */
-  .movie-container {
-    max-width: 1920px;
+  /* Explore container layout */
+  .explore-container {
+    padding: 20px;
     width: 100%;
+    max-width: 1920px;
     margin: 0 auto;
-    padding: var(--spacing-md);
-    padding-top: calc(var(--navbar-height) + var(--spacing-lg));
   }
   
   /* Left sidebar styles */
   .filter-sidebar {
-    margin-bottom: var(--spacing-lg);
-  }
-  
-  .filter-content {
-    background-color: var(--bg-card);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-lg);
+    background-color: #1E1E1E;
+    border-radius: 12px;
+    padding: 20px;
     position: sticky;
-    top: calc(var(--navbar-height) + var(--spacing-md));
-    max-height: calc(100vh - var(--navbar-height) - var(--spacing-md) * 2);
+    top: 85px;
+    height: calc(100vh - 100px);
     overflow-y: auto;
   }
   
   .sidebar-title, .filter-heading {
-    color: var(--text-light);
-    margin-bottom: var(--spacing-lg);
+    color: #fff;
+    margin-bottom: 20px;
   }
   
   .filter-section {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: 30px;
   }
   
   .filter-heading {
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid #333;
+    padding-bottom: 8px;
     font-size: 1.1rem;
   }
   
   .genre-filters {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: 12px;
   }
   
   .genre-item {
@@ -393,9 +357,8 @@
   }
   
   .form-check-label {
-    color: var(--text-light);
-    margin-left: var(--spacing-sm);
-    cursor: pointer;
+    color: #fff;
+    margin-left: 8px;
   }
   
   .form-check-input {
@@ -408,23 +371,23 @@
   }
   
   .filter-select {
-    background-color: var(--bg-element);
-    color: var(--text-light);
-    border-color: var(--border-color);
+    background-color: #2A2A2A;
+    color: #fff;
+    border-color: #444;
   }
   
   .filter-select:focus {
     box-shadow: 0 0 0 0.25rem rgba(150, 131, 195, 0.25);
     border-color: var(--accent-purple);
-    background-color: var(--bg-element);
-    color: var(--text-light);
+    background-color: #2A2A2A;
+    color: #fff;
   }
   
   .apply-filters-btn {
     background-color: var(--primary-purple);
     border: none;
     width: 100%;
-    margin-top: var(--spacing-md);
+    margin-top: 15px;
     transition: all 0.3s;
   }
   
@@ -437,35 +400,22 @@
   /* Main content styles */
   .main-content {
     padding: 0 20px;
-    flex-grow: 1;
-    margin-bottom: 60px;
+    flex-grow: 1; /* Add this to make it take up available vertical space */
+    margin-bottom: 60px; /* Add a margin at the bottom for the fixed footer */
   }
   
   .content-wrapper {
-    background-color: var(--bg-card);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-xl);
-    min-height: 90vh;
+    background-color: #1E1E1E;
+    border-radius: 12px;
+    padding: 25px;
   }
   
-  /* Section headers */
-  .explore-header, .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
-  }
-  
-  .explore-title, .section-title {
-    color: var(--text-light);
+  .explore-title {
+    color: #fff;
+    margin-bottom: 25px;
+    text-align: center;
     font-weight: 700;
     letter-spacing: -0.5px;
-    margin: 0;
-  }
-  
-  .section-title {
-    font-weight: 600;
   }
   
   /* Animations */
@@ -481,18 +431,14 @@
   
   .animate-slide {
     transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
-    max-height: 0;
-    overflow: hidden;
     opacity: 0;
-    display: none;
   }
   
   .animate-slide.show {
-    display: block;
     opacity: 1;
-    max-height: 300px;
-    padding: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
+    max-height: 300px !important;
+    padding: 15px;
+    border-top: 1px solid #333;
   }
   
   /* Pulse animation for loading */
@@ -528,11 +474,18 @@
     opacity: 0.5;
   }
   
+  /* Titles */
+  .section-title {
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-top: 40px;
+  }
+  
   /* Search elements */
   .search-container {
-    background-color: var(--bg-element);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-lg);
+    background-color: #2A2A2A !important;
+    border-radius: 12px;
     transition: box-shadow 0.3s ease;
   }
   
@@ -543,9 +496,9 @@
   .search-btn {
     background-color: var(--primary-purple);
     color: white;
-    border-top-right-radius: var(--radius-sm);
-    border-bottom-right-radius: var(--radius-sm);
-    padding: var(--spacing-sm) var(--spacing-lg);
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding: 8px 20px;
     transition: background-color 0.2s ease;
   }
   
@@ -555,25 +508,25 @@
   }
   
   #searchInput {
-    color: white; 
-    background-color: var(--bg-input); 
-    border: 1px solid var(--border-color);
+    background-color: #333;
+    border-color: #444;
+    color: #fff;
   }
   
   #searchInput::placeholder {
-    color: var(--text-muted);
+    color: #999;
   }
   
   #searchInput:focus {
-    background-color: var(--bg-input);
-    color: var(--text-light);
+    background-color: #333;
+    color: #fff;
     box-shadow: none;
     border-color: var(--accent-purple);
   }
   
   #advancedSearchToggle {
-    color: var(--text-dim);
-    border-color: var(--border-color);
+    color: #ddd;
+    border-color: #555;
   }
   
   #advancedSearchToggle:hover {
@@ -583,27 +536,27 @@
   }
   
   #advancedSearchOptions {
-    background-color: var(--bg-input);
-    border-radius: var(--radius-sm);
+    background-color: #333;
+    border-radius: 8px;
   }
   
   #advancedSearchOptions .form-label {
-    color: var(--text-dim);
+    color: #ddd;
   }
   
   #advancedSearchOptions .form-control, 
   #advancedSearchOptions .form-select {
-    background-color: var(--bg-element);
-    border-color: var(--border-color);
-    color: var(--text-light);
+    background-color: #444;
+    border-color: #555;
+    color: #fff;
   }
   
   /* Popular search pills */
   .popular-search-pill {
-    background-color: var(--bg-element);
+    background-color: #2A2A2A;
     color: var(--accent-purple);
     border: 1px solid var(--accent-purple);
-    border-radius: var(--radius-lg);
+    border-radius: 20px;
     padding: 6px 16px;
     transition: all 0.3s ease;
   }
@@ -619,39 +572,38 @@
   .trending-tabs {
     display: flex;
     gap: 5px;
-    flex-wrap: wrap;
   }
   
   .tab-btn {
     background: none;
     border: none;
     padding: 8px 16px;
-    color: var(--text-muted);
-    border-radius: var(--radius-lg);
+    color: #999;
+    border-radius: 20px;
     font-size: 0.9rem;
     transition: all 0.2s ease;
   }
   
   .tab-btn:hover {
-    color: var(--text-light);
+    color: #fff;
   }
   
   .tab-btn.active {
     background-color: var(--dark-purple);
-    color: var(--text-light);
+    color: #fff;
     font-weight: 600;
   }
   
   /* Movie cards */
   .movie-card {
     position: relative;
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     cursor: pointer;
     height: 100%;
-    background-color: var(--bg-element);
+    background-color: #2A2A2A;
   }
   
   .movie-card:hover {
@@ -676,19 +628,19 @@
   }
   
   .movie-info {
-    padding: var(--spacing-md);
+    padding: 15px;
     position: relative;
-    background-color: var(--bg-element);
+    background-color: #2A2A2A;
   }
   
   .movie-title {
     font-weight: 600;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: 8px;
     font-size: 1rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--text-light);
+    color: #fff;
     transition: color 0.2s ease;
   }
   
@@ -698,29 +650,51 @@
   
   .movie-year-rating {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     margin-top: 5px;
     margin-bottom: 10px;
   }
   
   .movie-year {
-    color: var(--text-muted);
+    color: #999;
     font-size: 0.8rem;
   }
   
+  .movie-rating {
+    background-color: var(--primary-purple);
+    color: white;
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+  }
+  
+  .movie-card:hover .movie-rating {
+    transform: scale(1.1);
+  }
+  
+  .movie-rating i {
+    color: #ffc107;
+    margin-right: 3px;
+    font-size: 0.85rem;
+  }
+  
   .movie-description {
-    color: var(--text-dim);
+    color: #bbb;
     font-size: 0.85rem;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: 8px;
   }
   
   .movie-watch-on {
-    color: var(--text-muted);
+    color: #999;
     font-size: 0.8rem;
     margin-bottom: 0;
   }
@@ -737,7 +711,7 @@
     align-items: center;
     justify-content: center;
     border: none;
-    color: var(--text-light);
+    color: #fff;
     opacity: 0;
     transform: translateY(-5px);
     transition: all 0.3s ease;
@@ -776,14 +750,14 @@
   }
   
   .movie-info-placeholder {
-    padding: var(--spacing-md);
+    padding: 15px;
   }
   
   .placeholder-title {
     height: 16px;
     background-color: #444;
     width: 85%;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: 8px;
     border-radius: 4px;
   }
   
@@ -798,8 +772,8 @@
   #loadMoreBtn {
     color: var(--accent-purple);
     border-color: var(--accent-purple);
-    border-radius: var(--radius-sm);
-    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: 8px;
+    padding: 8px 24px;
     transition: all 0.3s ease;
   }
   
@@ -810,236 +784,104 @@
     box-shadow: 0 4px 12px rgba(95, 75, 139, 0.3);
   }
   
-  /* Observer target element for infinite scroll */
-  #scrollObserver {
-    width: 100%;
-    height: 10px;
-    margin-top: 20px;
-    margin-bottom: 20px;
+  /* Sort by styles */
+  .sort-by .form-select {
+    background-color: #2A2A2A;
+    color: #fff;
+    border-color: #444;
+    max-width: 120px;
+  }
+  
+  .sort-by span {
+    color: #ddd;
+  }
+  
+  .results-title {
+    color: #fff;
   }
   
   /* Responsive adjustments */
   @media (max-width: 991.98px) {
-    .filter-content {
+    .filter-sidebar {
       position: static;
       height: auto;
-      max-height: none;
+      margin-bottom: 20px;
     }
     
     .filter-section {
-      margin-bottom: var(--spacing-lg);
+      margin-bottom: 20px;
     }
     
     .genre-filters {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: var(--spacing-sm);
-    }
-    
-    .explore-header, .section-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .section-header {
-      flex-direction: column;
-      align-items: flex-start;
     }
   }
   
   @media (max-width: 767.98px) {
-    .movie-container {
-      padding-top: calc(var(--navbar-height) + var(--spacing-md));
+    .results-title {
+      font-size: 1.5rem;
     }
     
-    .content-wrapper {
-      padding: var(--spacing-md);
+    .sort-by span {
+      display: none;
     }
     
     .trending-tabs {
-      width: 100%;
+      display: flex;
       overflow-x: auto;
       white-space: nowrap;
       padding-bottom: 5px;
-      margin-top: var(--spacing-sm);
+      margin-left: -10px;
+      width: 100%;
     }
     
     .tab-btn {
       flex: 0 0 auto;
     }
     
-    .search-container {
-      padding: var(--spacing-md);
-    }
-    
     .explore-title {
-      font-size: 1.5rem;
+      font-size: 1.8rem;
     }
-    
-    .section-title {
-      font-size: 1.3rem;
-    }
-  }
-  
-  @media (max-width: 575.98px) {
-    .movie-container {
-      padding: var(--spacing-sm);
-      padding-top: calc(var(--navbar-height) + var(--spacing-sm));
-    }
-    
-    .content-wrapper {
-      padding: var(--spacing-sm);
-      border-radius: var(--radius-sm);
-    }
-    
-    .filter-content {
-      padding: var(--spacing-md);
-    }
-    
-    .filter-section {
-      margin-bottom: var(--spacing-md);
-    }
-    
-    .search-container {
-      padding: var(--spacing-sm);
-    }
-    
-    .genre-filters {
-      display: grid;
-      grid-template-columns: repeat(1, 1fr);
-    }
-    
-    .explore-title {
-      font-size: 1.3rem;
-    }
-    
-    .section-title {
-      font-size: 1.2rem;
-    }
-    
-    #advancedSearchOptions .row {
-      margin-left: 0;
-      margin-right: 0;
-    }
-    
-    #advancedSearchOptions .col-md-4 {
-      padding: var(--spacing-sm) 0;
-    }
-  }
-  
-  /* Footer spacer */
-  .footer-spacer {
-    height: var(--footer-height);
   }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Variables for pagination and loading state
+  // Fix navbar conflict by adding top padding to the explore container
+  const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 80;
+  document.querySelector('.explore-container').style.paddingTop = `${navbarHeight + 20}px`;
+  
+  // Fix filter sidebar height and scrolling
+  const filterSidebar = document.querySelector('.filter-sidebar');
+  const windowHeight = window.innerHeight;
+  filterSidebar.style.height = `calc(${windowHeight}px - ${navbarHeight + 40}px)`;
+  filterSidebar.style.overflowY = 'auto';
+  
+  // Variables for pagination and loading
   let page = 1;
   let isLoading = false;
   let currentQuery = '';
   let selectedGenres = [];
-  let currentSortBy = 'relevance'; // Default sort
-  let hasMoreResults = true;
-  let totalResults = 0;
-  let activeTab = 'latest'; // Default active tab
-  
-  // DOM Elements
-  const elements = {
-    searchForm: document.getElementById('searchForm'),
-    searchInput: document.getElementById('searchInput'),
-    advancedSearchToggle: document.getElementById('advancedSearchToggle'),
-    advancedSearchOptions: document.getElementById('advancedSearchOptions'),
-    applyFiltersBtn: document.getElementById('applyFiltersBtn'),
-    clearFiltersBtn: document.getElementById('clearFiltersBtn'),
-    sortOptions: document.getElementById('sortOptions'),
-    trendingSection: document.getElementById('trendingSection'),
-    resultsSection: document.getElementById('resultsSection'),
-    resultsContainer: document.getElementById('resultsContainer'),
-    resultsCount: document.getElementById('resultsCount'),
-    loadingIndicator: document.getElementById('loadingIndicator'),
-    noResultsMessage: document.getElementById('noResultsMessage'),
-    loadMoreBtn: document.getElementById('loadMoreBtn'),
-    trendingContainer: document.getElementById('trendingContainer'),
-    yearFilter: document.getElementById('yearFilter'),
-    typeFilter: document.getElementById('typeFilter'),
-    newestFilter: document.getElementById('newestFilter'),
-    directorFilter: document.getElementById('directorFilter'),
-    actorFilter: document.getElementById('actorFilter'),
-    ratingFilter: document.getElementById('ratingFilter'),
-    popularSearchesContainer: document.getElementById('popularSearchesContainer')
-  };
-  
-  // Initialize Intersection Observer for infinite scrolling
-  const initInfiniteScroll = () => {
-    // Create observer target element if it doesn't exist
-    let observerTarget = document.getElementById('scrollObserver');
-    if (!observerTarget) {
-      observerTarget = document.createElement('div');
-      observerTarget.id = 'scrollObserver';
-      observerTarget.style.width = '100%';
-      observerTarget.style.height = '10px';
-      observerTarget.style.margin = '20px 0';
-      
-      // Append to either results or trending container depending on which is visible
-      if (!elements.resultsSection.classList.contains('d-none')) {
-        elements.resultsContainer.parentNode.appendChild(observerTarget);
-      } else if (!elements.trendingSection.classList.contains('d-none')) {
-        elements.trendingContainer.parentNode.appendChild(observerTarget);
-      }
-    }
-    
-    // Create the IntersectionObserver
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && !isLoading && hasMoreResults) {
-          console.log('Intersection observer triggered, loading more results...');
-          loadMoreResults();
-        }
-      });
-    }, {
-      root: null, // viewport
-      rootMargin: '0px 0px 250px 0px', // trigger 250px before reaching the target
-      threshold: 0.1
-    });
-    
-    // Observe the target
-    observer.observe(observerTarget);
-    
-    // Add fallback for browsers that might not support IntersectionObserver
-    window.addEventListener('scroll', function() {
-      if (isLoading || !hasMoreResults) return;
-      
-      const scrollPosition = window.scrollY + window.innerHeight;
-      const pageHeight = document.documentElement.scrollHeight;
-      
-      if (scrollPosition >= pageHeight - 300) {
-        console.log('Scroll-triggered loading of more results...');
-        loadMoreResults();
-      }
-    });
-    
-    return observer;
-  };
-  
-  // Initialize the observer
-  let scrollObserver = initInfiniteScroll();
-  
+  let currentTab = 'popular';
+
   // Toggle advanced search options
-  elements.advancedSearchToggle.addEventListener('click', function() {
-    if (!elements.advancedSearchOptions.classList.contains('show')) {
-      elements.advancedSearchOptions.style.display = 'block';
+  const advancedSearchToggle = document.getElementById('advancedSearchToggle');
+  const advancedSearchOptions = document.getElementById('advancedSearchOptions');
+  
+  advancedSearchToggle.addEventListener('click', function() {
+    if (!advancedSearchOptions.classList.contains('show')) {
+      advancedSearchOptions.style.display = 'block';
       setTimeout(() => {
-        elements.advancedSearchOptions.classList.add('show');
+        advancedSearchOptions.classList.add('show');
       }, 10);
-      this.innerHTML = '<i class="bi bi-x-lg me-1"></i> Hide Filters';
+      advancedSearchToggle.innerHTML = '<i class="bi bi-x-lg me-1"></i> Hide Filters';
     } else {
-      elements.advancedSearchOptions.classList.remove('show');
+      advancedSearchOptions.classList.remove('show');
       setTimeout(() => {
-        elements.advancedSearchOptions.style.display = 'none';
+        advancedSearchOptions.style.display = 'none';
       }, 300);
-      this.innerHTML = '<i class="bi bi-sliders me-1"></i> Advanced Filters';
+      advancedSearchToggle.innerHTML = '<i class="bi bi-sliders me-1"></i> Advanced Filters';
     }
   });
   
@@ -1052,83 +894,112 @@ document.addEventListener('DOMContentLoaded', function() {
       } else {
         selectedGenres = selectedGenres.filter(genre => genre !== this.value);
       }
+      
+      // Update UI to show active filters
+      updateActiveFiltersDisplay();
     });
   });
   
-  // Handle sort selection
-  if (elements.sortOptions) {
-    elements.sortOptions.addEventListener('change', function() {
-      currentSortBy = this.value;
-      if (elements.resultsSection.classList.contains('d-none')) {
-        // If we're currently in trending section, don't refresh yet
-        return;
-      }
+  // Function to update the display of active filters
+  function updateActiveFiltersDisplay() {
+    const filterSidebar = document.querySelector('.filter-sidebar');
+    
+    // Remove any existing active filters indicator
+    const existingIndicator = filterSidebar.querySelector('.active-filters-indicator');
+    if (existingIndicator) {
+      existingIndicator.remove();
+    }
+    
+    // Count active filters
+    const activeFiltersCount = selectedGenres.length + 
+                              (document.getElementById('yearFilter').value ? 1 : 0) +
+                              (document.getElementById('typeFilter').value ? 1 : 0) +
+                              (document.getElementById('directorFilter')?.value ? 1 : 0) +
+                              (document.getElementById('actorFilter')?.value ? 1 : 0) +
+                              (document.getElementById('ratingFilter')?.value ? 1 : 0);
+    
+    // If there are active filters, show indicator
+    if (activeFiltersCount > 0) {
+      const indicator = document.createElement('div');
+      indicator.className = 'active-filters-indicator';
+      indicator.innerHTML = `<span>${activeFiltersCount}</span> active ${activeFiltersCount === 1 ? 'filter' : 'filters'}`;
       
-      resetSearch();
+      // Insert before the apply button
+      const applyBtn = document.getElementById('applyFiltersBtn');
+      filterSidebar.insertBefore(indicator, applyBtn);
       
-      // If there's a search query, use that, otherwise show filtered trending
-      if (currentQuery) {
-        performSearch(currentQuery, 1);
-      } else {
-        performFilteredSearch();
-      }
-    });
+      // Style the indicator
+      indicator.style.backgroundColor = 'var(--accent-purple)';
+      indicator.style.color = 'white';
+      indicator.style.padding = '5px 10px';
+      indicator.style.borderRadius = '4px';
+      indicator.style.marginBottom = '10px';
+      indicator.style.textAlign = 'center';
+      indicator.style.fontWeight = 'bold';
+    }
   }
   
   // Apply filters button
-  elements.applyFiltersBtn.addEventListener('click', function() {
+  const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+  applyFiltersBtn.addEventListener('click', function() {
     resetSearch();
     
-    // Collect all filter values
-    const filters = getFilterValues();
+    // Check if we have any active filters
+    const hasDirectorFilter = document.getElementById('directorFilter')?.value?.trim() !== '';
+    const hasActorFilter = document.getElementById('actorFilter')?.value?.trim() !== '';
+    const hasGenreFilter = selectedGenres.length > 0;
     
-    // If there's a search query, use that, otherwise show filtered trending
+    // Hide trending and show results section
+    document.getElementById('trendingSection').classList.add('d-none');
+    document.getElementById('resultsSection').classList.remove('d-none');
+    
+    // If there's a search query, use that
     if (currentQuery) {
-      performSearch(currentQuery, 1, filters);
-    } else {
-      // Hide trending and show filtered results
-      elements.trendingSection.classList.add('d-none');
-      elements.resultsSection.classList.remove('d-none');
-      performFilteredSearch(filters);
+      performSearch(currentQuery, 1);
+    } 
+    // If any filters are active, use filtered search
+    else if (hasDirectorFilter || hasActorFilter || hasGenreFilter) {
+      performFilteredSearch();
+    }
+    // Otherwise show trending results
+    else {
+      loadTrendingMovies(currentTab);
+      document.getElementById('trendingSection').classList.remove('d-none');
+      document.getElementById('resultsSection').classList.add('d-none');
     }
   });
   
-  // Clear filters button
-  if (elements.clearFiltersBtn) {
-    elements.clearFiltersBtn.addEventListener('click', function() {
-      // Clear all filter inputs
-      elements.yearFilter.value = '';
-      elements.typeFilter.value = '';
+  // Handle sorting options
+  const sortOptions = document.getElementById('sortOptions');
+  sortOptions.addEventListener('change', function() {
+    const resultsContainer = document.getElementById('resultsContainer');
+    const movieCards = Array.from(resultsContainer.querySelectorAll('.col'));
+    
+    // Sort the movie cards based on selected option
+    movieCards.sort((a, b) => {
+      const sortBy = sortOptions.value;
       
-      if (elements.directorFilter) elements.directorFilter.value = '';
-      if (elements.actorFilter) elements.actorFilter.value = '';
-      if (elements.ratingFilter) elements.ratingFilter.value = '';
-      
-      // Uncheck newestFilter - default to relevance
-      elements.newestFilter.checked = false;
-      
-      // Clear genre checkboxes
-      genreCheckboxes.forEach(checkbox => {
-        checkbox.checked = false;
-      });
-      selectedGenres = [];
-      
-      // Reset sort to default
-      if (elements.sortOptions) elements.sortOptions.value = 'relevance';
-      currentSortBy = 'relevance';
-      
-      // If there was a search, redo it with cleared filters
-      if (currentQuery) {
-        resetSearch();
-        performSearch(currentQuery, 1);
-      } else {
-        // Otherwise go back to trending view
-        elements.resultsSection.classList.add('d-none');
-        elements.trendingSection.classList.remove('d-none');
-        loadTrendingMovies(activeTab);
+      if (sortBy === 'title') {
+        const titleA = a.querySelector('.movie-title').textContent.toLowerCase();
+        const titleB = b.querySelector('.movie-title').textContent.toLowerCase();
+        return titleA.localeCompare(titleB);
+      } else if (sortBy === 'year') {
+        const yearA = parseInt(a.querySelector('.movie-year').textContent) || 0;
+        const yearB = parseInt(b.querySelector('.movie-year').textContent) || 0;
+        return yearB - yearA; // Newest first
+      } else if (sortBy === 'rating') {
+        const ratingA = parseFloat(a.querySelector('.movie-rating').textContent.replace(/[^\d.]/g, '')) || 0;
+        const ratingB = parseFloat(b.querySelector('.movie-rating').textContent.replace(/[^\d.]/g, '')) || 0;
+        return ratingB - ratingA; // Highest first
       }
+      
+      // Default to original order (relevance)
+      return 0;
     });
-  }
+    
+    // Re-append sorted cards to container
+    movieCards.forEach(card => resultsContainer.appendChild(card));
+  });
   
   // Handle tab switching
   const tabButtons = document.querySelectorAll('.tab-btn');
@@ -1139,277 +1010,47 @@ document.addEventListener('DOMContentLoaded', function() {
       // Add active class to clicked tab
       this.classList.add('active');
       
-      activeTab = this.getAttribute('data-tab');
-      console.log(`Loading ${activeTab} movies...`);
+      // Load different content based on the tab
+      currentTab = this.getAttribute('data-tab');
       
-      // Load the corresponding movie category
-      showSkeletonLoading(elements.trendingContainer, 5);
+      // Show loading state
+      const trendingContainer = document.getElementById('trendingContainer');
+      trendingContainer.innerHTML = generateSkeletonLoaders(5);
       
-      // Reset pagination for new tab
-      page = 1;
-      
-      // Load new trending movies after delay
-      setTimeout(() => loadTrendingMovies(activeTab), 300);
+      // Load new trending movies
+      loadTrendingMovies(currentTab);
     });
   });
   
-  // Load popular searches dynamically
-  loadPopularSearches();
-  
-  // Handle popular search clicks
-  elements.popularSearchesContainer.addEventListener('click', function(e) {
-    const button = e.target.closest('.popular-search-pill');
-    if (button) {
-      const searchTerm = button.getAttribute('data-search');
-      elements.searchInput.value = searchTerm;
+  // Handle popular search pills
+  const popularSearchButtons = document.querySelectorAll('.popular-search-pill');
+  popularSearchButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const searchTerm = this.getAttribute('data-search');
+      document.getElementById('searchInput').value = searchTerm;
       resetSearch();
       performSearch(searchTerm, 1);
-    }
+    });
   });
   
   // Search form submission
-  elements.searchForm.addEventListener('submit', function(e) {
+  const searchForm = document.getElementById('searchForm');
+  const searchInput = document.getElementById('searchInput');
+  
+  searchForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    const searchTerm = elements.searchInput.value.trim();
+    const searchTerm = searchInput.value.trim();
     if (searchTerm) {
       resetSearch();
       performSearch(searchTerm, 1);
     }
   });
   
-  // Load trending movies on page load - with latest tab active
-  loadTrendingMovies('latest');
-  
-  // Reset search state
-  function resetSearch() {
-    page = 1;
-    hasMoreResults = true;
-    currentQuery = elements.searchInput.value.trim();
-    elements.resultsContainer.innerHTML = '';
-  }
-  
-  // Helper function to collect all filter values
-  function getFilterValues() {
-    return {
-      year: elements.yearFilter.value,
-      type: elements.typeFilter.value,
-      genres: selectedGenres,
-      director: elements.directorFilter?.value || '',
-      actor: elements.actorFilter?.value || '',
-      minRating: elements.ratingFilter?.value || '',
-      sort: currentSortBy,
-      newestFirst: elements.newestFilter.checked
-    };
-  }
-  
-  // Helper function to build API URL with filters
-  function buildApiUrl(baseUrl, filters) {
-    // Check if baseUrl already contains query parameters
-    const hasQueryParams = baseUrl.includes('?');
-    
-    // Start with the base URL and add page parameter with the appropriate separator
-    let apiUrl = hasQueryParams ? `${baseUrl}&page=${page}` : `${baseUrl}?page=${page}`;
-    
-    // Add filter parameters
-    if (filters.genres && filters.genres.length > 0) {
-      apiUrl += `&genres=${filters.genres.join(',')}`;
-    }
-    
-    if (filters.year) {
-      apiUrl += `&year=${filters.year}`;
-    }
-    
-    if (filters.type) {
-      apiUrl += `&type=${filters.type}`;
-    }
-    
-    if (filters.director) {
-      apiUrl += `&director=${encodeURIComponent(filters.director)}`;
-    }
-    
-    if (filters.actor) {
-      apiUrl += `&actor=${encodeURIComponent(filters.actor)}`;
-    }
-    
-    if (filters.minRating) {
-      apiUrl += `&minRating=${filters.minRating}`;
-    }
-    
-    if (filters.sort && filters.sort !== 'relevance') {
-      apiUrl += `&sort=${filters.sort}`;
-    }
-    
-    if (filters.newestFirst) {
-      apiUrl += `&newestFirst=true`;
-    }
-    
-    console.log('API URL:', apiUrl); // Debug log to see the constructed URL
-    return apiUrl;
-  }
-  
-  // Perform filtered search with no query term
-  function performFilteredSearch(filters = {}) {
-    if (isLoading) return;
-    
-    // Show loading state
-    showLoadingState();
-    
-    // Build the API URL with query parameters
-    const apiUrl = buildApiUrl('/api/movies/filter', filters || getFilterValues());
-    
-    // Send the request
-    fetchMovies(apiUrl, 'filtered results');
-  }
-  
-  // Main search function
-  function performSearch(query, currentPage = 1, filters = {}) {
-    if (isLoading) return;
-    
-    // Show loading state
-    showLoadingState();
-    
-    // Hide trending section and show results section
-    elements.trendingSection.classList.add('d-none');
-    elements.resultsSection.classList.remove('d-none');
-    
-    // Construct base API URL with query parameter
-    const baseUrl = `/api/movies/search?query=${encodeURIComponent(query)}`;
-    
-    // Add filter parameters from either provided filters or current UI state
-    const currentFilters = filters || getFilterValues();
-    const apiUrl = buildApiUrl(baseUrl, currentFilters);
-    
-    // Send the request
-    fetchMovies(apiUrl, 'search results');
-  }
-  
-  // Common function to fetch movies data
-  function fetchMovies(apiUrl, sourceDescription) {
-    console.log(`Fetching ${sourceDescription} from:`, apiUrl);
-    
-    fetch(apiUrl)
-      .then(response => {
-        console.log(`Response status:`, response.status);
-        if (!response.ok) {
-          throw new Error(`Network response was not ok: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log(`Received data:`, data);
-        hideLoadingState();
-        
-        // Check various conditions for no results
-        if (!data) {
-          console.error('No data returned from API');
-          elements.noResultsMessage.classList.remove('d-none');
-          hasMoreResults = false;
-          return;
-        }
-        
-        if (!data.success || !data.results || data.results.length === 0) {
-          elements.noResultsMessage.classList.remove('d-none');
-          hasMoreResults = false;
-          return;
-        }
-        
-        // Update total results count
-        totalResults = data.totalResults || data.results.length;
-        if (elements.resultsCount) {
-          elements.resultsCount.textContent = `${totalResults} results found`;
-        }
-        
-        // Render results
-        renderMovies(data.results, elements.resultsContainer);
-        
-        // Update infinite scroll status
-        hasMoreResults = totalResults > page * 10;
-        
-        // Reinitialize the observer to handle the new content
-        if (scrollObserver) {
-          scrollObserver.disconnect();
-        }
-        scrollObserver = initInfiniteScroll();
-        
-        // Show Load More button if there are more results
-        if (hasMoreResults) {
-          elements.loadMoreBtn.classList.remove('d-none');
-          elements.loadMoreBtn.onclick = loadMoreResults;
-        } else {
-          elements.loadMoreBtn.classList.add('d-none');
-        }
-        
-        console.log(`Loaded ${data.results.length} movies from ${sourceDescription}. Total: ${totalResults}`);
-      })
-      .catch(error => {
-        console.error(`Error fetching ${sourceDescription}:`, error);
-        hideLoadingState();
-        elements.noResultsMessage.classList.remove('d-none');
-        hasMoreResults = false;
-      });
-  }
-  
-  // Load more results (used by both button and infinite scrolling)
-  function loadMoreResults() {
-    if (isLoading || !hasMoreResults) return;
-    
-    page++;
-    
-    // If we're in search results view
-    if (!elements.resultsSection.classList.contains('d-none')) {
-      if (currentQuery) {
-        performSearch(currentQuery, page, getFilterValues());
-      } else {
-        performFilteredSearch(getFilterValues());
-      }
-    } 
-    // If we're in trending view, load more trending movies
-    else if (!elements.trendingSection.classList.contains('d-none')) {
-      loadTrendingMovies(activeTab);
-    }
-  }
-  
-  // Render movies to a container
-  function renderMovies(movies, container) {
-    movies.forEach((movie, index) => {
-      // Create the list area for all movies
-      const movieElement = document.createElement('div');
-      movieElement.className = 'col animate-fade-in';
-      movieElement.style.animationDelay = `${index * 0.05}s`;
-      
-      // Default poster image if not available
-      const posterUrl = movie.poster && movie.poster !== 'N/A' 
-        ? movie.poster 
-        : '/api/placeholder/300/450';
-      
-      movieElement.innerHTML = `
-        <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
-          <div class="poster-container">
-            <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
-            <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title}', '${posterUrl}')">
-              <i class="bi bi-plus-lg"></i>
-            </button>
-          </div>
-          <div class="movie-info">
-            <div class="movie-title">${movie.title}</div>
-            <div class="movie-year-rating">
-              <div class="movie-year">${movie.year}</div>
-              ${movie.rating !== 'N/A' ? `<span class="separator ms-2 me-2">•</span><div class="movie-rating"><i class="bi bi-star-fill me-1" style="color: #ffc107;"></i>${movie.rating}</div>` : ''}
-            </div>
-          </div>
-        </div>
-      `;
-      
-      container.appendChild(movieElement);
-    });
-  }
-  
-  // Show skeleton loading effect
-  function showSkeletonLoading(container, count = 5) {
-    container.innerHTML = '';
-    
+  // Generate skeleton loaders
+  function generateSkeletonLoaders(count) {
+    let skeletons = '';
     for (let i = 0; i < count; i++) {
-      container.innerHTML += `
+      skeletons += `
         <div class="col">
           <div class="movie-card skeleton">
             <div class="movie-poster-placeholder"></div>
@@ -1421,81 +1062,316 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       `;
     }
+    return skeletons;
   }
   
-  // Show loading state
-  function showLoadingState() {
-    isLoading = true;
-    elements.loadingIndicator.classList.remove('d-none');
-    elements.noResultsMessage.classList.add('d-none');
-    elements.loadMoreBtn.classList.add('d-none');
+  // Load trending movies on page load
+  loadTrendingMovies('popular');
+  
+  // Reset search state
+  function resetSearch() {
+    page = 1;
+    currentQuery = searchInput.value.trim();
+    document.getElementById('resultsContainer').innerHTML = '';
   }
   
-  // Hide loading state
-  function hideLoadingState() {
-    isLoading = false;
-    elements.loadingIndicator.classList.add('d-none');
-  }
-  
-  // Load trending movies
-  function loadTrendingMovies(type = 'latest') {
+  // Perform filtered search with no query term
+  function performFilteredSearch() {
     if (isLoading) return;
     
-    showLoadingState();
+    // Show loading state
+    isLoading = true;
+    document.getElementById('loadingIndicator').classList.remove('d-none');
+    document.getElementById('noResultsMessage').classList.add('d-none');
+    document.getElementById('loadMoreBtn').classList.add('d-none');
     
-    // Fetch trending movies from the API
-    fetch(`/api/movies/trending?type=${type}&page=${page}`)
+    // Get filter values
+    const yearFilter = document.getElementById('yearFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    const directorFilter = document.getElementById('directorFilter')?.value || '';
+    const actorFilter = document.getElementById('actorFilter')?.value || '';
+    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+    
+    // Determine primary search term based on available filters
+    let searchQuery = '';
+    
+    // If director or actor is specified, use that as primary search term
+    if (directorFilter) {
+      searchQuery = `director:${directorFilter}`;
+    } else if (actorFilter) {
+      searchQuery = `actor:${actorFilter}`;
+    } else if (selectedGenres.length > 0) {
+      // Otherwise use first genre as search term
+      searchQuery = selectedGenres[0];
+    } else {
+      // Default search term if none provided
+      searchQuery = 'movie';
+    }
+    
+    // Build the API URL with query parameters - using search endpoint with filters
+    let apiUrl = `/api/movies/search?query=${encodeURIComponent(searchQuery)}&page=${page}`;
+    
+    if (selectedGenres.length > 0) {
+      apiUrl += `&genres=${selectedGenres.join(',')}`;
+    }
+    
+    if (yearFilter) {
+      apiUrl += `&year=${yearFilter}`;
+    }
+    
+    if (typeFilter) {
+      apiUrl += `&type=${typeFilter}`;
+    }
+    
+    // Only add these if they weren't used as the primary search term
+    if (directorFilter && !searchQuery.startsWith('director:')) {
+      apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
+    }
+    
+    if (actorFilter && !searchQuery.startsWith('actor:')) {
+      apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
+    }
+    
+    if (ratingFilter) {
+      apiUrl += `&minRating=${ratingFilter}`;
+    }
+    
+    fetch(apiUrl)
       .then(response => {
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error('Network response was not ok: ' + response.status);
         }
         return response.json();
       })
       .then(data => {
-        hideLoadingState();
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        isLoading = false;
         
         if (!data.success || !data.results || data.results.length === 0) {
-          console.error('Invalid trending data format or no results');
+          document.getElementById('noResultsMessage').classList.remove('d-none');
           return;
         }
         
-        // If first page, clear container
-        if (page === 1) {
-          elements.trendingContainer.innerHTML = '';
+        // Format the results to match frontend expectations
+        const formattedResults = formatMovieResults(data);
+        
+        // Render results
+        renderSearchResults(formattedResults.results);
+        
+        // Show Load More button if there are more results
+        if (formattedResults.totalResults > page * 10) {
+          const loadMoreBtn = document.getElementById('loadMoreBtn');
+          loadMoreBtn.classList.remove('d-none');
+          loadMoreBtn.onclick = () => {
+            page++;
+            performFilteredSearch();
+          };
         }
-        
-        // Update total count to determine if we have more results
-        totalResults = data.totalResults || data.results.length;
-        hasMoreResults = totalResults > page * data.results.length;
-        
-        // Render trending movies
-        renderMovies(data.results, elements.trendingContainer);
-        
-        // Update infinite scroll
-        if (scrollObserver) {
-          scrollObserver.disconnect();
-        }
-        scrollObserver = initInfiniteScroll();
       })
       .catch(error => {
-        console.error('Error loading trending movies:', error);
-        hideLoadingState();
-        
-        if (page === 1) {
-          elements.trendingContainer.innerHTML = `
-            <div class="col-12 text-center text-light">
-              <p>Unable to load trending movies. Please try again later.</p>
-            </div>
-          `;
-        }
+        console.error('Error fetching filtered results:', error);
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        document.getElementById('noResultsMessage').classList.remove('d-none');
+        isLoading = false;
       });
   }
-
-  // Load popular searches dynamically
-  function loadPopularSearches() {
-    const popularSearchesContainer = elements.popularSearchesContainer;
+  
+  // Format movie results to ensure consistent structure
+  function formatMovieResults(data) {
+    // If the data is already in the required format
+    if (data.results && Array.isArray(data.results) && 
+        data.results[0] && (data.results[0].id || data.results[0].imdbID)) {
+      
+      return {
+        success: true,
+        results: data.results.map(movie => ({
+          id: movie.id || movie.imdbID,
+          title: movie.title || movie.Title,
+          year: movie.year || movie.Year,
+          poster: (movie.poster || movie.Poster) && (movie.poster || movie.Poster) !== 'N/A' 
+            ? (movie.poster || movie.Poster) 
+            : `/api/placeholder/300/450`,
+          rating: movie.rating || movie.imdbRating || '7.0'
+        })),
+        totalResults: data.totalResults || data.results.length
+      };
+    }
     
-    fetch('/api/movies/popular-searches')
+    // Return data as is if it doesn't match expected format
+    return data;
+  }
+  
+  // Main search function
+  function performSearch(query, currentPage = 1) {
+    if (isLoading) {
+      return; // Prevent multiple simultaneous searches
+    }
+    
+    const yearFilter = document.getElementById('yearFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    const directorFilter = document.getElementById('directorFilter')?.value || '';
+    const actorFilter = document.getElementById('actorFilter')?.value || '';
+    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+    
+    // Show loading state
+    isLoading = true;
+    document.getElementById('loadingIndicator').classList.remove('d-none');
+    document.getElementById('noResultsMessage').classList.add('d-none');
+    document.getElementById('loadMoreBtn').classList.add('d-none');
+    
+    // Hide trending section and show results section
+    document.getElementById('trendingSection').classList.add('d-none');
+    document.getElementById('resultsSection').classList.remove('d-none');
+    
+    // Determine if we need to modify the search query to include director/actor
+    let searchTerms = query;
+    
+    // If director or actor is specified and not already in the query
+    if (directorFilter && !query.includes('director:')) {
+      if (query.trim() !== '') {
+        searchTerms = `${query} director:${directorFilter}`;
+      } else {
+        searchTerms = `director:${directorFilter}`;
+      }
+    }
+    
+    if (actorFilter && !query.includes('actor:')) {
+      if (searchTerms.trim() !== '') {
+        searchTerms = `${searchTerms} actor:${actorFilter}`;
+      } else {
+        searchTerms = `actor:${actorFilter}`;
+      }
+    }
+    
+    // Build the API URL with query parameters
+    let apiUrl = `/api/movies/search?query=${encodeURIComponent(searchTerms)}&page=${currentPage}`;
+    
+    if (yearFilter) {
+      apiUrl += `&year=${yearFilter}`;
+    }
+    
+    if (typeFilter) {
+      apiUrl += `&type=${typeFilter}`;
+    }
+    
+    if (selectedGenres.length > 0) {
+      apiUrl += `&genres=${selectedGenres.join(',')}`;
+    }
+    
+    if (ratingFilter) {
+      apiUrl += `&minRating=${ratingFilter}`;
+    }
+    
+    // Fetch from the API
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok: ' + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        isLoading = false;
+        
+        if (!data.success || !data.results || data.results.length === 0) {
+          document.getElementById('noResultsMessage').classList.remove('d-none');
+          return;
+        }
+        
+        // Format results to ensure consistent structure
+        const formattedResults = formatMovieResults(data);
+        
+        // Render results
+        renderSearchResults(formattedResults.results);
+        
+        // Show Load More button if there are more results
+        if (formattedResults.totalResults > currentPage * 10) {
+          const loadMoreBtn = document.getElementById('loadMoreBtn');
+          loadMoreBtn.classList.remove('d-none');
+          loadMoreBtn.onclick = () => {
+            page++;
+            performSearch(query, page);
+          };
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching search results:', error);
+        document.getElementById('loadingIndicator').classList.add('d-none');
+        document.getElementById('noResultsMessage').classList.remove('d-none');
+        isLoading = false;
+      });
+  }
+  
+  // Render search results
+  function renderSearchResults(movies) {
+    const resultsContainer = document.getElementById('resultsContainer');
+    
+    // Update results count
+    const resultsTitle = document.querySelector('.results-title');
+    if (resultsTitle) {
+      resultsTitle.textContent = `Search Results (${movies.length})`;
+    }
+    
+    movies.forEach((movie, index) => {
+      const movieElement = document.createElement('div');
+      movieElement.className = 'col animate-fade-in';
+      movieElement.style.animationDelay = `${index * 0.05}s`;
+      
+      // Default poster image if not available
+      const posterUrl = movie.poster && movie.poster !== 'N/A' 
+        ? movie.poster 
+        : '/api/placeholder/300/450';
+      
+      // Extract year from movie.year which might be a range like "2022-2023"
+      const year = movie.year ? movie.year.split('-')[0].trim() : '';
+      
+      // Prepare genres display if available
+      let genreDisplay = '';
+      if (movie.genre) {
+        const genres = typeof movie.genre === 'string' ? movie.genre.split(',')[0].trim() : '';
+        genreDisplay = `<div class="movie-genre">${genres}</div>`;
+      }
+      
+      movieElement.innerHTML = `
+        <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
+          <div class="poster-container">
+            <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
+            <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title.replace(/'/g, "\\'")}', '${posterUrl}')">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+          <div class="movie-info">
+            <div class="movie-title">${movie.title}</div>
+            <div class="movie-year-rating">
+              <div class="movie-year">${year}</div>
+              <div class="movie-rating">
+                <i class="bi bi-star-fill"></i> ${movie.rating !== 'N/A' ? movie.rating : '—'}
+              </div>
+            </div>
+            ${genreDisplay}
+          </div>
+        </div>
+      `;
+      
+      resultsContainer.appendChild(movieElement);
+    });
+    
+    // Apply current sort option to the new results
+    if (sortOptions.value !== 'relevance') {
+      const event = new Event('change');
+      sortOptions.dispatchEvent(event);
+    }
+  }
+  
+  // Load trending movies
+  function loadTrendingMovies(type = 'popular') {
+    // Clear the container and show loading state
+    const trendingContainer = document.getElementById('trendingContainer');
+    trendingContainer.innerHTML = generateSkeletonLoaders(5);
+    
+    // Fetch trending movies from the API
+    fetch(`/api/movies/trending?type=${type}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -1503,82 +1379,89 @@ document.addEventListener('DOMContentLoaded', function() {
         return response.json();
       })
       .then(data => {
-        popularSearchesContainer.innerHTML = '';
+        // Clear placeholders
+        trendingContainer.innerHTML = '';
         
-        // Use returned data or fallback to these if API doesn't return anything
-        const searches = data.success && data.searches && data.searches.length > 0 
-          ? data.searches 
-          : fetchTrendingSearchTerms();
+        if (!data.success || !data.results) {
+          console.error('Invalid trending data format');
+          return;
+        }
         
-        searches.forEach(search => {
-          const button = document.createElement('button');
-          button.className = 'btn popular-search-pill';
-          button.setAttribute('data-search', search);
-          button.textContent = search;
-          popularSearchesContainer.appendChild(button);
+        // Format the results to ensure consistent structure
+        const formattedResults = formatMovieResults(data);
+        
+        // Render trending movies with staggered animation
+        formattedResults.results.forEach((movie, index) => {
+          const movieElement = document.createElement('div');
+          movieElement.className = 'col animate-fade-in';
+          movieElement.style.animationDelay = `${index * 0.05}s`;
+          
+          const posterUrl = movie.poster && movie.poster !== 'N/A' 
+            ? movie.poster 
+            : `/api/placeholder/300/450`;
+          
+          // Extract year from movie.year which might be a range
+          const year = movie.year ? movie.year.split('-')[0].trim() : '';
+          
+          movieElement.innerHTML = `
+            <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
+              <div class="poster-container">
+                <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
+                <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title.replace(/'/g, "\\'")}', '${posterUrl}')">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+              <div class="movie-info">
+                <div class="movie-title">${movie.title}</div>
+                <div class="movie-year-rating">
+                  <div class="movie-year">${year}</div>
+                  <div class="movie-rating">
+                    <i class="bi bi-star-fill"></i> ${movie.rating !== 'N/A' ? movie.rating : '—'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          trendingContainer.appendChild(movieElement);
         });
       })
       .catch(error => {
-        console.error('Error loading popular searches:', error);
-        // Fallback to trending terms
-        popularSearchesContainer.innerHTML = '';
-        const defaultSearches = fetchTrendingSearchTerms();
-        defaultSearches.forEach(search => {
-          const button = document.createElement('button');
-          button.className = 'btn popular-search-pill';
-          button.setAttribute('data-search', search);
-          button.textContent = search;
-          popularSearchesContainer.appendChild(button);
-        });
+        console.error('Error loading trending movies:', error);
+        trendingContainer.innerHTML = `
+          <div class="col-12 text-center text-light">
+            <p>Unable to load trending movies. Please try again later.</p>
+          </div>
+        `;
       });
   }
-  
-  // Get trending search terms from actual API data
-  function fetchTrendingSearchTerms() {
-    // Make this dynamic by fetching latest movies and extracting terms
-    fetch('/api/movies/trending?type=latest&page=1')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && data.results && data.results.length > 0) {
-          // Extract movie titles for trending searches
-          const searchTerms = data.results.slice(0, 6).map(movie => movie.title);
-          updatePopularSearchTerms(searchTerms);
-          return searchTerms;
+    
+  // Implement scroll-based loading for infinite scroll effect
+  let debounceTimer;
+  window.onscroll = () => {
+    clearTimeout(debounceTimer); // Reset debounce timer
+    debounceTimer = setTimeout(() => {
+      if (isLoading) return; // Skip if already loading
+      
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const pageHeight = Math.max(
+        document.body.scrollHeight, 
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight, 
+        document.documentElement.offsetHeight
+      );
+      
+      if (scrollPosition >= pageHeight - 500) {
+        // Load more results when user is near bottom
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (!loadMoreBtn.classList.contains('d-none')) {
+          loadMoreBtn.click();
         }
-        return defaultSearchTerms();
-      })
-      .catch(() => {
-        return defaultSearchTerms();
-      });
-    
-    // Return default searches while waiting for API
-    return defaultSearchTerms();
-  }
+      }
+    }, 150);
+  };
   
-  // Update popular search pills with new terms
-  function updatePopularSearchTerms(terms) {
-    const container = elements.popularSearchesContainer;
-    if (container.children.length > 1) {
-      // Already populated, no need to update
-      return;
-    }
-    
-    container.innerHTML = '';
-    terms.forEach(term => {
-      const button = document.createElement('button');
-      button.className = 'btn popular-search-pill';
-      button.setAttribute('data-search', term);
-      button.textContent = term;
-      container.appendChild(button);
-    });
-  }
-  
-  // Default search terms as a fallback
-  function defaultSearchTerms() {
-    return ['Dune: Part Two', 'Deadpool & Wolverine', 'Twisters', 'Inside Out 2', 'Kingdom of the Planet of the Apes', 'A Quiet Place: Day One'];
-  }
-  
-  // Add to watchlist function (global to be called from inline onclick)
+  // Add to watchlist function
   window.addToWatchlist = function(imdbId, title, posterUrl) {
     // Get the button that was clicked
     const watchlistBtn = event.target.closest('.watchlist-btn');
@@ -1588,7 +1471,7 @@ document.addEventListener('DOMContentLoaded', function() {
     watchlistBtn.style.backgroundColor = 'var(--primary-purple)';
     watchlistBtn.style.color = 'white';
     
-    // API call to add to watchlist 
+    // Make API call to add to watchlist
     fetch('/api/movies/watchlist', {
       method: 'POST',
       headers: {
@@ -1603,16 +1486,21 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
+        // Keep the check mark
         console.log('Added to watchlist:', title);
       } else {
         // Reset button on error
-        resetWatchlistButton(watchlistBtn);
+        watchlistBtn.innerHTML = '<i class="bi bi-plus-lg"></i>';
+        watchlistBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        watchlistBtn.style.color = '#fff';
         console.error('Error adding to watchlist');
       }
     })
     .catch(error => {
       // Reset button on error
-      resetWatchlistButton(watchlistBtn);
+      watchlistBtn.innerHTML = '<i class="bi bi-plus-lg"></i>';
+      watchlistBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+      watchlistBtn.style.color = '#fff';
       console.error('Error adding to watchlist:', error);
     });
     
@@ -1620,10 +1508,16 @@ document.addEventListener('DOMContentLoaded', function() {
     event.stopPropagation();
   };
   
-  function resetWatchlistButton(button) {
-    button.innerHTML = '<i class="bi bi-plus-lg"></i>';
-    button.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    button.style.color = '#fff';
-  }
+  // Handle "newest first" checkbox
+  const newestFilter = document.getElementById('newestFilter');
+  newestFilter.addEventListener('change', function() {
+    if (this.checked) {
+      // If we're on the results page, sort by year
+      if (!document.getElementById('resultsSection').classList.contains('d-none')) {
+        sortOptions.value = 'year';
+        sortOptions.dispatchEvent(new Event('change'));
+      }
+    }
+  });
 });
 </script>

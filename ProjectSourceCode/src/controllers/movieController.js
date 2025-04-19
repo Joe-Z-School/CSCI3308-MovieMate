@@ -1,8 +1,12 @@
 const omdbApi = require('../api/omdbApi');
 const youtubeApi = require('../api/youtubeApi');
 const db = require('../index').db;
+const axios = require('axios');
 
-// Get new/trending movies
+/**
+ * Get new/trending movies
+ * GET /api/movies/new
+ */
 exports.getNewMovies = async (req, res) => {
   try {
     // These could be updated periodically or stored in the database
@@ -35,7 +39,10 @@ exports.getNewMovies = async (req, res) => {
   }
 };
 
-// API endpoint to get popular searches
+/**
+ * Get popular searches for the explore page
+ * GET /api/movies/popular-searches
+ */
 exports.getPopularSearches = async (req, res) => {
   try {
     // We'll generate this dynamically from trending movies
@@ -82,43 +89,84 @@ exports.getPopularSearches = async (req, res) => {
   }
 };
 
-// Update searchMovies to format data for the new frontend
+/**
+ * Search movies with flexible filtering and sorting
+ * GET /api/movies/search
+ */
 exports.searchMovies = async (req, res) => {
   try {
-    const { query, year, type, page = 1, director, actor, minRating, sort, newestFirst } = req.query;
+    const { 
+      query, 
+      year, 
+      type, 
+      page = 1, 
+      director, 
+      actor, 
+      minRating, 
+      sort, 
+      newestFirst, 
+      genres,
+      pageSize = 10
+    } = req.query;
     
     if (!query) {
       return res.status(400).json({ success: false, error: 'Search query is required' });
     }
     
+    // Process query to handle director/actor prefixes
+    let searchQuery = query;
+    let directorFilter = director;
+    let actorFilter = actor;
+    
+    // Check if query contains director: or actor: prefixes
+    if (query.includes('director:')) {
+      const match = query.match(/director:([^director:actor:]+)/i);
+      if (match && match[1]) {
+        directorFilter = match[1].trim();
+        // Remove director: prefix from search query
+        searchQuery = query.replace(/director:[^director:actor:]+/i, '').trim();
+      }
+    }
+    
+    if (query.includes('actor:')) {
+      const match = query.match(/actor:([^director:actor:]+)/i);
+      if (match && match[1]) {
+        actorFilter = match[1].trim();
+        // Remove actor: prefix from search query
+        searchQuery = searchQuery.replace(/actor:[^director:actor:]+/i, '').trim();
+      }
+    }
+    
+    // If search query is empty after removing prefixes, use a generic term
+    if (!searchQuery) {
+      searchQuery = directorFilter || actorFilter || 'movie';
+    }
+    
     // Build filters object with all possible parameters
     const filters = { 
       y: year, 
-      type: type
+      type: type,
+      page: page // Pass page parameter to API
     };
     
-    // Add additional filters from the advanced search
-    if (director) {
-      // We'll search by director in OMDB API
-      // But OMDB doesn't have a direct director filter, so we'll handle this in post-processing
-    }
-    
-    if (actor) {
-      // Same for actor - we'll handle in post-processing
-    }
-    
-    const apiResults = await omdbApi.searchMovies(query, filters, page);
-    
-    console.log('OMDB API response:', apiResults); // Debug log
+    const apiResults = await omdbApi.searchMovies(searchQuery, filters, page);
     
     if (!apiResults.success) {
       return res.status(404).json(apiResults);
     }
     
     let results = apiResults.results;
+    const totalResultsCount = parseInt(apiResults.totalResults) || results.length;
     
-    // If we have director or actor filters, we need to get details for each movie and filter
-    if ((director && director.trim() !== '') || (actor && actor.trim() !== '') || (minRating && minRating.trim() !== '')) {
+    // If we have director, actor, genre, or rating filters, we need to get details for each movie and filter
+    if ((directorFilter && directorFilter.trim() !== '') || 
+        (actorFilter && actorFilter.trim() !== '') || 
+        (minRating && minRating.trim() !== '') ||
+        (genres && genres.trim() !== '')) {
+        
+      // Parse genres if provided
+      const genreArray = genres ? genres.split(',').map(g => g.trim().toLowerCase()) : [];
+      
       // Fetch details for each movie to check directors, actors, and ratings
       const detailPromises = results.map(movie => 
         omdbApi.getMovieDetails(movie.imdbID)
@@ -134,17 +182,30 @@ exports.searchMovies = async (req, res) => {
           const movie = result.movie;
           
           // Check director if specified
-          if (director && director.trim() !== '') {
-            const movieDirectors = movie.Director.toLowerCase();
-            if (!movieDirectors.includes(director.toLowerCase())) {
+          if (directorFilter && directorFilter.trim() !== '') {
+            const movieDirectors = (movie.Director || '').toLowerCase();
+            if (!movieDirectors.includes(directorFilter.toLowerCase())) {
               return false;
             }
           }
           
           // Check actor if specified
-          if (actor && actor.trim() !== '') {
-            const movieActors = movie.Actors.toLowerCase();
-            if (!movieActors.includes(actor.toLowerCase())) {
+          if (actorFilter && actorFilter.trim() !== '') {
+            const movieActors = (movie.Actors || '').toLowerCase();
+            if (!movieActors.includes(actorFilter.toLowerCase())) {
+              return false;
+            }
+          }
+          
+          // Check genre if specified
+          if (genreArray.length > 0) {
+            const movieGenres = (movie.Genre || '').toLowerCase().split(',').map(g => g.trim());
+            // Check if any of the requested genres match the movie genres
+            const hasMatchingGenre = genreArray.some(requestedGenre => 
+              movieGenres.some(movieGenre => movieGenre.includes(requestedGenre))
+            );
+            
+            if (!hasMatchingGenre) {
               return false;
             }
           }
@@ -187,12 +248,13 @@ exports.searchMovies = async (req, res) => {
         title: movie.Title,
         year: movie.Year,
         poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
-        rating: movie.imdbRating || 'N/A'
+        rating: movie.imdbRating || 'N/A',
+        genre: movie.Genre || ''
       })),
-      totalResults: results.length
+      totalResults: totalResultsCount,
+      page: parseInt(page),
+      hasMorePages: parseInt(page) * parseInt(pageSize) < totalResultsCount
     };
-    
-    console.log('Formatted results:', formattedResults); // Debug log
     
     return res.json(formattedResults);
   } catch (error) {
@@ -201,10 +263,284 @@ exports.searchMovies = async (req, res) => {
   }
 };
 
-// Updated filter movies function with enhanced filtering capabilities
+/**
+ * Get movie details by IMDB ID
+ * GET /api/movies/details/:imdbId
+ */
+exports.getMovieDetails = async (req, res) => {
+  try {
+    const { imdbId } = req.params;
+    
+    if (!imdbId) {
+      return res.status(400).json({ success: false, error: 'IMDB ID is required' });
+    }
+    
+    const result = await omdbApi.getMovieDetails(imdbId);
+    
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+    
+    return res.json(result);
+  } catch (error) {
+    console.error('Error in getMovieDetails controller:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+/**
+ * Add a movie to the user's watchlist
+ * POST /api/movies/watchlist
+ */
+exports.addToWatchlist = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, error: 'User not authenticated' });
+    }
+    
+    const { imdbId } = req.body;
+    const userId = req.session.user.id;
+    
+    // First, check if the movie exists in our database
+    let movieId;
+    const movieCheck = await db.query('SELECT id FROM movies WHERE imdb_id = $1', [imdbId]);
+    
+    if (movieCheck.length === 0) {
+      // Movie doesn't exist in our database, so we need to fetch and save it
+      const movieData = await omdbApi.getMovieDetails(imdbId);
+      
+      if (!movieData.success) {
+        return res.status(404).json({ success: false, error: 'Movie not found' });
+      }
+      
+      const movie = movieData.movie;
+      
+      // Insert movie into database
+      const insertResult = await db.query(
+        'INSERT INTO movies (name, imdb_id, genre, year, poster) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        [movie.Title, movie.imdbID, movie.Genre, movie.Year, movie.Poster]
+      );
+      
+      movieId = insertResult[0].id;
+    } else {
+      movieId = movieCheck[0].id;
+    }
+    
+    // Check if movie is already in user's watchlist
+    const watchlistCheck = await db.query(
+      'SELECT * FROM movies_to_users WHERE user_id = $1 AND movie_id = $2 AND status = $3',
+      [userId, movieId, 'watchlist']
+    );
+    
+    if (watchlistCheck.length > 0) {
+      return res.json({ success: true, message: 'Movie already in watchlist' });
+    }
+    
+    // Add to watchlist
+    await db.query(
+      'INSERT INTO movies_to_users (user_id, movie_id, status) VALUES ($1, $2, $3)',
+      [userId, movieId, 'watchlist']
+    );
+    
+    return res.json({ success: true, message: 'Movie added to watchlist' });
+  } catch (error) {
+    console.error('Error adding to watchlist:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+/**
+ * Mark a movie as watched
+ * POST /api/movies/watched
+ */
+exports.markAsWatched = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, error: 'User not authenticated' });
+    }
+    
+    const { imdbId } = req.body;
+    const userId = req.session.user.id;
+    
+    // Similar logic to addToWatchlist
+    // First, check if the movie exists in our database
+    let movieId;
+    const movieCheck = await db.query('SELECT id FROM movies WHERE imdb_id = $1', [imdbId]);
+    
+    if (movieCheck.length === 0) {
+      // Movie doesn't exist in our database, need to fetch and save it
+      const movieData = await omdbApi.getMovieDetails(imdbId);
+      
+      if (!movieData.success) {
+        return res.status(404).json({ success: false, error: 'Movie not found' });
+      }
+      
+      const movie = movieData.movie;
+      
+      // Insert movie into database
+      const insertResult = await db.query(
+        'INSERT INTO movies (name, imdb_id, genre, year, poster) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        [movie.Title, movie.imdbID, movie.Genre, movie.Year, movie.Poster]
+      );
+      
+      movieId = insertResult[0].id;
+    } else {
+      movieId = movieCheck[0].id;
+    }
+    
+    // Check if movie is already marked as watched
+    const watchedCheck = await db.query(
+      'SELECT * FROM movies_to_users WHERE user_id = $1 AND movie_id = $2 AND status = $3',
+      [userId, movieId, 'watched']
+    );
+    
+    if (watchedCheck.length > 0) {
+      return res.json({ success: true, message: 'Movie already marked as watched' });
+    }
+    
+    // Mark as watched (this will update from watchlist if it exists)
+    await db.query(
+      'INSERT INTO movies_to_users (user_id, movie_id, status) VALUES ($1, $2, $3) ' +
+      'ON CONFLICT (user_id, movie_id) DO UPDATE SET status = $3',
+      [userId, movieId, 'watched']
+    );
+    
+    return res.json({ success: true, message: 'Movie marked as watched' });
+  } catch (error) {
+    console.error('Error marking as watched:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+/**
+ * Add a review for a movie
+ * POST /api/movies/review
+ */
+exports.addReview = async (req, res) => {
+  try {
+    if (!req.session.user) {
+      return res.status(401).json({ success: false, error: 'User not authenticated' });
+    }
+    
+    const { imdbId, rating, comment } = req.body;
+    const username = req.session.user.username;
+    
+    if (!imdbId || rating === undefined || !comment) {
+      return res.status(400).json({ success: false, error: 'IMDB ID, rating, and comment are required' });
+    }
+    
+    // First, check if the movie exists in our database
+    let movieId;
+    const movieCheck = await db.query('SELECT id FROM movies WHERE imdb_id = $1', [imdbId]);
+    
+    if (movieCheck.length === 0) {
+      // Movie doesn't exist in our database, need to fetch and save it
+      const movieData = await omdbApi.getMovieDetails(imdbId);
+      
+      if (!movieData.success) {
+        return res.status(404).json({ success: false, error: 'Movie not found' });
+      }
+      
+      const movie = movieData.movie;
+      
+      // Insert movie into database
+      const insertResult = await db.query(
+        'INSERT INTO movies (name, imdb_id, genre, year, poster) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        [movie.Title, movie.imdbID, movie.Genre, movie.Year, movie.Poster]
+      );
+      
+      movieId = insertResult[0].id;
+    } else {
+      movieId = movieCheck[0].id;
+    }
+    
+    // Add the comment
+    const commentResult = await db.query(
+      'INSERT INTO comments (username, comment, rating) VALUES ($1, $2, $3) RETURNING id',
+      [username, comment, rating]
+    );
+    
+    const commentId = commentResult[0].id;
+    
+    // Link comment to movie
+    await db.query(
+      'INSERT INTO movies_to_comments (movie_id, comment_id) VALUES ($1, $2)',
+      [movieId, commentId]
+    );
+    
+    // Also mark the movie as watched if it's not already
+    await db.query(
+      'INSERT INTO movies_to_users (user_id, movie_id, status) VALUES ($1, $2, $3) ' +
+      'ON CONFLICT (user_id, movie_id) DO UPDATE SET status = $3',
+      [req.session.user.id, movieId, 'watched']
+    );
+    
+    return res.json({ success: true, message: 'Review added successfully' });
+  } catch (error) {
+    console.error('Error adding review:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get reviews for a movie
+ * GET /api/movies/reviews/:imdbId
+ */
+exports.getMovieReviews = async (req, res) => {
+  try {
+    const { imdbId } = req.params; 
+    
+    if (!imdbId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'IMDB ID is required to fetch reviews' 
+      });
+    }
+    
+    // Get the movie ID from our database
+    const movieResult = await db.query('SELECT id FROM movies WHERE imdb_id = $1', [imdbId]);
+    
+    if (movieResult.length === 0) {
+      return res.json({ success: true, reviews: [] });
+    }
+    
+    const movieId = movieResult[0].id;
+    
+    // Get all comments for this movie
+    const reviews = await db.query(
+      'SELECT c.username, c.comment, c.rating, c.created_at ' +
+      'FROM comments c ' +
+      'JOIN movies_to_comments mtc ON c.id = mtc.comment_id ' +
+      'WHERE mtc.movie_id = $1 ' +
+      'ORDER BY c.created_at DESC',
+      [movieId]
+    );
+    
+    return res.json({ success: true, reviews });
+  } catch (error) {
+    console.error('Error getting movie reviews:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+/**
+ * Filter movies with flexible criteria
+ * GET /api/movies/filter
+ */
 exports.filterMovies = async (req, res) => {
   try {
-    const { genres, year, type, director, actor, minRating, sort, newestFirst, page = 1 } = req.query;
+    const { 
+      genres, 
+      year, 
+      type, 
+      director, 
+      actor, 
+      minRating, 
+      sort, 
+      newestFirst, 
+      page = 1,
+      pageSize = 10
+    } = req.query;
     
     // If no filters are provided, return trending movies
     if (!genres && !year && !type && !director && !actor && !minRating) {
@@ -215,14 +551,14 @@ exports.filterMovies = async (req, res) => {
     let searchQuery = '';
     let filters = {};
     
-    // For genre filtering, we'll use the first genre as search term
-    if (genres) {
-      const genreArray = genres.split(',');
-      searchQuery = genreArray[0]; // Use first genre as search term
-    } else if (director) {
+    // Determine primary search term based on filters
+    if (director) {
       searchQuery = director;
     } else if (actor) {
       searchQuery = actor;
+    } else if (genres) {
+      const genreArray = genres.split(',');
+      searchQuery = genreArray[0]; // Use first genre as search term
     } else {
       // Default search term if none provided
       searchQuery = 'movie';
@@ -237,6 +573,9 @@ exports.filterMovies = async (req, res) => {
       filters.type = type;
     }
     
+    // Include pagination in search
+    filters.page = page;
+    
     // Use the existing search function
     const results = await omdbApi.searchMovies(searchQuery, filters, page);
     
@@ -244,16 +583,25 @@ exports.filterMovies = async (req, res) => {
       return res.status(404).json(results);
     }
     
-    // If we have director or actor filters, we need to get details for each movie and filter
-    if ((director && director.trim() !== '') || (actor && actor.trim() !== '') || (minRating && minRating.trim() !== '')) {
-      // Fetch details for each movie to check directors, actors, and ratings
+    const totalResultsCount = parseInt(results.totalResults) || results.results.length;
+    
+    // If we have director, actor, genre, or rating filters, we need to get details for each movie and filter
+    if ((director && director.trim() !== '') || 
+        (actor && actor.trim() !== '') || 
+        (genres && genres.trim() !== '') ||
+        (minRating && minRating.trim() !== '')) {
+        
+      // Parse genres if provided
+      const genreArray = genres ? genres.split(',').map(g => g.trim().toLowerCase()) : [];
+      
+      // Fetch details for each movie to check directors, actors, genres, and ratings
       const detailPromises = results.results.map(movie => 
         omdbApi.getMovieDetails(movie.imdbID)
       );
       
       const detailResults = await Promise.all(detailPromises);
       
-      // Filter movies based on director, actor, and/or rating
+      // Filter movies based on criteria
       const filteredMovies = detailResults
         .filter(result => {
           if (!result.success || !result.movie) return false;
@@ -262,7 +610,7 @@ exports.filterMovies = async (req, res) => {
           
           // Check director if specified
           if (director && director.trim() !== '') {
-            const movieDirectors = movie.Director.toLowerCase();
+            const movieDirectors = (movie.Director || '').toLowerCase();
             if (!movieDirectors.includes(director.toLowerCase())) {
               return false;
             }
@@ -270,8 +618,21 @@ exports.filterMovies = async (req, res) => {
           
           // Check actor if specified
           if (actor && actor.trim() !== '') {
-            const movieActors = movie.Actors.toLowerCase();
+            const movieActors = (movie.Actors || '').toLowerCase();
             if (!movieActors.includes(actor.toLowerCase())) {
+              return false;
+            }
+          }
+          
+          // Check genre if specified
+          if (genreArray.length > 0) {
+            const movieGenres = (movie.Genre || '').toLowerCase().split(',').map(g => g.trim());
+            // Check if any of the requested genres match the movie genres
+            const hasMatchingGenre = genreArray.some(requestedGenre => 
+              movieGenres.some(movieGenre => movieGenre.includes(requestedGenre))
+            );
+            
+            if (!hasMatchingGenre) {
               return false;
             }
           }
@@ -293,7 +654,8 @@ exports.filterMovies = async (req, res) => {
             title: movie.Title,
             year: movie.Year,
             poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
-            rating: movie.imdbRating || 'N/A'
+            rating: movie.imdbRating || 'N/A',
+            genre: movie.Genre || ''
           };
         });
       
@@ -317,7 +679,9 @@ exports.filterMovies = async (req, res) => {
       return res.json({
         success: true,
         results: filteredMovies,
-        totalResults: filteredMovies.length
+        totalResults: filteredMovies.length,
+        page: parseInt(page),
+        hasMorePages: filteredMovies.length === parseInt(pageSize) // Assume more if we got a full page
       });
     }
     
@@ -329,9 +693,12 @@ exports.filterMovies = async (req, res) => {
         title: movie.Title,
         year: movie.Year,
         poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
-        rating: movie.imdbRating || 'N/A'
+        rating: movie.imdbRating || 'N/A',
+        genre: movie.Genre || ''
       })),
-      totalResults: parseInt(results.totalResults) || results.results.length
+      totalResults: parseInt(results.totalResults) || results.results.length,
+      page: parseInt(page),
+      hasMorePages: parseInt(page) * parseInt(pageSize) < totalResultsCount
     };
     
     return res.json(formattedResults);
@@ -340,3 +707,190 @@ exports.filterMovies = async (req, res) => {
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
+
+/**
+ * Get trending movies based on type (popular, latest, recommended)
+ * GET /api/movies/trending
+ */
+exports.getTrendingMovies = async (req, res) => {
+  try {
+    const { type = 'popular', page = 1 } = req.query;
+    const pageSize = 10; // Number of movies per page
+    
+    let allMovieIds = [];
+    
+    // Different lists based on trending type with expanded selections for pagination
+    if (type === 'popular') {
+      allMovieIds = [
+        'tt1745960', // Top Gun: Maverick
+        'tt12593682', // Bullet Train
+        'tt6443346', // Black Adam
+        'tt9114286', // Black Panther: Wakanda Forever
+        'tt1630029', // Avatar: The Way of Water
+        'tt15398776', // Oppenheimer
+        'tt9362722', // Spider-Man: Across the Spider-Verse
+        'tt1517268', // Barbie
+        'tt10151854', // The Fabelmans
+        'tt8760708', // TOP GUN: Maverick
+        'tt6710474', // Everything Everywhere All at Once
+        'tt11813216', // The Banshees of Inisherin
+        'tt10640346', // Babylon
+        'tt14444726', // The Menu
+        'tt10366206', // John Wick: Chapter 4
+        'tt2906216', // Ant-Man and the Wasp: Quantumania
+        'tt9764362', // The Menu
+        'tt9114286', // Black Panther: Wakanda Forever
+        'tt11564570', // Glass Onion: A Knives Out Mystery
+        'tt10954600', // Ant-Man and the Wasp: Quantumania
+      ];
+    } else if (type === 'latest') {
+      allMovieIds = [
+        'tt15239678', // Dune: Part Two
+        'tt11304740', // Deadpool & Wolverine
+        'tt17024450', // A Quiet Place: Day One
+        'tt1517268', // Twisters
+        'tt22687790', // Inside Out 2
+        'tt2283336', // Gladiator 2
+        'tt0499097', // Joker: Folie à Deux
+        'tt4873118', // The Lord of the Rings: The War of the Rohirrim
+        'tt3758542', // Kraven the Hunter
+        'tt8593824', // Alien: Romulus
+        'tt0439572', // The Batman: Part II
+        'tt5537002', // Killers of the Flower Moon
+        'tt6166392', // Fantastic Four
+        'tt1630029', // Avatar 3
+        'tt9362722', // Spider-Man: Beyond the Spider-Verse
+        'tt9362930', // Spider-Man 4
+        'tt27146282', // Minecraft
+        'tt14998742', // Trap
+        'tt24548838', // Beetlejuice Beetlejuice
+        'tt27548871', // IF
+      ];
+    } else if (type === 'recommended') {
+      // If user is logged in, we could personalize this based on their watch history
+      // For now, we'll return classic favorites
+      allMovieIds = [
+        'tt1375666', // Inception
+        'tt0816692', // Interstellar
+        'tt0468569', // The Dark Knight
+        'tt0109830', // Forrest Gump
+        'tt0111161', // The Shawshank Redemption
+        'tt0068646', // The Godfather
+        'tt0071562', // The Godfather: Part II
+        'tt0110912', // Pulp Fiction
+        'tt0167260', // The Lord of the Rings: The Return of the King
+        'tt0137523', // Fight Club
+        'tt0133093', // The Matrix
+        'tt0114369', // Se7en
+        'tt0120737', // The Lord of the Rings: The Fellowship of the Ring
+        'tt0102926', // The Silence of the Lambs
+        'tt0076759', // Star Wars
+        'tt0120815', // Saving Private Ryan
+        'tt0167261', // The Lord of the Rings: The Two Towers
+        'tt0080684', // Star Wars: Episode V - The Empire Strikes Back
+        'tt0073486', // One Flew Over the Cuckoo's Nest
+        'tt0099685', // Goodfellas
+      ];
+    }
+    
+    // Calculate pagination
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, allMovieIds.length);
+    
+    // Get the movie IDs for the current page
+    const pageMovieIds = allMovieIds.slice(startIndex, endIndex);
+    
+    // Get details for each movie in the current page
+    const moviePromises = pageMovieIds.map(imdbId => omdbApi.getMovieDetails(imdbId));
+    const results = await Promise.all(moviePromises);
+    
+    // Filter out any failures and extract the movie data
+    const movies = results
+      .filter(result => result.success)
+      .map(result => {
+        const movie = result.movie;
+        // Format the data to match the frontend expectations
+        return {
+          id: movie.imdbID,
+          title: movie.Title,
+          year: movie.Year,
+          rating: movie.imdbRating || '7.5', // Default if no rating
+          poster: movie.Poster,
+          genre: movie.Genre || ''
+        };
+      });
+    
+    return res.json({ 
+      success: true, 
+      results: movies,
+      totalResults: allMovieIds.length,
+      page: parseInt(page),
+      hasMorePages: endIndex < allMovieIds.length
+    });
+  } catch (error) {
+    console.error('Error fetching trending movies:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get movie trailer from YouTube
+ * GET /api/movies/trailer/:query
+ */
+exports.getMovieTrailer = async (req, res) => {
+  try {
+    const { query } = req.params;
+    const imdbId = req.query.imdbId;
+    
+    // If imdbId is provided, first get movie details to form a better query
+    let searchQuery = query;
+    
+    if (imdbId) {
+      const movieDetails = await omdbApi.getMovieDetails(imdbId);
+      if (movieDetails.success) {
+        const movie = movieDetails.movie;
+        searchQuery = `${movie.Title} ${movie.Year} official trailer`;
+      }
+    } else {
+      searchQuery = `${query} official trailer`;
+    }
+    
+    const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+      params: {
+        part: 'snippet',
+        maxResults: 1,
+        q: searchQuery,
+        type: 'video',
+        key: process.env.YOUTUBE_API_KEY
+      }
+    });
+
+    if (response.data.items && response.data.items.length > 0) {
+      const videoId = response.data.items[0].id.videoId;
+      res.json({
+        success: true,
+        videoId: videoId,
+        embedUrl: `https://www.youtube.com/embed/${videoId}`
+      });
+    } else {
+      res.json({ success: false, message: 'No trailer found' });
+    }
+  } catch (error) {
+    console.error('Error in getMovieTrailer controller:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+/**
+ * Simple placeholder image generator
+ * GET /api/placeholder/:width/:height
+ */
+exports.getPlaceholderImage = (req, res) => {
+  const width = req.params.width || 300;
+  const height = req.params.height || 450;
+  
+  // Redirect to a placeholder image service
+  res.redirect(`https://via.placeholder.com/${width}x${height}/808080/ffffff?text=Movie+Poster`);
+};
+
+module.exports = exports;
