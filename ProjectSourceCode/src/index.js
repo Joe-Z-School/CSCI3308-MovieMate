@@ -1270,34 +1270,17 @@ app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
 
   if (!title) {
-    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400 });
+    res.render('pages/profile', { layout: 'Main', message: 'Movie title is required', status: 400 });
     return;
   }
 
   db.tx(async remove => {
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
+    res.render('pages/profile', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
   }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
+    res.render('pages/profile', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
   });
-});
-
-app.get('/watchlist', async (req, res) => {
-  const userId = req.session.user?.id;
-
-  try {
-    const result = await db.query(
-      'SELECT title, poster_picture, description FROM watchlist WHERE user_id = $1',
-      [userId]
-    );
-
-    const watchlist = result;
-    res.render('pages/watchlist', { watchlist });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Error loading watchlist');
-  }
 });
 
 
@@ -1314,6 +1297,9 @@ app.get('/profile', async (req, res) => {
       (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
       (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
   `, [profileUserID]);
+  posts = await db.any(
+    `SELECT * FROM posts WHERE user_id = $1`, [profileUserID]
+  );
   if (isOwnProfile) {
     res.render('pages/profile', {
       user: req.session.user,
@@ -1321,6 +1307,7 @@ app.get('/profile', async (req, res) => {
       followersCount: counts.followers_count,
       followingCount: counts.following_count,
       watchlistCount: counts.watchlist_count,
+      posts: posts,
       isOwnProfile: isOwnProfile
     });
   }
@@ -1419,7 +1406,7 @@ app.get('/profile/watchlist', async (req, res) => {
 
   try {
     const watchlist = await db.any(`
-      SELECT id, title, poster_picture, where_to_watch 
+      SELECT id, title, poster_picture, where_to_watch, description
       FROM watchlist 
       WHERE user_id = $1
       ORDER BY id DESC
@@ -1435,23 +1422,23 @@ app.get('/profile/watchlist', async (req, res) => {
   }
 });
 
-app.post('/remove-from-watchlist', async (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).send('Unauthorized');
-  }
+// app.post('/remove-from-watchlist', async (req, res) => {
+//   if (!req.session.user) {
+//     return res.status(401).send('Unauthorized');
+//   }
 
-  try {
-    await db.none(`
-      DELETE FROM watchlist 
-      WHERE id = $1 AND user_id = $2
-    `, [req.body.watchlistId, req.session.user.id]);
+//   try {
+//     await db.none(`
+//       DELETE FROM watchlist 
+//       WHERE id = $1 AND user_id = $2
+//     `, [req.body.watchlistId, req.session.user.id]);
 
-    res.redirect('/profile/watchlist');
-  } catch (err) {
-    console.error('Error removing from watchlist:', err);
-    res.status(500).send('Error removing item from watchlist');
-  }
-});
+//     res.redirect('/profile/watchlist');
+//   } catch (err) {
+//     console.error('Error removing from watchlist:', err);
+//     res.status(500).send('Error removing item from watchlist');
+//   }
+// });
 
 // Profile Followers/Following Routes
 app.get('/profile/followers', async (req, res) => {
@@ -1545,6 +1532,7 @@ app.get('/messaging', async (req, res) => {
     res.render('pages/messaging', {
       activeUser,
       allFriends: formattedFriends,
+      user: req.session.user 
     });
   } catch (error) {
     console.error('Error loading messaging page:', error.message);
