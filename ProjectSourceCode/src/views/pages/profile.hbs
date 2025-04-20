@@ -282,12 +282,12 @@
     .custom-dropdown {
         position: relative;
         background-color: #222;
-        border: 2px solid #5F4B8B;
+        border: 1px solid #9999994d;
         border-radius: 8px;
         cursor: pointer;
         user-select: none;
         transition: border 0.3s ease;
-        color: white;
+        color: #A884F0;
         padding: 10px;
         width: 100%;
         font-size: 16px;
@@ -328,7 +328,7 @@
 
     .dropdown-options div:hover {
         background-color: #4a3a6d;
-        color: white;
+        color: #A884F0;
     }
 
     @keyframes fadeIn {
@@ -340,9 +340,67 @@
         }
     }
 
-    input::placeholder {
-        color: #5F4B8B;
-        opacity: 1;
+    input::placeholder,
+    textarea::placeholder {
+        color: #5F4B8B !important;
+        font-style: italic !important;
+        opacity: 1 !important;
+    }
+
+    .form-floating-container {
+        position: relative;
+        margin-bottom: 1.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .floating-input {
+        background-color: #222;
+        color: #fff;
+        border: 1px solid #444;
+        padding: 14px 12px 8px 12px;
+        border-radius: 6px;
+        width: 100%;
+    }
+
+    .floating-label {
+        position: absolute;
+        left: 12px;
+        top: 14px;
+        color: #A884F0;
+        font-style: italic;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        pointer-events: none;
+    }
+
+    .floating-input:focus + .floating-label,
+    .floating-input:not(:placeholder-shown) + .floating-label {
+        top: -10px;
+        left: 10px;
+        font-size: 0.8rem;
+        background-color: #222;
+        padding: 0 4px;
+        border-radius: 4px;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        opacity: 0;
+        animation: fadeInPlaceholder 1s ease forwards;
+        color: #A884F0 !important;
+        font-style: italic !important;
+    }
+
+    @keyframes fadeInPlaceholder {
+        to {
+            opacity: 1;
+        }
+    }
+
+    input.form-control:focus,
+    textarea.form-control:focus {
+        border-image: linear-gradient(90deg, #A884F0, #5F4B8B) 1;
+        box-shadow: 0 0 10px rgba(168, 132, 240, 0.6);
     }
 
 </style>
@@ -444,75 +502,77 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="addPostForm" enctype="multipart/form-data">
-            <div class="modal-body">
-                <!-- Select Image -->
-                <div class="radio-container">
-                    <p class="form-label mb-2 fw-bold">Choose a Movie Poster or Upload Your Own Picture</p>
-                    <div class="radio-group">
-                        <input type="radio" id="upload" name="imageSource" checked>
-                        <label for="upload" class="fw-bold" style="color: #999">Upload Your Own</label>
-                        <input type="radio" id="poster" name="imageSource">
-                        <label for="poster" class="fw-bold" style="color: #999">Use Movie Poster From Watchlist</label>
-                        <div class="glow-indicator"></div>
-                        <div class="outline-indicator"></div>
+                <div class="modal-body">
+                    <!-- Select Image -->
+                    <div class="radio-container">
+                        <p class="form-label mb-2 fw-bold">Choose a Movie Poster or Upload Your Own Picture</p>
+                        <div class="radio-group">
+                            <input type="radio" id="upload" name="imageSource" checked>
+                            <label for="upload" class="fw-bold" style="color: #999">Upload Your Own</label>
+                            <input type="radio" id="poster" name="imageSource">
+                            <label for="poster" class="fw-bold" style="color: #999">Use Movie Poster From Watchlist</label>
+                            <div class="glow-indicator"></div>
+                            <div class="outline-indicator"></div>
+                        </div>
+                    </div>
+                    <!-- Upload Box -->
+                    <div id="upload-box" class="upload-box hidden">
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                        <div class="upload-box-content">
+                            <i class="bi bi-upload fs-1"></i>
+                            <p>Drag and drop an image here,<br>or <span class="click-text">click to browse</span></p>
+                        </div>
+                    </div>
+                    <!-- Image Preview -->
+                    <div id="preview-container" class="mt-3 text-center hidden">
+                        <p class="mb-1">Image Preview:</p>
+                        <img id="preview-image" class="img-fluid rounded shadow" alt="Preview" />
+                    </div>
+                    <div class="text-center">
+                        <button type="button" id="resetImageBtn" class="btn btn-outline-light mt-3 hidden">Reset Image</button>
+                    </div>
+                    <div id="upload-error" class="text-danger mt-2 hidden">File is too large. Max size is 2MB.</div>
+                    <!-- Movie Poster Dropdown -->
+                    <div id="posterContainer" class="d-none">
+                        <div class="custom-dropdown" id="customPosterDropdown">
+                            <div class="dropdown-selected" id="dropdownSelected">Select Movie From Watchlist</div>
+                            <div class="dropdown-options" id="dropdownOptions"></div>
+                        </div>
+                        <input type="hidden" id="posterSelector" name="posterSelector" />
+                    </div>
+                    <!-- Post Title -->
+                    <div class="mb-3">
+                        <label for="postTitle" class="form-label mb-2 fw-bold" style="color: #999">Post Title</label>
+                        <div class="form-floating-container">
+                            <input type="text" id="postTitle" name="postTitle" class="form-control floating-input" placeholder=" " />
+                            <label for="postTitle" class="floating-label">Enter your post title or leave blank to use movie title</label>
+                        </div>
+                    </div>
+                    <!-- Comments -->
+                    <div class="mb-3">
+                        <label for="postBody" class="form-label mb-2 fw-bold" style="color: #999">Your Comments</label>
+                        <div class="form-floating-container">
+                            <textarea class="form-control floating-input" id="postBody" name="postBody" rows="4" placeholder=" "></textarea>                    
+                            <label for="postTitle" class="floating-label">Share your thoughts about the movie...</label>
+                        </div>
+                    </div>
+                    <!-- Star Rating (Film Reel Style) -->
+                    <div class="mb-3">
+                        <label class="form-label">Your Rating</label>
+                        <div id="filmReelRating" class="d-flex align-items-center gap-1">
+                            {{#each [1,2,3,4,5]}}
+                                <i class="bi bi-film fs-3 film-icon" data-value="{{this}}"></i>
+                            {{/each}}
+                            <input type="hidden" name="rating" id="ratingValue">
+                        </div>
                     </div>
                 </div>
-                <!-- Upload Box -->
-                <div id="upload-box" class="upload-box hidden">
-                    <input type="file" id="fileInput" accept="image/*" hidden>
-                    <div class="upload-box-content">
-                        <i class="bi bi-upload fs-1"></i>
-                        <p>Drag and drop an image here,<br>or <span class="click-text">click to browse</span></p>
-                    </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Post</button>
                 </div>
-                <!-- Image Preview -->
-                <div id="preview-container" class="mt-3 text-center hidden">
-                    <p class="mb-1">Image Preview:</p>
-                    <img id="preview-image" class="img-fluid rounded shadow" alt="Preview" />
-                </div>
-                <div class="text-center">
-                    <button type="button" id="resetImageBtn" class="btn btn-outline-light mt-3 hidden">Reset Image</button>
-                </div>
-                <div id="upload-error" class="text-danger mt-2 hidden">File is too large. Max size is 2MB.</div>
-                <!-- Movie Poster Dropdown -->
-                <div id="posterContainer" class="d-none">
-                    <div class="custom-dropdown" id="customPosterDropdown">
-                        <div class="dropdown-selected" id="dropdownSelected">Select Movie From Watchlist</div>
-                        <div class="dropdown-options" id="dropdownOptions"></div>
-                    </div>
-                    <input type="hidden" id="posterSelector" name="posterSelector" />
-                </div>
-                <!-- Post Title -->
-
-                <div class="mb-3">
-                    <label for="postTitle" class="form-label mb-2 fw-bold" style="color: #999">Post Title</label>
-                    <input type="text" class="form-control" id="postTitle" name="postTitle" placeholder="Enter your post title or leave blank to use movie title" style="color: #6f42c1 !important">
-                </div>
-
-          <!-- Comments -->
-          <div class="mb-3">
-            <label for="postBody" class="form-label">Your Comments</label>
-            <textarea class="form-control" id="postBody" name="postBody" rows="4" placeholder="Share your thoughts about the movie..."></textarea>
-          </div>
-
-          <!-- Star Rating (Film Reel Style) -->
-          <div class="mb-3">
-            <label class="form-label">Your Rating</label>
-            <div id="filmReelRating" class="d-flex align-items-center gap-1">
-              {{#each [1,2,3,4,5]}}
-              <i class="bi bi-film fs-3 film-icon" data-value="{{this}}"></i>
-              {{/each}}
-              <input type="hidden" name="rating" id="ratingValue">
-            </div>
-          </div>
-
+            </form>
         </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Post</button>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
 
 
