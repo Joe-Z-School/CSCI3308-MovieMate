@@ -395,65 +395,65 @@
     }
     
     #filmReelRating {
-  --background: rgba(0, 0, 0, .35);
-  --size: 10px;
-  background-image:
-    linear-gradient(to right, var(--background) var(--size), transparent var(--size)),
-    linear-gradient(to bottom, var(--background) var(--size), transparent var(--size)),
-    linear-gradient(to right, var(--background) var(--size), transparent var(--size)),
-    linear-gradient(to bottom, var(--background) var(--size), transparent var(--size)),
-    linear-gradient(to bottom, transparent var(--size), var(--background) var(--size));
-  background-size: calc(var(--size) * 2) var(--size),
-                   calc(var(--size) * 2) var(--size),
-                   calc(var(--size) * 2) var(--size),
-                   calc(var(--size) * 2) var(--size),
-                   100% calc(100% - var(--size) * 3);
-  background-repeat: repeat-x;
-  background-position: 0 var(--size), top left, 0 calc(100% - var(--size)), bottom left, 0 var(--size);
-  padding: calc(var(--size) * 3) 5px;
-  box-sizing: border-box;
-  border-radius: 12px;
-  position: relative;
-  display: inline-block;
-}
+        --background: rgba(0, 0, 0, .35);
+        --size: 10px;
+        background-image:
+            linear-gradient(to right, var(--background) var(--size), transparent var(--size)),
+            linear-gradient(to bottom, var(--background) var(--size), transparent var(--size)),
+            linear-gradient(to right, var(--background) var(--size), transparent var(--size)),
+            linear-gradient(to bottom, var(--background) var(--size), transparent var(--size)),
+            linear-gradient(to bottom, transparent var(--size), var(--background) var(--size));
+        background-size: calc(var(--size) * 2) var(--size),
+                         calc(var(--size) * 2) var(--size),
+                         calc(var(--size) * 2) var(--size),
+                         calc(var(--size) * 2) var(--size),
+                         100% calc(100% - var(--size) * 3);
+        background-repeat: repeat-x;
+        background-position: 0 var(--size), top left, 0 calc(100% - var(--size)), bottom left, 0 var(--size);
+        padding: calc(var(--size) * 3) 5px;
+        box-sizing: border-box;
+        border-radius: 12px;
+        position: relative;
+        display: inline-block;
+    }
 
-.svg-container {
-  position: relative;
-  height: 90px; 
-  overflow: visible;
-}
+    .svg-container {
+        position: relative;
+        height: 90px; 
+        overflow: visible;
+    }
 
-svg {
-  overflow: visible;
-}
+    svg {
+        overflow: visible;
+    }
 
-.reel-slot rect {
-  fill: #333;
-  stroke: #6f42c1;
-  stroke-width: 2;
-  cursor: pointer;
-  transition: fill 0.3s ease, transform 0.3s ease;
-  transform-origin: center bottom;
-}
+    .reel-slot rect {
+        fill: #333;
+        stroke: #6f42c1;
+        stroke-width: 2;
+        cursor: pointer;
+        transition: fill 0.3s ease, transform 0.3s ease;
+        transform-origin: center bottom;
+    }
 
-.reel-slot.filled rect {
-  fill: #6f42c1;
-  filter: drop-shadow(0 0 4px rgba(111, 66, 193, 0.4));
-  animation: pop-up 0.3s ease;
-}
+    .reel-slot.filled rect {
+        fill: #6f42c1;
+        filter: drop-shadow(0 0 4px rgba(111, 66, 193, 0.4));
+        animation: pop-up 0.3s ease;
+    }
 
-.reel-slot:hover rect,
-.reel-slot.hovered rect {
-  fill: #854eca;
-  filter: drop-shadow(0 0 4px rgba(111, 66, 193, 0.4));
-  transform: translateY(-6px);
-}
+    .reel-slot:hover rect,
+    .reel-slot.hovered rect {
+        fill: #854eca;
+        filter: drop-shadow(0 0 4px rgba(111, 66, 193, 0.4));
+        transform: translateY(-6px);
+    }
 
-@keyframes pop-up {
-  0%   { transform: translateY(10px); opacity: 0.5; }
-  50%  { transform: translateY(-8px); opacity: 1; }
-  100% { transform: translateY(0); }
-}
+    @keyframes pop-up {
+        0%   { transform: translateY(10px); opacity: 0.5; }
+        50%  { transform: translateY(-8px); opacity: 1; }
+        100% { transform: translateY(0); }
+    }
 
 
 
