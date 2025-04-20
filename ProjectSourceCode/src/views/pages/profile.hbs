@@ -286,6 +286,17 @@
         margin-bottom: 15px;
     }
 
+    .custom-dropdown.open-up {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+
+    .custom-dropdown.open-down {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+
     .custom-dropdown:hover {
         border-color: #4a3a6d;
     }
@@ -299,10 +310,11 @@
     .dropdown-options {
         position: absolute;
         top: 100%;
-        left: 0;
+        width: calc(100% + 2px);
+        left: -1px;
         right: 0;
         background-color: #222;
-        border: 1px solid #5F4B8B;
+        border: 1px solid #9999994d;
         border-top: none;
         z-index: 1000;
         display: none;
@@ -313,7 +325,7 @@
     }
 
     .dropdown-options div {
-        padding: 10px;
+        padding: 8px;
         transition: background-color 0.2s;
     }
 
@@ -330,6 +342,70 @@
             opacity: 1;
         }
     }
+
+    /* Custom Checkbox Container */
+    .custom-checkbox-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    /* Hide the default checkbox */
+    .custom-checkbox-container input[type="checkbox"] {
+        display: none;
+    }
+    
+    /* Label style */
+    .custom-checkbox-container label {
+        position: relative;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #999;
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Create a custom checkbox circle */
+    .custom-checkbox-container input[type="checkbox"]:checked + label::before,
+    .custom-checkbox-container input[type="checkbox"]:not(:checked) + label::before {
+        content: '';
+        position: absolute;
+        left: -37px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: transparent;
+        border: 2px solid #6f42c1; /* Purple border */
+        transition: all 0.3s ease;
+    }
+    
+    /* Glowing effect when checked */
+    .custom-checkbox-container input[type="checkbox"]:checked + label::after {
+        content: '';
+        position: absolute;
+        left: -36px;
+        top: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background-color: #6f42c1; /* Purple glow */
+        box-shadow: 0 0 10px 4px rgba(168, 84, 240, 0.6); /* Glow effect */
+        z-index: 2;
+    }
+    
+    /* Add the outline when checked */
+    .custom-checkbox-container input[type="checkbox"]:checked + label::before {
+        border: 2px solid #6f42c1; /* Purple border */
+        box-shadow: 0 0 6px rgba(168, 84, 240, 0.6); /* Soft purple glow */
+    }
+    
+    /* Show a circle outline when not checked */
+    .custom-checkbox-container input[type="checkbox"]:not(:checked) + label::before {
+        box-shadow: 0 0 4px rgba(168, 84, 240, 0.3); /* Soft purple outline */
+    }
+
 
     input::placeholder,
     textarea::placeholder {
@@ -455,7 +531,40 @@
         100% { transform: translateY(0); }
     }
 
+    #ratingLabel {
+        display: block; 
+        min-height: 1.5rem; 
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(4px);
+        transition: 
+            opacity 0.3s ease,
+            visibility 0.3s ease,
+            transform 0.3s ease;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #A884F0;
+        pointer-events: none;
+    }
 
+    #ratingLabel.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .fade-label {
+        animation: fadeLabel 0.5s ease forwards;
+    }
+
+    @keyframes fadeLabel {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-footer {
+        border-top: 1px solid #A884F0; 
+    }
 
 </style>
 
@@ -524,13 +633,16 @@
 
     <h3 style="margin-top: 30px;">Recent Posts</h3>
     <div class="post-container">
-       {{#each posts}}
-       <div class="post-content">
+        {{#each posts}}
+        <div class="post-content">
             <a href="#" data-bs-toggle="modal" data-bs-target="#postDetailsModal" onclick="showPostDetails('{{id}}')">
                 <img src="{{cover}}" alt="{{title}} cover" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 10px;">
             </a>
+            <h5>{{title}}</h5>
+            <p>Review: {{review}}</p>
+            <p><strong>Where to Watch:</strong> {{where_to_watch}}</p>
         </div>
-    {{/each}}
+        {{/each}}
     </div>
 
     {{> postDetailsModal}}  <!-- Include post details modal -->
@@ -593,15 +705,37 @@
                             <div class="dropdown-options" id="dropdownOptions"></div>
                         </div>
                         <input type="hidden" id="posterSelector" name="posterSelector" />
+                        <input type="hidden" id="movieTitle" name="movieTitle" />
+                        <input type="hidden" id="movieDescription" name="movieDescription" />
                     </div>
                     <!-- Post Title -->
                     <div class="mb-3">
                         <label for="postTitle" class="form-label mb-2 fw-bold" style="color: #999">Post Title</label>
                         <div class="form-floating-container">
                             <input type="text" id="postTitle" name="postTitle" class="form-control floating-input" placeholder=" " />
-                            <label for="postTitle" class="floating-label">Enter your post title or leave blank to use movie title</label>
+                            <label for="postTitle" class="floating-label">Enter your post title</label>
                         </div>
                     </div>
+                    <!-- Include Title/Description Toggle -->
+                    <div class="form-check form-switch mt-3 custom-checkbox-container">
+                        <input class="form-check-input" type="checkbox" id="includeMovieDetails">
+                        <label class="form-check-label mb-2 fw-bold" style="color: #999" for="includeMovieDetails">Include Movie Title and Description</label>
+                    </div>
+                    <!-- Movie Details Checkbox -->
+                    <div id="movieInfoDropdownContainer" class="mt-2 d-none">
+                        <div class="custom-dropdown" id="movieInfoDropdown">
+                            <div class="dropdown-selected">Select a movie</div>
+                            <div class="dropdown-options" style="display: none;"></div>
+                        </div>
+                    </div>
+                    <!-- Movie Description Preview -->
+                    <div id="movieDetailsPreview" class="mt-2 d-none">
+                        <h6 id="selectedMovieTitle" class="fw-bold"></h6>
+                        <p id="selectedMovieDescription" class="small" style="color: #bbb;"></p>
+                    </div>
+                    <!-- Hidden fields for form submission -->
+                    <input type="hidden" name="includedMovieTitle" id="includedMovieTitle">
+                    <input type="hidden" name="includedMovieDescription" id="includedMovieDescription">
                     <!-- Comments -->
                     <div class="mb-3">
                         <label for="postBody" class="form-label mb-2 fw-bold" style="color: #999">Your Comments</label>
@@ -626,11 +760,20 @@
                                 </div>
                                 <input type="hidden" name="rating" id="ratingValue">
                             </div>
+                            <div id="ratingLabel" class="rating-label fade-label"></div>
                         </div>
                     </div>
+                    <!-- Dropdown for streaming services -->
+                    <div id="whereToWatchDropdown" class="custom-dropdown">
+                        <div id="whereToWatchSelected" class="dropdown-selected">Select Platform</div>
+                        <div id="whereToWatchOptions" class="dropdown-options">
+                            <!-- options will be injected here -->
+                        </div>
+                    </div>
+                    <input type="hidden" id="whereToWatchInput" name="platform">
                 </div>
-                <div class="modal-footer" >
-                    <button type="submit" class="btn btn-success">Post</button>
+                <div class="modal-footer justify-content-center">
+                    <button type="submit" class="btn btn-purple mt-4">Post</button>
                 </div>
             </form>
         </div>
@@ -745,11 +888,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const MAX_SIZE_MB = 2;
     const posterContainer = document.getElementById("posterContainer");
     const posterSelector = document.getElementById("posterSelector");
+    const dropdown = document.getElementById('whereToWatchDropdown');
     const dropdownSelected = document.getElementById("dropdownSelected");
     const dropdownOptions = document.getElementById("dropdownOptions");
     const ratingInput = document.getElementById('ratingValue');
     const reelSlots = document.querySelectorAll('.reel-slot');
     const modal = document.getElementById('postModal');
+    const includeMovieDetailsCheckbox = document.getElementById("includeMovieDetails");
+    const movieInfoDropdownContainer = document.getElementById("movieInfoDropdownContainer");
+    const movieDetailsPreview = document.getElementById("movieDetailsPreview");
 
     // Toggle User Upload or Poster View
     function toggleUploadBox() {
@@ -775,78 +922,201 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Handle file upload
-    function handleFile(file) {
-        previewImage.src = "";
-        const fileSizeMB = file.size / (1024 * 1024);
-        if (fileSizeMB > MAX_SIZE_MB) {
-            errorMessage.classList.remove("hidden");
-            previewContainer.classList.add("hidden");
-            fileInput.value = "";
-            uploadBox.classList.remove("hidden");
-            return;
-        }
-        errorMessage.classList.add("hidden");
+    async function uploadSelectedImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('senderId', 0);      // Dummy data to reuse the existing route
+        formData.append('recipientId', 0);
 
+        try {
+            const res = await fetch('/upload-chat-image', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                console.log("Image uploaded, ID:", data.imageId);
+                // Store this in the form element for later
+                document.getElementById('addPostForm').dataset.uploadedImageId = data.imageId;
+            } else {
+                console.error('Image upload failed:', data.error);
+            }
+        } catch (err) {
+            console.error('Image upload error:', err);
+        }
+    }
+
+    function handleFile(file) {
+        if (!file) return;
+    
         const reader = new FileReader();
         reader.onload = function (e) {
             previewImage.src = e.target.result;
             previewContainer.classList.remove("hidden");
             resetImageBtn.classList.remove("hidden");
             uploadBox.classList.add("hidden");
+    
+            // Upload the image to the server after previewing
+            uploadSelectedImage(file);
         };
         reader.readAsDataURL(file);
     }
 
+    
     // Watchlist dropdown logic
     async function fetchWatchlist() {
         try {
             const response = await fetch('/profile/watchlist/data');
-            const contentType = response.headers.get('Content-Type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Expected JSON, but got: ' + contentType);
-            }
-        const watchlist = await response.json();
-        const dropdown = document.getElementById("customPosterDropdown");
-        const selected = dropdown.querySelector(".dropdown-selected");
-        const optionsContainer = dropdown.querySelector(".dropdown-options");
-        const hiddenInput = document.getElementById("posterSelector");
-        optionsContainer.innerHTML = '';
+            const watchlist = await response.json();
+            const dropdown = document.getElementById("movieInfoDropdown");
+            const selected = dropdown.querySelector(".dropdown-selected");
+            const optionsContainer = dropdown.querySelector(".dropdown-options");
+            const posterDropdown = document.getElementById("customPosterDropdown");
+            const posterSelected = posterDropdown.querySelector(".dropdown-selected");
+            const posterOptionsContainer = posterDropdown.querySelector(".dropdown-options");
 
-        if (watchlist.length === 0) {
-            const noOption = document.createElement("div");
-            noOption.textContent = "No movies in watchlist.";
-            optionsContainer.appendChild(noOption);
+            optionsContainer.innerHTML = ''; // Clear the movie details options
+            posterOptionsContainer.innerHTML = ''; // Clear the poster options
+
+            if (watchlist.length === 0) {
+                const noOption = document.createElement("div");
+                noOption.textContent = "No movies in watchlist.";
+                optionsContainer.appendChild(noOption);
+            }
+            else {
+                watchlist.forEach(movie => {
+                    // Movie Title and Description Dropdown
+                    const movieOption = document.createElement("div");
+                    movieOption.classList.add("option");
+                    movieOption.textContent = movie.title;
+                    movieOption.addEventListener("click", () => {
+                        selected.textContent = movie.title;
+                        optionsContainer.style.display = "none";
+                        dropdown.classList.remove("open-down");
+                        // Set preview for movie details
+                        document.getElementById("selectedMovieTitle").textContent = movie.title;
+                        document.getElementById("selectedMovieDescription").textContent = movie.description || "No description available";
+                        movieDetailsPreview.classList.remove("d-none");
+                        // Set hidden fields for movie title and description
+                        document.getElementById("includedMovieTitle").value = movie.title;
+                        document.getElementById("includedMovieDescription").value = movie.description || "No description available";
+                    });
+                    optionsContainer.appendChild(movieOption);
+
+                    // Poster Dropdown
+                    const posterOption = document.createElement("div");
+                    posterOption.classList.add("option");
+                    posterOption.textContent = movie.title;
+                    posterOption.addEventListener("click", () => {
+                        posterSelected.textContent = movie.title;
+                        posterOptionsContainer.style.display = "none";
+                        posterDropdown.classList.remove("open-down");
+
+                        // Set the selected poster image in hidden field
+                        posterSelector.value = movie.poster_picture;
+
+                        // Show the poster preview
+                        previewImage.src = movie.poster_picture;
+                        previewContainer.classList.remove("hidden"); // Show preview container
+                        resetImageBtn.classList.add("hidden");  // Show reset button
+                    });
+                    posterOptionsContainer.appendChild(posterOption);
+                });
+            }
+
+            // Toggle dropdown open/close for movie details
+            selected.addEventListener("click", () => {
+                const isOpen = optionsContainer.style.display === "block";
+                optionsContainer.style.display = isOpen ? "none" : "block";
+                dropdown.classList.toggle("open-down", !isOpen);
+            });
+
+            // Toggle dropdown open/close for poster
+            posterSelected.addEventListener("click", () => {
+                const isOpen = posterOptionsContainer.style.display === "block";
+                posterOptionsContainer.style.display = isOpen ? "none" : "block";
+                posterDropdown.classList.toggle("open-down", !isOpen);
+            });
+
+        } catch (error) {
+            console.error('Error fetching watchlist:', error);
+        }
+    }
+
+    includeMovieDetailsCheckbox.addEventListener("change", () => {
+        if (includeMovieDetailsCheckbox.checked) {
+            movieInfoDropdownContainer.classList.remove("d-none");
         }
         else {
-            watchlist.forEach(movie => {
-                const option = document.createElement("div");
-                option.textContent = movie.title;
-                option.dataset.value = movie.poster_picture;
-                option.addEventListener("click", () => {
-                    selected.textContent = movie.title;
-                    hiddenInput.value = movie.poster_picture;
-                    previewImage.src = movie.poster_picture;
-                    previewContainer.classList.remove("hidden");
-                    resetImageBtn.classList.add("hidden");
-                    optionsContainer.style.display = "none";
-                });
-                optionsContainer.appendChild(option);
-            });
+            movieInfoDropdownContainer.classList.add("d-none");
+            movieDetailsPreview.classList.add("d-none");
+            document.getElementById("includedMovieTitle").value = "";
+            document.getElementById("includedMovieDescription").value = "";
         }
+    });
+
+    function setupWhereToWatchDropdown() {
+        const dropdown = document.getElementById("whereToWatchDropdown");
+        const selected = document.getElementById("whereToWatchSelected");
+        const optionsContainer = document.getElementById("whereToWatchOptions");
+        const hiddenInput = document.getElementById("whereToWatchInput");
+
+        const platforms = ["Netflix", "Hulu", "Amazon Prime", "Disney+", "HBO Max"];
+
+        optionsContainer.innerHTML = "";
+        platforms.forEach(platform => {
+            const option = document.createElement("div");
+            option.textContent = platform;
+            option.addEventListener("click", () => {
+                selected.textContent = platform;
+                hiddenInput.value = platform;
+                optionsContainer.style.display = "none";
+                dropdown.classList.remove("open-down");
+                dropdown.classList.remove("open-up");
+            });
+            optionsContainer.appendChild(option);
+        });
 
         selected.addEventListener("click", () => {
-            optionsContainer.style.display = optionsContainer.style.display === "block" ? "none" : "block";
+            const rect = dropdown.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const dropdownHeight = 200;
+
+            const shouldOpenUpward = spaceBelow < dropdownHeight + 20;
+
+            // Remove both directional classes first
+            dropdown.classList.remove("open-up");
+            dropdown.classList.remove("open-down");
+
+            if (shouldOpenUpward) {
+                optionsContainer.style.top = "auto";
+                optionsContainer.style.bottom = "100%";
+                optionsContainer.style.borderRadius = "8px 8px 0 0";
+                dropdown.classList.add("open-up");
+                dropdown.classList.remove("open-down");
+            }
+            else {
+                optionsContainer.style.top = "100%";
+                optionsContainer.style.bottom = "auto";
+                optionsContainer.style.borderRadius = "0 0 8px 8px";
+                dropdown.classList.add("open-down");
+                dropdown.classList.remove("open-up");
+            }
+
+            const isOpen = optionsContainer.style.display === "block";
+            optionsContainer.style.display = isOpen ? "none" : "block";
         });
 
         document.addEventListener("click", (e) => {
             if (!dropdown.contains(e.target)) {
                 optionsContainer.style.display = "none";
+                dropdown.classList.remove("open-up");
+                dropdown.classList.remove("open-down");
             }
         });
-        } catch (error) {
-            console.error('Error fetching watchlist:', error);
-        }
     }
+
 
     // File upload
     uploadBox.addEventListener("click", () => fileInput.click());
@@ -879,15 +1149,40 @@ document.addEventListener("DOMContentLoaded", function () {
         uploadBox.classList.remove("hidden");
         fileInput.value = "";
     });
-
+    
     // Rating
-    reelSlots.forEach((slot, index) => {
+    const ratingLabel = document.getElementById("ratingLabel");
+    let lockedRating = null;
+    const ratingDescriptions = {
+        1: "🤮 Terrible 1/5 🤮",
+        2: "😒 Meh 2/5 😒",
+        3: "😐 Okay 3/5 😐",
+        4: "❤️ Loved it 4/5 ❤️",
+        5: "🔥 Masterpiece 5/5 🔥"
+    };
+    
+    reelSlots.forEach((slot, index) => {  
+        const value = parseInt(slot.dataset.value);
+        
         slot.addEventListener('click', () => {
-            const value = slot.dataset.value;
-            ratingInput.value = value;
-            reelSlots.forEach(s => s.classList.remove('filled'));
-            for (let i = 0; i < value; i++) {
-                reelSlots[i].classList.add('filled');
+            if (lockedRating === value) {
+                // Clear rating
+                lockedRating = null;
+                ratingInput.value = '';
+                reelSlots.forEach(s => s.classList.remove('filled'));
+                ratingLabel.classList.remove("visible");
+                ratingLabel.textContent = '';
+            }
+            else {
+                // Set new rating
+                lockedRating = value;
+                ratingInput.value = value;
+                reelSlots.forEach(s => s.classList.remove('filled'));
+                for (let i = 0; i < value; i++) {
+                    reelSlots[i].classList.add('filled');
+                }
+                ratingLabel.textContent = ratingDescriptions[value];
+                ratingLabel.classList.add("visible");
             }
         });
 
@@ -895,14 +1190,22 @@ document.addEventListener("DOMContentLoaded", function () {
             reelSlots.forEach((s, i) => {
                 s.classList.toggle('hovered', i <= index);
             });
+            ratingLabel.textContent = ratingDescriptions[index + 1];
+            ratingLabel.classList.add("visible");
         });
 
         slot.addEventListener('mouseleave', () => {
             reelSlots.forEach(s => s.classList.remove('hovered'));
+            if (!lockedRating) {
+                ratingLabel.classList.remove("visible");
+                ratingLabel.textContent = '';
+            } else {
+                ratingLabel.textContent = ratingDescriptions[lockedRating];
+            }
         });
     });
 
-    // Reset everything when modal closes or opens
+    // Reset Modal on close/open
     const clearPostModal = () => {
         // Reset radio
         uploadRadio.checked = true;
@@ -915,9 +1218,23 @@ document.addEventListener("DOMContentLoaded", function () {
         previewContainer.classList.add("hidden");
         resetImageBtn.classList.add("hidden");
 
+        // Reset Include Title/Description Checkbox
+        const includeMovieDetailsCheckbox = document.getElementById("includeMovieDetails");
+        includeMovieDetailsCheckbox.checked = false;
+        const movieInfoDropdownContainer = document.getElementById("movieInfoDropdownContainer");
+        const movieDetailsPreview = document.getElementById("movieDetailsPreview");
+        movieInfoDropdownContainer.classList.add("d-none");
+        movieDetailsPreview.classList.add("d-none");
+    
+        // Reset Title/Description text
+        const movieInfoDropdown = document.getElementById("movieInfoDropdown");
+        const dropdownSelected = movieInfoDropdown.querySelector(".dropdown-selected");
+        dropdownSelected.textContent = "Select a movie";
+
         // Reset rating
         reelSlots.forEach(slot => slot.classList.remove('filled', 'hovered'));
         ratingInput.value = '';
+        ratingLabel.classList.remove("visible");
 
         // Reset dropdown
         dropdownSelected.textContent = "Select Movie From Watchlist";
@@ -927,19 +1244,114 @@ document.addEventListener("DOMContentLoaded", function () {
         // Clear title/comments
         document.getElementById("postTitle").value = "";
         document.getElementById("postBody").value = "";
+
+        // Reset "Where to Watch" dropdown
+        document.getElementById("whereToWatchSelected").textContent = "Select Platform";
+        document.getElementById("whereToWatchInput").value = "";
+        document.getElementById("whereToWatchOptions").style.display = "none";
+
+        // Clear hidden input values
+        document.getElementById("includedMovieTitle").value = "";
+        document.getElementById("includedMovieDescription").value = "";
+
+        // Reset selected movie info
+        document.getElementById("selectedMovieTitle").textContent = "";
+        document.getElementById("selectedMovieDescription").textContent = "";
     };
 
     modal.addEventListener('hidden.bs.modal', clearPostModal);
     modal.addEventListener('show.bs.modal', clearPostModal);
 
-    // Toggling image source
+    // Reset image source to userUpload
     uploadRadio.addEventListener("change", toggleUploadBox);
     posterRadio.addEventListener("change", toggleUploadBox);
     toggleUploadBox();
 
+    // Refetch watchlist
     fetchWatchlist();
+
+    setupWhereToWatchDropdown();
+    populateMovieInfoDropdown();
+
 });
 
+
+document.getElementById('addPostForm').addEventListener('submit', async function (e) {
+    e.preventDefault();     
+    const form = e.target;
+    const title = form.postTitle.value.trim();
+    const body = form.postBody.value.trim();
+    const rating = document.getElementById('ratingValue').value;
+    const imageSource = document.querySelector('input[name="imageSource"]:checked')?.id;
+    const includeDescription = form.querySelector('#includeDescriptionToggle')?.checked || false;
+    const where_to_watch = form.querySelector('#whereToWatchInput')?.value || '';
+
+    // Handle image IDs
+    let imageId = null;
+    let imdbId = null;
+
+    if (imageSource === 'poster') {
+        imdbId = document.getElementById('posterSelector').value;
+        if (imdbId?.startsWith('/image/')) {
+            imdbId = imdbId.replace('/image/', '');
+        }
+    }
+    else if (imageSource === 'upload') {
+        imageId = form.dataset.uploadedImageId || null;
+    }
+
+    // If the user wants to include the movie description
+    let movieDescription = '';
+    if (includeDescription && imdbId) {
+        try {
+            const res = await fetch(`/movie-description?imdbId=${encodeURIComponent(imdbId)}`);
+            const data = await res.json();
+
+            if (res.ok && data.description) {
+                movieDescription = data.description;
+            }
+        } catch (err) {
+            console.error('Error fetching movie description:', err);
+        }
+    }
+
+    // Create post object
+    const post = {
+        title,
+        body: movieDescription || body,  // If there's no description, use the body from the form
+        rating,
+        imageSource,
+        imageId,
+        imdbId,
+        includeDescription,
+        where_to_watch
+    };
+
+    console.log('Submitting post:', post);
+
+    // Submit form via fetch (final form submission)
+    try {
+        const res = await fetch('/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(post)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            console.log('Post created!', data);
+            const modalEl = document.getElementById('createPostModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            document.getElementById('createPostForm').reset();
+        } else {
+            console.error('Error creating post:', data.error);
+        }
+    } catch (err) {
+        console.error('Fetch error:', err);
+    }
+});
 
 
 // Show post details in the modal
@@ -950,12 +1362,13 @@ function showPostDetails(postId) {
     // Populate modal with post data
     if (post) {
         document.getElementById('postDetailCover').src = "../../resources/img/" + post.cover;
-        document.getElementById('postDetailTitle').innerText = post.title;
-        document.getElementById('postDetailReview').innerText = 'Review: ' + post.review;
-        document.getElementById('postDetailDescription').innerText = 'Description: ' + post.description;
-        document.getElementById('postDetailWhereToWatch').innerText = 'Where to Watch: ' + post.whereToWatch;
+        document.getElementById('postTitle').innerText = post.title;
+        document.getElementById('ratingValue').innerText = 'Review: ' + post.review;
+        document.getElementById('postBody').innerText = 'Description: ' + post.body;
+        document.getElementById('whereToWatchInput').innerText = 'Where to Watch: ' + post.where_to_watch;
     }
 }
+
 
 
 
