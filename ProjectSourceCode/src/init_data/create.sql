@@ -87,6 +87,8 @@ CREATE TABLE posts (
   review DECIMAL,
   like_count INTEGER DEFAULT 0,
   comment_count INTEGER DEFAULT 0,
+  movieTitle TEXT,
+  movieDescription TEXT,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

@@ -203,3 +203,84 @@ Week 3: April 11th
         - Look into Base64 or local download/hosting for file uploading if we want to house user uploaded images.
 
 ------------------------------------------------------------------------------
+
+Week 4: April 18th
+    - Lizze:
+        - what have you done since the last meeting?
+            - Private Message Notifications
+            - Testing
+            - Layout of Social Page adjustments
+            - Bug Fixes
+
+        - what are you planning to do until the next meeting?
+            - UAT results
+            - Bug fixes
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Maeve:
+        - what have you done since the last meeting?
+            - Visual Display of Posts on user profiles
+            - Visual fixes with navbar/footer
+            - Fixed all profile pictures
+
+        - what are you planning to do until the next meeting?
+            - Presentation material
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Neha:
+        - what have you done since the last meeting?
+            - View Followers/Following counts on profile page
+            - Profile navigation routes
+            - Bug fixes with adding/removing followers
+            - Color adjustments to modals
+
+        - what are you planning to do until the next meeting?
+            - Presentation material
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Ella:
+        - what have you done since the last meeting?
+            - Visual updates to Social page
+            - Visual fixes to notifications page
+
+        - what are you planning to do until the next meeting?
+            - Presentation material
+            - Visual fixes/adjustments
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Conner:
+        - what have you done since the last meeting?
+            - Update README in github repo
+            - Developed filters for discover page to filter movies
+            - Adjusted Discover page layout
+
+        - what are you planning to do until the next meeting?
+            - Movie Details page reviews loading
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Joe:
+        - what have you done since the last meeting?
+            - Image storage solutions for user uploads and movie posters
+            - Hosting on Render
+            - Messaging page improvements/image uploading
+
+        - what are you planning to do until the next meeting?
+            - Post modal so users can upload pictures/make posts
+            
+        - what are the challenges you are facing?
+            - None
+
+    - Additionals:
+        - None
+
+------------------------------------------------------------------------------
