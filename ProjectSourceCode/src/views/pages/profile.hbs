@@ -767,7 +767,7 @@
                     <div id="whereToWatchDropdown" class="custom-dropdown">
                         <div id="whereToWatchSelected" class="dropdown-selected">Select Platform</div>
                         <div id="whereToWatchOptions" class="dropdown-options">
-                            <!-- options will be injected here -->
+                            <!-- Options will load here -->
                         </div>
                     </div>
                     <input type="hidden" id="whereToWatchInput" name="platform">
@@ -927,7 +927,7 @@ document.addEventListener("DOMContentLoaded", function () {
     async function uploadSelectedImage(file) {
         const formData = new FormData();
         formData.append('image', file);
-        formData.append('senderId', 0);      // Dummy data to reuse the existing route
+        formData.append('senderId', 0); 
         formData.append('recipientId', 0);
 
         try {
@@ -1410,27 +1410,13 @@ document.getElementById('addPostForm').addEventListener('submit', async function
 
         if (res.ok) {
             console.log('Post created!', data);
-
-            // Close the modal only if it exists
-            const modalEl = document.getElementById('postModal'); // Correct ID here
-            if (modalEl) {
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();  // This will hide the modal
-
-                // Reset the form
-                form.reset();  // This will reset the form fields
-
-                // Optionally, you can reset the image preview and the radio buttons
-                document.getElementById('preview-container').classList.add('hidden');  // Hide image preview
-                document.getElementById('resetImageBtn').classList.add('hidden');  // Hide reset image button
-                document.getElementById('upload-error').classList.add('hidden');  // Hide error message
-                document.getElementById('upload-box').classList.add('hidden');  // Hide upload box
-            } else {
-                console.error('Modal element not found!');
-            }
-
-        } else {
-            console.error('Error creating post:', data.error);
+            // Redirect to profile page on success
+            window.location.href = '/profile';
+        } 
+        else {
+            const error = await response.json();
+            console.error('Failed to create post:', error);
+            alert('Error: ' + error.message);
         }
     } catch (err) {
         console.error('Fetch error:', err);
