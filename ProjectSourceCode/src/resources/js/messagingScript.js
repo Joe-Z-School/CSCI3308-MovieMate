@@ -100,7 +100,7 @@ function updateFriendsListOnUI(friendsList) {
     recentMessage.className = "recent-message text-muted";
     const rawMessage = friend.latest_message || "No recent messages";
     // Check if recent message was an image upload, if so, display text and not URL
-    const imageMessage = rawMessage.startsWith("/chat/image/") ? 'Image uploaded...' : rawMessage;
+    const imageMessage = rawMessage.startsWith("/user-image/") ? 'Image uploaded...' : rawMessage;
 
     // Dont display more than 22 characters in recent messages area for formatting. Add ellipses if longer
     recentMessage.textContent = imageMessage.length > 22 ? imageMessage.slice(0, 22) + "..." : imageMessage;
@@ -309,7 +309,7 @@ socket.on('private-message', ({ senderId, content }) => {
     user: friendName,
     profileIcon: `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
     timestamp: new Date(),
-    isImage: content.startsWith("/chat/image/")
+    isImage: content.startsWith("/user-image/")
   });
 });
 
@@ -327,7 +327,7 @@ socket.on('load-messages', (messages) => {
         ? `/resources/img/${activeUser.profile_icon}`
         : `/resources/img/${document.querySelector('[data-user-id="'+friendId+'"] img').getAttribute('src').split('/').pop()}`,
       timestamp,
-      isImage: content.startsWith("/chat/image/")
+      isImage: content.startsWith("/user-image/")
     });
   });
 
@@ -369,7 +369,7 @@ function appendMessage({ message, user, profileIcon = null, timestamp = new Date
   bubble.classList.add('chat-bubble');
 
   // Check if message sent/received is an image
-  if (isImage || message.startsWith("/chat/image/")) {
+  if (isImage || message.startsWith("/user-image/")) {
     const img = document.createElement('img');
     img.src = message;
     img.alt = "Sent image";
@@ -455,7 +455,7 @@ document.getElementById('file-input').addEventListener('change', async function 
     const data = await res.json();
 
     if (data.success) {
-      const imageUrl = `/chat/image/${data.imageId}`;
+      const imageUrl = `/user-image/${data.imageId}`;
 
       // Display in your own chat window
       appendMessage({ 

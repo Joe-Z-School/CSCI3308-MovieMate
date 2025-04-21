@@ -45,7 +45,7 @@ async function uploadPoster(posterUrl, imdbID) {
   return `/image/${imdbID}`;
 }
 
-async function uploadChatImage(buffer, contentType, userId, senderId, recipientId) {
+async function uploadUserImage(buffer, contentType, userId, senderId, recipientId) {
   const id = uuidv4();
 
   await db.query(
@@ -1100,10 +1100,125 @@ app.get('/dev/create-user-posts', async (req, res) => {
   }
 });
 
+app.post('/posts', async (req, res) => {
+  try {
+    const {
+      title,
+      body,
+      rating,
+      imageSource,
+      imageId,
+      imdbId,
+      where_to_watch,
+      includeDescription,
+      movieTitle,
+      movieDescription
+    } = req.body;
 
+    const userId = req.session.user?.id;
 
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
+    const postId = await createPost({
+      userId,
+      title,
+      body,
+      rating,
+      imageSource,
+      imageId,
+      imdbId,
+      where_to_watch,
+      includeDescription,
+      movieTitle,
+      movieDescription
+    });
 
+    res.status(201).json({ success: true, postId });
+  } catch (err) {
+    console.error('Post creation failed:', err);
+    res.status(500).json({ error: 'Failed to create post' });
+  }
+});
+
+async function createPost({userId,
+    title,
+    body,
+    rating,
+    imageSource,
+    imageId,
+    imdbId,
+    where_to_watch,
+    includeDescription,
+    movieTitle,
+    movieDescription
+  }) {
+  try {
+    let finalCoverUrl = null;
+
+    // Get image route path depending on source
+    if (imageSource === 'poster' && imdbId) {
+      const result = await db.oneOrNone(
+        'SELECT id FROM images WHERE imdb_id = $1',
+        [imdbId]
+      );
+
+      if (!result) {
+        throw new Error(`No image found for IMDb ID: ${imdbId}`);
+      }
+
+      finalCoverUrl = `/image/${result.id}`; // Route to serve the image
+    } else if (imageSource === 'upload' && imageId) {
+      const result = await db.oneOrNone(
+        'SELECT id FROM user_images WHERE id = $1',
+        [imageId]
+      );
+
+      if (!result) {
+        throw new Error(`No image found for upload ID: ${imageId}`);
+      }
+
+      finalCoverUrl = `/user-image/${result.id}`;
+    }
+
+    // Include the description if needed
+    if (includeDescription && imdbId) {
+      const movie = await db.oneOrNone('SELECT description FROM watchlist WHERE imdb_id = $1', [imdbId]);
+      if (movie) {
+        body = movie.description; // Use the movie description if available
+      }
+    }
+
+    const insertQuery = `
+      INSERT INTO posts (
+        user_id,
+        title,
+        body,
+        review,
+        cover,
+        where_to_watch,
+        movieTitle,
+        movieDescription
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id`;
+
+    const inserted = await db.one(insertQuery, [
+      userId,
+      title,
+      body,
+      rating,
+      finalCoverUrl,
+      where_to_watch,
+      movieTitle || null,
+      movieDescription || null
+    ]);
+
+    return inserted.id;
+  } catch (err) {
+    console.error('Error in createPost:', err);
+    throw err;
+  }
+}
 
 // *****************************************************
 // <!-- Friends Posts -->
@@ -1124,6 +1239,8 @@ app.get('/social', async (req, res) => {
     posts.review, 
     posts.like_count, 
     posts.comment_count,
+    posts.movieTitle,
+    posts.movieDescription,
     users.username AS user,
     EXISTS (
       SELECT 1 FROM post_likes 
@@ -1163,6 +1280,8 @@ app.get('/load-more', async (req, res) => {
     posts.review, 
     posts.like_count, 
     posts.comment_count,
+    posts.movieTitle,
+    posts.movieDescription,
     users.username AS user,
     EXISTS (
       SELECT 1 FROM post_likes 
@@ -1226,15 +1345,22 @@ app.get('/load-more', async (req, res) => {
 //   });
 // });
 
-app.get('/image/:imdbID', async (req, res) => {
-  const { imdbID } = req.params;
+app.get('/image/:identifier', async (req, res) => {
+  const { identifier } = req.params;
 
-  const result = await db.query(
-    'SELECT image_data, content_type FROM images WHERE imdb_id = $1',
-    [imdbID]
-  );
+  let query = '';
+  let param = identifier;
 
-  // If no image found
+  // Determine if identifier is a numeric ID or an IMDb ID
+  if (/^\d+$/.test(identifier)) {
+    query = 'SELECT image_data, content_type FROM images WHERE id = $1';
+    param = parseInt(identifier, 10);
+  } else {
+    query = 'SELECT image_data, content_type FROM images WHERE imdb_id = $1';
+  }
+
+  const result = await db.query(query, [param]);
+
   if (!result || result.length === 0) {
     return res.status(404).send('Image not found');
   }
@@ -1243,6 +1369,7 @@ app.get('/image/:imdbID', async (req, res) => {
   res.set('Content-Type', image.content_type);
   res.send(image.image_data);
 });
+
 
 
 app.post('/add-to-watchlist', async (req, res) => {
@@ -1421,6 +1548,28 @@ app.get('/profile/watchlist', async (req, res) => {
   }
 });
 
+app.get('/profile/watchlist/data', async (req, res) => {
+  const userId = req.query.userId || req.session.user.id;  // Get the userId either from the query or session
+  try {
+    const watchlist = await db.any(`
+      SELECT id, title, poster_picture, description FROM watchlist
+      WHERE user_id = $1
+      ORDER BY id DESC
+    `, [userId]);
+    
+    // Ensure watchlist is an array before sending it as JSON
+    if (Array.isArray(watchlist)) {
+      res.json(watchlist);  // Send the watchlist as a JSON response
+    } else {
+      throw new Error('Watchlist is not an array');
+    }
+  } catch (err) {
+    console.error('Error fetching watchlist:', err);
+    res.status(500).json({ error: 'Failed to fetch watchlist' });
+  }
+});
+
+
 // app.post('/remove-from-watchlist', async (req, res) => {
 //   if (!req.session.user) {
 //     return res.status(401).send('Unauthorized');
@@ -1561,8 +1710,8 @@ app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'User ID is required' });
     }
 
-    // Call the uploadChatImage function to insert the image data into the database
-    const imageId = await uploadChatImage(
+    // Call the uploadUserImage function to insert the image data into the database
+    const imageId = await uploadUserImage(
       req.file.buffer,
       req.file.mimetype,
       userId,
@@ -1577,7 +1726,7 @@ app.post('/upload-chat-image', upload.single('image'), async (req, res) => {
   }
 });
 
-app.get('/chat/image/:id', async (req, res) => {
+app.get('/user-image/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -1594,10 +1743,11 @@ app.get('/chat/image/:id', async (req, res) => {
     res.setHeader('Content-Type', image.content_type);
     res.send(image.image_data);
   } catch (err) {
-    console.error('Error retrieving image:', err);
+    console.error('Error retrieving user image:', err);
     res.status(500).send('Server error');
   }
 });
+
 
 // Track sockets and active chats
 const userSockets = new Map(); // { userId: socket }
