@@ -21,6 +21,179 @@ function formatMovieData(movie) {
   };
 }
 
+// Popular movies search terms
+const POPULAR_SEARCH_TERMS = ["action", "adventure", "marvel", "star", "mission"];
+
+// Recent movies (approximate by year)
+const RECENT_YEARS = ["2024", "2023"];
+
+// Classic/recommended movies search terms
+const CLASSIC_SEARCH_TERMS = ["godfather", "shawshank", "casablanca", "citizen"];
+
+/**
+ * Get a list of movies by searching with strategic terms
+ * @param {string[]} searchTerms - Terms to search for
+ * @param {string} year - Optional year to filter by
+ * @param {number} limit - Max number of movies to return
+ * @returns {Promise<string[]>} - Array of IMDB IDs
+ */
+async function getMoviesBySearchTerms(searchTerms, year = "", limit = 20) {
+  try {
+    const apiKey = process.env.OMDB_API_KEY;
+    const movieIds = new Set(); // Use Set to avoid duplicates
+    
+    // Search using multiple terms to get variety
+    for (const term of searchTerms) {
+      if (movieIds.size >= limit) break; // Stop if we have enough movies
+      
+      // Build search URL with term and optional year
+      const yearParam = year ? `&y=${year}` : "";
+      const url = `http://www.omdbapi.com/?apikey=${apiKey}&s=${encodeURIComponent(term)}${yearParam}&type=movie`;
+      
+      try {
+        const response = await axios.get(url);
+        
+        if (response.data.Response === "True" && response.data.Search) {
+          // Add unique movie IDs to our Set
+          response.data.Search.forEach(movie => {
+            if (movieIds.size < limit) {
+              movieIds.add(movie.imdbID);
+            }
+          });
+        }
+      } catch (err) {
+        console.error(`Error searching for term "${term}":`, err.message);
+        // Continue with next term even if one fails
+      }
+    }
+    
+    return Array.from(movieIds);
+  } catch (error) {
+    console.error('Error getting movies by search terms:', error);
+    return [];
+  }
+}
+
+/**
+ * Get popular movies (using popular search terms)
+ * @returns {Promise<string[]>} - Array of IMDB IDs
+ */
+async function fetchPopularMovies() {
+  return getMoviesBySearchTerms(POPULAR_SEARCH_TERMS);
+}
+
+/**
+ * Get latest movies (using 2025 year)
+ * @returns {Promise<string[]>} - Array of IMDB IDs
+ */
+async function fetchLatestMovies() {
+  // Always pull the 2025 movie set
+  return getMoviesBySearchTerms(POPULAR_SEARCH_TERMS, "2025", 50);
+}
+
+/**
+ * Get recommended classic movies
+ * @returns {Promise<string[]>} - Array of IMDB IDs
+ */
+async function fetchRecommendedMovies() {
+  return getMoviesBySearchTerms(CLASSIC_SEARCH_TERMS);
+}
+
+// Simple in-memory cache
+const cache = {
+  popular: {
+    data: null,
+    timestamp: 0
+  },
+  latest: {
+    data: null,
+    timestamp: 0
+  },
+  recommended: {
+    data: null,
+    timestamp: 0
+  }
+};
+
+// Cache lifetime in milliseconds (6 hours)
+const CACHE_LIFETIME = 6 * 60 * 60 * 1000;
+
+/**
+ * Get movies with caching
+ * @param {string} type - Category of movies to fetch
+ * @returns {Promise<string[]>} - Array of IMDB IDs
+ */
+async function getMoviesWithCache(type) {
+  const now = Date.now();
+  
+  // Check if we have valid cached data
+  if (cache[type] && cache[type].data && now - cache[type].timestamp < CACHE_LIFETIME) {
+    return cache[type].data;
+  }
+  
+  // Fetch fresh data based on type
+  let data = [];
+  
+  switch (type) {
+    case 'popular':
+      data = await fetchPopularMovies();
+      break;
+    case 'latest':
+      data = await fetchLatestMovies();
+      break;
+    case 'recommended':
+      data = await fetchRecommendedMovies();
+      break;
+    default:
+      data = await fetchPopularMovies();
+  }
+  
+  // Update cache
+  cache[type] = { data, timestamp: now };
+  
+  return data;
+}
+
+// Hardcoded fallback movie lists (in case API calls fail)
+const FALLBACK_MOVIES = {
+  popular: [
+    'tt31193180', // Sinners
+    'tt3566834', // A Minecraft Movie
+    'tt6208148', // Snow White
+    'tt31434639', // Warfare
+    'tt0899043', // The Amateur
+    'tt12299608', // Mickey 17
+    'tt7967302', // The King of Kings
+    'tt29603959', // Novocaine
+    'tt12908150', // The Life of Chuck
+    'tt28607951', // Anora
+  ],
+  latest: [
+    'tt15239678', // Dune: Part Two
+    'tt11304740', // Deadpool & Wolverine
+    'tt17024450', // A Quiet Place: Day One
+    'tt1517268', // Twisters
+    'tt22687790', // Inside Out 2
+    'tt2283336', // Gladiator 2
+    'tt0499097', // Joker: Folie à Deux
+    'tt4873118', // The Lord of the Rings: The War of the Rohirrim
+    'tt3758542', // Kraven the Hunter
+    'tt8593824', // Alien: Romulus
+  ],
+  recommended: [
+    'tt1375666', // Inception
+    'tt0816692', // Interstellar
+    'tt0468569', // The Dark Knight
+    'tt0109830', // Forrest Gump
+    'tt0111161', // The Shawshank Redemption
+    'tt0068646', // The Godfather
+    'tt0071562', // The Godfather: Part II
+    'tt0110912', // Pulp Fiction
+    'tt0167260', // The Lord of the Rings: The Return of the King
+    'tt0137523', // Fight Club
+  ]
+};
+
 /**
  * Get new/trending movies
  * GET /api/movies/new
@@ -588,7 +761,7 @@ exports.filterMovies = async (req, res) => {
     // Include pagination in search
     filters.page = page;
     
-    // Use the search function to get initial results
+    // Use the existing search function
     const results = await omdbApi.searchMovies(searchQuery, filters, page);
     
     if (!results.success) {
@@ -690,99 +863,35 @@ exports.getTrendingMovies = async (req, res) => {
   try {
     const { type = 'popular', page = 1 } = req.query;
     const pageSize = 10; // Number of movies per page
-    
-    let allMovieIds = [];
-    
-    // Different lists based on trending type with expanded selections for pagination
+
+    // For "popular", always use the hard‑coded fallback list
+    let allMovieIds;
     if (type === 'popular') {
-      allMovieIds = [
-        'tt1745960', // Top Gun: Maverick
-        'tt12593682', // Bullet Train
-        'tt6443346', // Black Adam
-        'tt9114286', // Black Panther: Wakanda Forever
-        'tt1630029', // Avatar: The Way of Water
-        'tt15398776', // Oppenheimer
-        'tt9362722', // Spider-Man: Across the Spider-Verse
-        'tt1517268', // Barbie
-        'tt10151854', // The Fabelmans
-        'tt8760708', // TOP GUN: Maverick
-        'tt6710474', // Everything Everywhere All at Once
-        'tt11813216', // The Banshees of Inisherin
-        'tt10640346', // Babylon
-        'tt14444726', // The Menu
-        'tt10366206', // John Wick: Chapter 4
-        'tt2906216', // Ant-Man and the Wasp: Quantumania
-        'tt9764362', // The Menu
-        'tt9114286', // Black Panther: Wakanda Forever
-        'tt11564570', // Glass Onion: A Knives Out Mystery
-        'tt10954600', // Ant-Man and the Wasp: Quantumania
-      ];
-    } else if (type === 'latest') {
-      allMovieIds = [
-        'tt15239678', // Dune: Part Two
-        'tt11304740', // Deadpool & Wolverine
-        'tt17024450', // A Quiet Place: Day One
-        'tt1517268', // Twisters
-        'tt22687790', // Inside Out 2
-        'tt2283336', // Gladiator 2
-        'tt0499097', // Joker: Folie à Deux
-        'tt4873118', // The Lord of the Rings: The War of the Rohirrim
-        'tt3758542', // Kraven the Hunter
-        'tt8593824', // Alien: Romulus
-        'tt0439572', // The Batman: Part II
-        'tt5537002', // Killers of the Flower Moon
-        'tt6166392', // Fantastic Four
-        'tt1630029', // Avatar 3
-        'tt9362722', // Spider-Man: Beyond the Spider-Verse
-        'tt9362930', // Spider-Man 4
-        'tt27146282', // Minecraft
-        'tt14998742', // Trap
-        'tt24548838', // Beetlejuice Beetlejuice
-        'tt27548871', // IF
-      ];
-    } else if (type === 'recommended') {
-      // If user is logged in, we could personalize this based on their watch history
-      // For now, we'll return classic favorites
-      allMovieIds = [
-        'tt1375666', // Inception
-        'tt0816692', // Interstellar
-        'tt0468569', // The Dark Knight
-        'tt0109830', // Forrest Gump
-        'tt0111161', // The Shawshank Redemption
-        'tt0068646', // The Godfather
-        'tt0071562', // The Godfather: Part II
-        'tt0110912', // Pulp Fiction
-        'tt0167260', // The Lord of the Rings: The Return of the King
-        'tt0137523', // Fight Club
-        'tt0133093', // The Matrix
-        'tt0114369', // Se7en
-        'tt0120737', // The Lord of the Rings: The Fellowship of the Ring
-        'tt0102926', // The Silence of the Lambs
-        'tt0076759', // Star Wars
-        'tt0120815', // Saving Private Ryan
-        'tt0167261', // The Lord of the Rings: The Two Towers
-        'tt0080684', // Star Wars: Episode V - The Empire Strikes Back
-        'tt0073486', // One Flew Over the Cuckoo's Nest
-        'tt0099685', // Goodfellas
-      ];
+      allMovieIds = FALLBACK_MOVIES.popular;
+    } else {
+      allMovieIds = await getMoviesWithCache(type);
+      // if cache/API failed, fall back
+      if (!allMovieIds || allMovieIds.length === 0) {
+        allMovieIds = FALLBACK_MOVIES[type] || FALLBACK_MOVIES.popular;
+      }
     }
-    
+
     // Calculate pagination
     const startIndex = (page - 1) * pageSize;
     const endIndex = Math.min(startIndex + pageSize, allMovieIds.length);
-    
+
     // Get the movie IDs for the current page
     const pageMovieIds = allMovieIds.slice(startIndex, endIndex);
-    
+
     // Get details for each movie in the current page
     const moviePromises = pageMovieIds.map(imdbId => omdbApi.getMovieDetails(imdbId));
     const results = await Promise.all(moviePromises);
-    
+
     // Filter out any failures and extract the movie data
     const movies = results
       .filter(result => result.success)
       .map(result => formatMovieData(result.movie));
-    
+
     return res.json({ 
       success: true, 
       results: movies,

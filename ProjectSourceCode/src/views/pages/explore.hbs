@@ -1637,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const numRating = parseFloat(movie.rating);
         displayRating = Number.isInteger(numRating) ? numRating.toFixed(1) : numRating.toString();
       } else {
-        displayRating = '7.0';
+        displayRating = 'N/A';
       }
       
       // Prepare genres display if available
@@ -1722,7 +1722,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const numRating = parseFloat(movie.rating);
             displayRating = Number.isInteger(numRating) ? numRating.toFixed(1) : numRating.toString();
           } else {
-            displayRating = '7.0';
+            displayRating = 'N/A';
           }
           
           // Prepare genres display if available
