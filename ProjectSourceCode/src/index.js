@@ -1140,18 +1140,18 @@ app.post('/posts', async (req, res) => {
   }
 });
 
-async function createPost({userId,
-    title,
-    body,
-    rating,
-    imageSource,
-    imageId,
-    imdbId,
-    where_to_watch,
-    includeDescription,
-    movieTitle,
-    movieDescription
-  }) {
+async function createPost({ userId,
+  title,
+  body,
+  rating,
+  imageSource,
+  imageId,
+  imdbId,
+  where_to_watch,
+  includeDescription,
+  movieTitle,
+  movieDescription
+}) {
   try {
     let finalCoverUrl = null;
 
@@ -1403,9 +1403,9 @@ app.post('/remove-from-watchlist', async (req, res) => {
   db.tx(async remove => {
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
-    res.render('pages/profile', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
+    res.render('pages/profile', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.`, profile: req.session.user });
   }).catch(err => {
-    res.render('pages/profile', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
+    res.render('pages/profile', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.', profile: req.session.user});
   });
 });
 
@@ -1556,7 +1556,7 @@ app.get('/profile/watchlist/data', async (req, res) => {
       WHERE user_id = $1
       ORDER BY id DESC
     `, [userId]);
-    
+
     // Ensure watchlist is an array before sending it as JSON
     if (Array.isArray(watchlist)) {
       res.json(watchlist);  // Send the watchlist as a JSON response
@@ -1680,7 +1680,7 @@ app.get('/messaging', async (req, res) => {
     res.render('pages/messaging', {
       activeUser,
       allFriends: formattedFriends,
-      user: req.session.user 
+      user: req.session.user
     });
   } catch (error) {
     console.error('Error loading messaging page:', error.message);
