@@ -75,8 +75,16 @@ const hbs = handlebars.create({
   extname: 'hbs',
   layoutsDir: __dirname + '/views/layouts',
   partialsDir: __dirname + '/views/partials',
-
+  helpers: {
+    truncate: function (str, len) {
+      if (str && str.length > len) {
+        return str.substring(0, len).trim() + '...';
+      }
+      return str;
+    }
+  }
 });
+
 
 // database configuration
 const dbConfig = {
@@ -1110,7 +1118,7 @@ app.post('/posts', async (req, res) => {
       imageSource,
       imageId,
       imdbId,
-      where_to_watch,
+      whereToWatch,
       includeDescription,
       movieTitle,
       movieDescription
@@ -1128,7 +1136,7 @@ app.post('/posts', async (req, res) => {
       imageSource,
       imageId,
       imdbId,
-      where_to_watch,
+      whereToWatch,
       includeDescription,
       movieTitle,
       movieDescription
@@ -1148,7 +1156,7 @@ async function createPost({ userId,
   imageSource,
   imageId,
   imdbId,
-  where_to_watch,
+  whereToWatch,
   includeDescription,
   movieTitle,
   movieDescription
@@ -1209,7 +1217,7 @@ async function createPost({ userId,
       body,
       rating,
       finalCoverUrl,
-      where_to_watch,
+      whereToWatch,
       movieTitle || null,
       movieDescription || null
     ]);
@@ -1254,6 +1262,8 @@ app.get('/social', async (req, res) => {
   ORDER BY posts.created_at DESC
   LIMIT $2 OFFSET $3
 `, [userId, limit, offset]);
+
+  console.log("Sent posts:", posts);
 
     res.render('pages/social', { layout: 'main', user: req.session.user, posts });
   } catch (err) {
