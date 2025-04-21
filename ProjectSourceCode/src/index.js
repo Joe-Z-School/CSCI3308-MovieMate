@@ -1110,7 +1110,9 @@ app.post('/posts', async (req, res) => {
       imageId,
       imdbId,
       where_to_watch,
-      includeDescription
+      includeDescription,
+      movieTitle,
+      movieDescription
     } = req.body;
 
     const userId = req.session.user?.id;
@@ -1126,7 +1128,9 @@ app.post('/posts', async (req, res) => {
       imageId,
       imdbId,
       where_to_watch,
-      includeDescription
+      includeDescription,
+      movieTitle,
+      movieDescription
     });
 
     res.status(201).json({ success: true, postId });
@@ -1136,17 +1140,18 @@ app.post('/posts', async (req, res) => {
   }
 });
 
-async function createPost({
-  userId,
-  title,
-  body,
-  rating,
-  imageSource,
-  imageId,
-  imdbId,
-  where_to_watch,
-  includeDescription
-}) {
+async function createPost({userId,
+    title,
+    body,
+    rating,
+    imageSource,
+    imageId,
+    imdbId,
+    where_to_watch,
+    includeDescription,
+    movieTitle,
+    movieDescription
+  }) {
   try {
     let finalCoverUrl = null;
 
@@ -1184,10 +1189,18 @@ async function createPost({
     }
 
     const insertQuery = `
-      INSERT INTO posts (user_id, title, body, review, cover, where_to_watch)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id
-    `;
+      INSERT INTO posts (
+        user_id,
+        title,
+        body,
+        review,
+        cover,
+        where_to_watch,
+        movieTitle,
+        movieDescription
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id`;
 
     const inserted = await db.one(insertQuery, [
       userId,
@@ -1195,7 +1208,9 @@ async function createPost({
       body,
       rating,
       finalCoverUrl,
-      where_to_watch
+      where_to_watch,
+      movieTitle || null,
+      movieDescription || null
     ]);
 
     return inserted.id;
@@ -1204,8 +1219,6 @@ async function createPost({
     throw err;
   }
 }
-
-
 
 // *****************************************************
 // <!-- Friends Posts -->
@@ -1226,6 +1239,8 @@ app.get('/social', async (req, res) => {
     posts.review, 
     posts.like_count, 
     posts.comment_count,
+    posts.movieTitle,
+    posts.movieDescription,
     users.username AS user,
     EXISTS (
       SELECT 1 FROM post_likes 
@@ -1265,6 +1280,8 @@ app.get('/load-more', async (req, res) => {
     posts.review, 
     posts.like_count, 
     posts.comment_count,
+    posts.movieTitle,
+    posts.movieDescription,
     users.username AS user,
     EXISTS (
       SELECT 1 FROM post_likes 
