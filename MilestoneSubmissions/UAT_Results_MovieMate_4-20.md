@@ -5,8 +5,8 @@ Date Conducted: 04/20/2025
 Testers: Neha Ramachandra
 
 1. Executive Summary
-Total Test Cases	Passed	Failed	Blocked	Success Rate
-16      	       	[XX]	[XX%]
+Total Test Cases	Passed	Failed
+16      	       	13	    3       
 Overall Status: ✅ Passed / ❌ Failed (with Critical Issues) / ⚠️ Passed with Minor Issues
 
 Key Findings:
