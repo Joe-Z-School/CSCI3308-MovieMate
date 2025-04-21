@@ -563,7 +563,43 @@
     }
 
     .modal-footer {
-        border-top: 1px solid #A884F0; 
+        border-top: 1px solid #A884F0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .modal-footer p {
+        margin-top: 5px !important;
+    }
+
+    input.is-invalid,
+    textarea.is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .invalid-feedback {
+        color: #ff6b6b;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    #filmReelRating.border-danger {
+        border: 2px solid #dc3545 !important;
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+        border-radius: 12px;
+    }
+
+    #upload-box.is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.4);
+    }
+
+    .custom-dropdown.is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.4);
     }
 
 </style>
@@ -671,7 +707,7 @@
                 <div class="modal-body">
                     <!-- Select Image -->
                     <div class="radio-container">
-                        <p class="form-label mb-2 fw-bold">Choose a Movie Poster or Upload Your Own Picture</p>
+                        <p class="form-label mb-2 fw-bold">*Choose a Movie Poster or Upload Your Own Picture</p>
                         <div class="radio-group">
                             <input type="radio" id="upload" name="imageSource" checked>
                             <label for="upload" class="fw-bold" style="color: #999">Upload Your Own</label>
@@ -688,6 +724,7 @@
                             <i class="bi bi-upload fs-1"></i>
                             <p>Drag and drop an image here,<br>or <span class="click-text">click to browse</span></p>
                         </div>
+                        <div class="invalid-feedback mt-2 d-none" id="uploadErrorText">Please upload an image or select a poster.</div>
                     </div>
                     <!-- Image Preview -->
                     <div id="preview-container" class="mt-3 text-center hidden">
@@ -702,8 +739,9 @@
                     <div id="posterContainer" class="d-none">
                         <div class="custom-dropdown" id="customPosterDropdown">
                             <div class="dropdown-selected" id="dropdownSelected">Select Movie From Watchlist</div>
-                            <div class="dropdown-options" id="dropdownOptions"></div>
-                        </div>
+                            <div class="dropdown-options" id="dropdownOptions"></div>                            
+                        </div>                 
+                        <div class="invalid-feedback mt-2 d-none" id="posterError">Please select a movie poster or upload an image.</div>
                         <input type="hidden" id="posterSelector" name="posterSelector" />
                         <input type="hidden" id="movieTitle" name="movieTitle" />
                         <input type="hidden" id="movieDescription" name="movieDescription" />
@@ -719,10 +757,11 @@
 =======
                     <!-- Post Title -->
                     <div class="mb-3">
-                        <label for="postTitle" class="form-label mb-2 fw-bold" style="color: #999">Post Title</label>
+                        <label for="postTitle" class="form-label mb-2 fw-bold" style="color: #999">*Post Title</label>
                         <div class="form-floating-container">
                             <input type="text" id="postTitle" name="postTitle" class="form-control floating-input" placeholder=" " />
                             <label for="postTitle" class="floating-label">Enter your post title</label>
+                            <div class="invalid-feedback">A Title is required and must be under 100 characters.</div>
                         </div>
                     </div>
                     <!-- Include Title/Description Toggle -->
@@ -755,7 +794,7 @@
                     </div>
                     <!-- Star Rating (Film Reel Style) -->                    
                     <div class="mb-3">
-                        <label class="form-label mb-2 fw-bold d-block" style="color: #999;">Your Rating</label>
+                        <label class="form-label mb-2 fw-bold d-block" style="color: #999;">*Your Rating</label>
                         <div style="text-align: center;">
                             <div id="filmReelRating" class="svg-reel-wrapper">
                                 <div class="svg-container">
@@ -768,6 +807,7 @@
                                     </svg>
                                 </div>
                                 <input type="hidden" name="rating" id="ratingValue">
+                                <div class="invalid-feedback mt-2" id="ratingFeedback">Please select a rating.</div>
                             </div>
                             <div id="ratingLabel" class="rating-label fade-label"></div>
                         </div>
@@ -781,8 +821,9 @@
                     </div>
                     <input type="hidden" id="whereToWatchInput" name="platform">
                 </div>
-                <div class="modal-footer justify-content-center">
+                <div class="modal-footer justify-content-center flex-column align-items-center">
                     <button type="submit" class="btn btn-purple mt-4">Post</button>
+                    <p class="mt-3">Fields marked with * are required</p>
                 </div>
             </form>
 >>>>>>> 425eb2ee96dfe4b5cf102e78c62c10d51bab027e
@@ -1285,6 +1326,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Reset Modal on close/open
     const clearPostModal = () => {
+        // Define the elements that need validation reset
+        const titleInput = document.getElementById("postTitle");
+        const uploadBox = document.getElementById("upload-box");
+        const posterDropdown = document.getElementById("posterSelector");
+        const ratingInput = document.getElementById("ratingValue"); // Targeting the correct hidden input
+
         // Reset radio
         uploadRadio.checked = true;
         posterRadio.checked = false;
@@ -1303,7 +1350,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const movieDetailsPreview = document.getElementById("movieDetailsPreview");
         movieInfoDropdownContainer.classList.add("d-none");
         movieDetailsPreview.classList.add("d-none");
-    
+
         // Reset Title/Description text
         const movieInfoDropdown = document.getElementById("movieInfoDropdown");
         const dropdownSelected = movieInfoDropdown.querySelector(".dropdown-selected");
@@ -1311,7 +1358,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Reset rating
         reelSlots.forEach(slot => slot.classList.remove('filled', 'hovered'));
-        ratingInput.value = '';
+        ratingInput.value = '';  // Clear the hidden rating input
         ratingLabel.classList.remove("visible");
 
         // Reset dropdown
@@ -1335,11 +1382,22 @@ document.addEventListener("DOMContentLoaded", function () {
         // Reset selected movie info
         document.getElementById("selectedMovieTitle").textContent = "";
         document.getElementById("selectedMovieDescription").textContent = "";
+
+        // Reset validation error styles and messages
+        [titleInput, uploadBox, posterDropdown, ratingInput].forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+        document.getElementById('filmReelRating').classList.remove('border', 'border-danger');
+        document.getElementById('ratingFeedback').style.display = 'none';
+        const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
+        invalidFeedbacks.forEach(feedback => {
+            feedback.style.display = 'none';
+        });
     };
 
     modal.addEventListener('hidden.bs.modal', clearPostModal);
     modal.addEventListener('show.bs.modal', clearPostModal);
-
+    
     // Reset image source to userUpload
     uploadRadio.addEventListener("change", toggleUploadBox);
     posterRadio.addEventListener("change", toggleUploadBox);
@@ -1351,23 +1409,48 @@ document.addEventListener("DOMContentLoaded", function () {
     setupWhereToWatchDropdown();
 });
 
-
 document.getElementById('addPostForm').addEventListener('submit', async function (e) {
-    e.preventDefault();     
+    e.preventDefault();
     const form = e.target;
-    const title = form.postTitle.value.trim();
-    const body = form.postBody.value.trim();
-    const rating = document.getElementById('ratingValue').value;
+    const titleInput = form.querySelector('#postTitle');
+    const postBody = form.querySelector('#postBody');
+    const ratingInput = document.getElementById('ratingValue');
     const imageSource = document.querySelector('input[name="imageSource"]:checked')?.id;
     const includeDescription = form.querySelector('#includeDescriptionToggle')?.checked || false;
-    const where_to_watch = form.querySelector('#whereToWatchInput')?.value || '';
+    const whereToWatch = form.querySelector('#whereToWatchInput')?.value || '';
     const movieTitle = document.getElementById('includedMovieTitle')?.value || '';
     const movieDescription = document.getElementById('includedMovieDescription')?.value || '';
-
-    // Handle image IDs
+    
     let imageId = null;
     let imdbId = null;
+    let valid = true;
 
+    // Define DOM elements used for validation
+    const uploadBox = document.getElementById("upload-box");
+    const posterDropdown = document.getElementById("customPosterDropdown");
+
+    // Reset previous validation states and hide error messages
+    [titleInput, uploadBox, posterDropdown, ratingInput].forEach(el => {
+        if (el) el.classList.remove('is-invalid');
+    });
+    document.getElementById('ratingFeedback').style.display = 'none';
+    document.getElementById('filmReelRating').classList.remove('border', 'border-danger');
+    
+    // Hide invalid feedback initially
+    const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
+    invalidFeedbacks.forEach(feedback => {
+        feedback.style.display = 'none';
+    });
+
+    // Title validation
+    let title = titleInput.value.trim();
+    if (!title || title.length > 100) {
+        titleInput.classList.add('is-invalid');
+        valid = false;
+        titleInput.closest('.form-floating-container').querySelector('.invalid-feedback').style.display = 'block';
+    }
+
+    // If the image source is a poster, extract IMDb ID
     if (imageSource === 'poster') {
         imdbId = document.getElementById('posterSelector').value;
         if (imdbId?.startsWith('/image/')) {
@@ -1378,7 +1461,45 @@ document.getElementById('addPostForm').addEventListener('submit', async function
         imageId = form.dataset.uploadedImageId || null;
     }
 
-    // If the user wants to include the movie description
+   // Image validation (either upload or poster)
+    if (
+        (imageSource === 'upload' && !imageId) ||
+        (imageSource === 'poster' && !form.querySelector('#posterSelector').value)
+    ) {
+        // Image Source: upload (check if image is uploaded)
+        if (imageSource === 'upload') {
+            uploadBox.classList.add('is-invalid');
+            const invalidFeedback = document.getElementById('uploadErrorText');
+            if (invalidFeedback) {
+                invalidFeedback.classList.remove('d-none');  // Show error message
+                invalidFeedback.style.display = 'block'; // Ensure display is block
+            }
+        }
+
+        // Image Source: poster (check if poster is selected)
+        if (imageSource === 'poster') {
+            posterDropdown.classList.add('is-invalid');
+            const invalidFeedback = document.getElementById('posterError');
+            if (invalidFeedback) {
+                invalidFeedback.classList.remove('d-none');  // Show error message
+                invalidFeedback.style.display = 'block'; // Ensure display is block
+            }
+        }
+
+        valid = false;
+    }
+
+    // Rating validation
+    if (!ratingInput.value) {
+        document.getElementById('filmReelRating').classList.add('border', 'border-danger');
+        document.getElementById('ratingFeedback').style.display = 'block';
+        valid = false;
+    }
+
+    // If any validation fails, stop form submission
+    if (!valid) return;    
+
+    // Handle movie description if included
     if (includeDescription && imdbId) {
         try {
             const res = await fetch(`/movie-description?imdbId=${encodeURIComponent(imdbId)}`);
@@ -1392,23 +1513,23 @@ document.getElementById('addPostForm').addEventListener('submit', async function
         }
     }
 
-    // Create post object
+    // Prepare post object for submission
     const post = {
         title,
-        body,
-        rating,
+        body: postBody.value.trim(),
+        rating: ratingInput.value,
         imageSource,
         imageId,
         imdbId,
         includeDescription,
-        where_to_watch,
+        whereToWatch,
         movieTitle,
         movieDescription
     };
 
     console.log('Submitting post:', post);
 
-    // Submit form via fetch (final form submission)
+    // Submit the post via fetch API
     try {
         const res = await fetch('/posts', {
             method: 'POST',
@@ -1420,18 +1541,16 @@ document.getElementById('addPostForm').addEventListener('submit', async function
 
         if (res.ok) {
             console.log('Post created!', data);
-            // Redirect to profile page on success
-            window.location.href = '/profile';
-        } 
-        else {
-            const error = await response.json();
-            console.error('Failed to create post:', error);
-            alert('Error: ' + error.message);
+            window.location.href = '/profile';  // Redirect to profile on success
+        } else {
+            alert('Error: ' + data.message || 'Failed to create post');
         }
     } catch (err) {
         console.error('Fetch error:', err);
+        alert('An error occurred while submitting the post. Please try again later.');
     }
 });
+
 
 
 // Show post details in the modal
