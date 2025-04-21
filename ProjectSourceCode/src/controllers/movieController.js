@@ -4,6 +4,24 @@ const db = require('../index').db;
 const axios = require('axios');
 
 /**
+ * Consistent movie data formatter
+ * @param {Object} movie - The movie object to format
+ * @returns {Object} - Formatted movie object
+ */
+function formatMovieData(movie) {
+  return {
+    id: movie.imdbID || movie.id,
+    title: movie.Title || movie.title,
+    year: movie.Year || movie.year,
+    poster: (movie.Poster || movie.poster) && (movie.Poster || movie.poster) !== 'N/A' 
+      ? (movie.Poster || movie.poster) 
+      : `/api/placeholder/300/450`,
+    rating: movie.imdbRating || movie.rating || 'N/A', // Default rating if none available
+    genre: movie.Genre || movie.genre || ''
+  };
+}
+
+/**
  * Get new/trending movies
  * GET /api/movies/new
  */
@@ -30,7 +48,7 @@ exports.getNewMovies = async (req, res) => {
     // Filter out any failures and extract the movie data
     const movies = results
       .filter(result => result.success)
-      .map(result => result.movie);
+      .map(result => formatMovieData(result.movie));
 
     return res.json({ success: true, results: movies });
   } catch (error) {
@@ -158,100 +176,81 @@ exports.searchMovies = async (req, res) => {
     let results = apiResults.results;
     const totalResultsCount = parseInt(apiResults.totalResults) || results.length;
     
-    // If we have director, actor, genre, or rating filters, we need to get details for each movie and filter
-    if ((directorFilter && directorFilter.trim() !== '') || 
-        (actorFilter && actorFilter.trim() !== '') || 
-        (minRating && minRating.trim() !== '') ||
-        (genres && genres.trim() !== '')) {
+    // Always fetch details for movies to get accurate ratings and additional info
+    const detailPromises = results.map(movie => 
+      omdbApi.getMovieDetails(movie.imdbID)
+    );
+    
+    const detailResults = await Promise.all(detailPromises);
+    
+    // Filter and process detailed movie results
+    let filteredMovies = detailResults
+      .filter(result => {
+        if (!result.success || !result.movie) return false;
         
-      // Parse genres if provided
-      const genreArray = genres ? genres.split(',').map(g => g.trim().toLowerCase()) : [];
-      
-      // Fetch details for each movie to check directors, actors, and ratings
-      const detailPromises = results.map(movie => 
-        omdbApi.getMovieDetails(movie.imdbID)
-      );
-      
-      const detailResults = await Promise.all(detailPromises);
-      
-      // Filter movies based on director, actor, and/or rating
-      results = detailResults
-        .filter(result => {
-          if (!result.success || !result.movie) return false;
-          
-          const movie = result.movie;
-          
-          // Check director if specified
-          if (directorFilter && directorFilter.trim() !== '') {
-            const movieDirectors = (movie.Director || '').toLowerCase();
-            if (!movieDirectors.includes(directorFilter.toLowerCase())) {
-              return false;
-            }
+        const movie = result.movie;
+        
+        // Only apply these filters if specified
+        if (directorFilter && directorFilter.trim() !== '') {
+          const movieDirectors = (movie.Director || '').toLowerCase();
+          if (!movieDirectors.includes(directorFilter.toLowerCase())) {
+            return false;
           }
-          
-          // Check actor if specified
-          if (actorFilter && actorFilter.trim() !== '') {
-            const movieActors = (movie.Actors || '').toLowerCase();
-            if (!movieActors.includes(actorFilter.toLowerCase())) {
-              return false;
-            }
+        }
+        
+        if (actorFilter && actorFilter.trim() !== '') {
+          const movieActors = (movie.Actors || '').toLowerCase();
+          if (!movieActors.includes(actorFilter.toLowerCase())) {
+            return false;
           }
+        }
+        
+        if (genres && genres.trim() !== '') {
+          const genreArray = genres.split(',').map(g => g.trim().toLowerCase());
+          const movieGenres = (movie.Genre || '').toLowerCase().split(',').map(g => g.trim());
           
-          // Check genre if specified
-          if (genreArray.length > 0) {
-            const movieGenres = (movie.Genre || '').toLowerCase().split(',').map(g => g.trim());
-            // Check if any of the requested genres match the movie genres
-            const hasMatchingGenre = genreArray.some(requestedGenre => 
-              movieGenres.some(movieGenre => movieGenre.includes(requestedGenre))
-            );
-            
-            if (!hasMatchingGenre) {
-              return false;
-            }
+          const hasMatchingGenre = genreArray.some(requestedGenre => 
+            movieGenres.some(movieGenre => movieGenre.includes(requestedGenre))
+          );
+          
+          if (!hasMatchingGenre) {
+            return false;
           }
-          
-          // Check minimum rating if specified
-          if (minRating && minRating.trim() !== '') {
-            const minRatingValue = parseFloat(minRating);
-            if (!movie.imdbRating || movie.imdbRating === 'N/A' || parseFloat(movie.imdbRating) < minRatingValue) {
-              return false;
-            }
+        }
+        
+        if (minRating && minRating.trim() !== '') {
+          const minRatingValue = parseFloat(minRating);
+          if (!movie.imdbRating || movie.imdbRating === 'N/A' || parseFloat(movie.imdbRating) < minRatingValue) {
+            return false;
           }
-          
-          return true;
-        })
-        .map(result => result.movie);
-      
-      // Sort results if needed
-      if (sort === 'year') {
-        results.sort((a, b) => {
-          const yearA = parseInt(a.Year) || 0;
-          const yearB = parseInt(b.Year) || 0;
-          return newestFirst ? yearB - yearA : yearA - yearB;
-        });
-      } else if (sort === 'title') {
-        results.sort((a, b) => a.Title.localeCompare(b.Title));
-      } else if (sort === 'rating') {
-        results.sort((a, b) => {
-          const ratingA = parseFloat(a.imdbRating) || 0;
-          const ratingB = parseFloat(b.imdbRating) || 0;
-          return ratingB - ratingA; // Higher ratings first
-        });
-      }
+        }
+        
+        return true;
+      })
+      .map(result => result.movie);
+    
+    // Sort results if needed
+    if (sort === 'year') {
+      filteredMovies.sort((a, b) => {
+        const yearA = parseInt(a.Year) || 0;
+        const yearB = parseInt(b.Year) || 0;
+        return newestFirst === 'true' || newestFirst === true ? yearB - yearA : yearA - yearB;
+      });
+    } else if (sort === 'title') {
+      filteredMovies.sort((a, b) => a.Title.localeCompare(b.Title));
+    } else if (sort === 'rating') {
+      filteredMovies.sort((a, b) => {
+        const ratingA = parseFloat(a.imdbRating) || 0;
+        const ratingB = parseFloat(b.imdbRating) || 0;
+        return ratingB - ratingA; // Higher ratings first
+      });
     }
     
-    // Format the results to match frontend expectations
+    // Format the results
     const formattedResults = {
       success: true,
-      results: results.map(movie => ({
-        id: movie.imdbID,
-        title: movie.Title,
-        year: movie.Year,
-        poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
-        rating: movie.imdbRating || 'N/A',
-        genre: movie.Genre || ''
-      })),
-      totalResults: totalResultsCount,
+      results: filteredMovies.map(movie => formatMovieData(movie)),
+      totalResults: filteredMovies.length > 0 ? totalResultsCount : filteredMovies.length,
       page: parseInt(page),
       hasMorePages: parseInt(page) * parseInt(pageSize) < totalResultsCount
     };
@@ -298,8 +297,12 @@ exports.addToWatchlist = async (req, res) => {
       return res.status(401).json({ success: false, error: 'User not authenticated' });
     }
     
-    const { imdbId } = req.body;
+    const { imdbId, title, poster } = req.body;
     const userId = req.session.user.id;
+    
+    if (!imdbId) {
+      return res.status(400).json({ success: false, error: 'IMDB ID is required' });
+    }
     
     // First, check if the movie exists in our database
     let movieId;
@@ -310,18 +313,27 @@ exports.addToWatchlist = async (req, res) => {
       const movieData = await omdbApi.getMovieDetails(imdbId);
       
       if (!movieData.success) {
-        return res.status(404).json({ success: false, error: 'Movie not found' });
+        // If we can't fetch from OMDB but have title/poster from frontend, use those
+        if (title && poster) {
+          const insertResult = await db.query(
+            'INSERT INTO movies (name, imdb_id, poster) VALUES ($1, $2, $3) RETURNING id',
+            [title, imdbId, poster]
+          );
+          movieId = insertResult[0].id;
+        } else {
+          return res.status(404).json({ success: false, error: 'Movie not found' });
+        }
+      } else {
+        const movie = movieData.movie;
+        
+        // Insert movie into database
+        const insertResult = await db.query(
+          'INSERT INTO movies (name, imdb_id, genre, year, poster) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+          [movie.Title, movie.imdbID, movie.Genre, movie.Year, movie.Poster]
+        );
+        
+        movieId = insertResult[0].id;
       }
-      
-      const movie = movieData.movie;
-      
-      // Insert movie into database
-      const insertResult = await db.query(
-        'INSERT INTO movies (name, imdb_id, genre, year, poster) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [movie.Title, movie.imdbID, movie.Genre, movie.Year, movie.Poster]
-      );
-      
-      movieId = insertResult[0].id;
     } else {
       movieId = movieCheck[0].id;
     }
@@ -576,7 +588,7 @@ exports.filterMovies = async (req, res) => {
     // Include pagination in search
     filters.page = page;
     
-    // Use the existing search function
+    // Use the search function to get initial results
     const results = await omdbApi.searchMovies(searchQuery, filters, page);
     
     if (!results.success) {
@@ -585,123 +597,85 @@ exports.filterMovies = async (req, res) => {
     
     const totalResultsCount = parseInt(results.totalResults) || results.results.length;
     
-    // If we have director, actor, genre, or rating filters, we need to get details for each movie and filter
-    if ((director && director.trim() !== '') || 
-        (actor && actor.trim() !== '') || 
-        (genres && genres.trim() !== '') ||
-        (minRating && minRating.trim() !== '')) {
+    // Always fetch details for movies to get accurate ratings and additional info
+    const detailPromises = results.results.map(movie => 
+      omdbApi.getMovieDetails(movie.imdbID)
+    );
+    
+    const detailResults = await Promise.all(detailPromises);
+    
+    // Filter and process detailed movie results
+    const filteredMovies = detailResults
+      .filter(result => {
+        if (!result.success || !result.movie) return false;
         
-      // Parse genres if provided
-      const genreArray = genres ? genres.split(',').map(g => g.trim().toLowerCase()) : [];
-      
-      // Fetch details for each movie to check directors, actors, genres, and ratings
-      const detailPromises = results.results.map(movie => 
-        omdbApi.getMovieDetails(movie.imdbID)
-      );
-      
-      const detailResults = await Promise.all(detailPromises);
-      
-      // Filter movies based on criteria
-      const filteredMovies = detailResults
-        .filter(result => {
-          if (!result.success || !result.movie) return false;
-          
-          const movie = result.movie;
-          
-          // Check director if specified
-          if (director && director.trim() !== '') {
-            const movieDirectors = (movie.Director || '').toLowerCase();
-            if (!movieDirectors.includes(director.toLowerCase())) {
-              return false;
-            }
+        const movie = result.movie;
+        
+        // Only apply these filters if specified
+        if (director && director.trim() !== '') {
+          const movieDirectors = (movie.Director || '').toLowerCase();
+          if (!movieDirectors.includes(director.toLowerCase())) {
+            return false;
           }
-          
-          // Check actor if specified
-          if (actor && actor.trim() !== '') {
-            const movieActors = (movie.Actors || '').toLowerCase();
-            if (!movieActors.includes(actor.toLowerCase())) {
-              return false;
-            }
+        }
+        
+        if (actor && actor.trim() !== '') {
+          const movieActors = (movie.Actors || '').toLowerCase();
+          if (!movieActors.includes(actor.toLowerCase())) {
+            return false;
           }
+        }
+        
+        // Check genre if specified
+        if (genres && genres.trim() !== '') {
+          const genreArray = genres.split(',').map(g => g.trim().toLowerCase());
+          const movieGenres = (movie.Genre || '').toLowerCase().split(',').map(g => g.trim());
           
-          // Check genre if specified
-          if (genreArray.length > 0) {
-            const movieGenres = (movie.Genre || '').toLowerCase().split(',').map(g => g.trim());
-            // Check if any of the requested genres match the movie genres
-            const hasMatchingGenre = genreArray.some(requestedGenre => 
-              movieGenres.some(movieGenre => movieGenre.includes(requestedGenre))
-            );
-            
-            if (!hasMatchingGenre) {
-              return false;
-            }
+          const hasMatchingGenre = genreArray.some(requestedGenre => 
+            movieGenres.some(movieGenre => movieGenre.includes(requestedGenre))
+          );
+          
+          if (!hasMatchingGenre) {
+            return false;
           }
-          
-          // Check minimum rating if specified
-          if (minRating && minRating.trim() !== '') {
-            const minRatingValue = parseFloat(minRating);
-            if (!movie.imdbRating || movie.imdbRating === 'N/A' || parseFloat(movie.imdbRating) < minRatingValue) {
-              return false;
-            }
+        }
+        
+        // Check minimum rating if specified
+        if (minRating && minRating.trim() !== '') {
+          const minRatingValue = parseFloat(minRating);
+          if (!movie.imdbRating || movie.imdbRating === 'N/A' || parseFloat(movie.imdbRating) < minRatingValue) {
+            return false;
           }
-          
-          return true;
-        })
-        .map(result => {
-          const movie = result.movie;
-          return {
-            id: movie.imdbID,
-            title: movie.Title,
-            year: movie.Year,
-            poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
-            rating: movie.imdbRating || 'N/A',
-            genre: movie.Genre || ''
-          };
-        });
-      
-      // Sort results if needed
-      if (sort === 'year') {
-        filteredMovies.sort((a, b) => {
-          const yearA = parseInt(a.year) || 0;
-          const yearB = parseInt(b.year) || 0;
-          return newestFirst ? yearB - yearA : yearA - yearB;
-        });
-      } else if (sort === 'title') {
-        filteredMovies.sort((a, b) => a.title.localeCompare(b.title));
-      } else if (sort === 'rating') {
-        filteredMovies.sort((a, b) => {
-          const ratingA = parseFloat(a.rating) || 0;
-          const ratingB = parseFloat(b.rating) || 0;
-          return ratingB - ratingA; // Higher ratings first
-        });
-      }
-      
-      return res.json({
-        success: true,
-        results: filteredMovies,
-        totalResults: filteredMovies.length,
-        page: parseInt(page),
-        hasMorePages: filteredMovies.length === parseInt(pageSize) // Assume more if we got a full page
+        }
+        
+        return true;
+      })
+      .map(result => formatMovieData(result.movie));
+    
+    // Sort results if needed
+    if (sort === 'year') {
+      filteredMovies.sort((a, b) => {
+        const yearA = parseInt(a.year) || 0;
+        const yearB = parseInt(b.year) || 0;
+        return newestFirst === 'true' || newestFirst === true ? yearB - yearA : yearA - yearB;
+      });
+    } else if (sort === 'title') {
+      filteredMovies.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sort === 'rating') {
+      filteredMovies.sort((a, b) => {
+        const ratingA = parseFloat(a.rating) || 0;
+        const ratingB = parseFloat(b.rating) || 0;
+        return ratingB - ratingA; // Higher ratings first
       });
     }
     
-    // Format results for the frontend
-    const formattedResults = {
+    return res.json({
       success: true,
-      results: results.results.map(movie => ({
-        id: movie.imdbID,
-        title: movie.Title,
-        year: movie.Year,
-        poster: movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : `/api/placeholder/300/450`,
-        rating: movie.imdbRating || 'N/A',
-        genre: movie.Genre || ''
-      })),
-      totalResults: parseInt(results.totalResults) || results.results.length,
+      results: filteredMovies,
+      totalResults: filteredMovies.length > 0 ? totalResultsCount : filteredMovies.length,
       page: parseInt(page),
       hasMorePages: parseInt(page) * parseInt(pageSize) < totalResultsCount
-    };
-    
-    return res.json(formattedResults);
+    });
   } catch (error) {
     console.error('Error filtering movies:', error);
     return res.status(500).json({ success: false, error: 'Internal server error' });
@@ -807,18 +781,7 @@ exports.getTrendingMovies = async (req, res) => {
     // Filter out any failures and extract the movie data
     const movies = results
       .filter(result => result.success)
-      .map(result => {
-        const movie = result.movie;
-        // Format the data to match the frontend expectations
-        return {
-          id: movie.imdbID,
-          title: movie.Title,
-          year: movie.Year,
-          rating: movie.imdbRating || '7.5', // Default if no rating
-          poster: movie.Poster,
-          genre: movie.Genre || ''
-        };
-      });
+      .map(result => formatMovieData(result.movie));
     
     return res.json({ 
       success: true, 
