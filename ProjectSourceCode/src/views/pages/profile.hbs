@@ -1316,79 +1316,78 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Reset Modal on close/open
     const clearPostModal = () => {
-    // Define the elements that need validation reset
-    const titleInput = document.getElementById("postTitle");
-    const uploadBox = document.getElementById("upload-box");
-    const posterDropdown = document.getElementById("posterSelector");
-    const ratingInput = document.getElementById("ratingValue"); // Targeting the correct hidden input
+        // Define the elements that need validation reset
+        const titleInput = document.getElementById("postTitle");
+        const uploadBox = document.getElementById("upload-box");
+        const posterDropdown = document.getElementById("posterSelector");
+        const ratingInput = document.getElementById("ratingValue"); // Targeting the correct hidden input
 
-    // Reset radio
-    uploadRadio.checked = true;
-    posterRadio.checked = false;
-    toggleUploadBox();
+        // Reset radio
+        uploadRadio.checked = true;
+        posterRadio.checked = false;
+        toggleUploadBox();
 
-    // Reset image preview
-    previewImage.src = "";
-    fileInput.value = "";
-    previewContainer.classList.add("hidden");
-    resetImageBtn.classList.add("hidden");
+        // Reset image preview
+        previewImage.src = "";
+        fileInput.value = "";
+        previewContainer.classList.add("hidden");
+        resetImageBtn.classList.add("hidden");
 
-    // Reset Include Title/Description Checkbox
-    const includeMovieDetailsCheckbox = document.getElementById("includeMovieDetails");
-    includeMovieDetailsCheckbox.checked = false;
-    const movieInfoDropdownContainer = document.getElementById("movieInfoDropdownContainer");
-    const movieDetailsPreview = document.getElementById("movieDetailsPreview");
-    movieInfoDropdownContainer.classList.add("d-none");
-    movieDetailsPreview.classList.add("d-none");
+        // Reset Include Title/Description Checkbox
+        const includeMovieDetailsCheckbox = document.getElementById("includeMovieDetails");
+        includeMovieDetailsCheckbox.checked = false;
+        const movieInfoDropdownContainer = document.getElementById("movieInfoDropdownContainer");
+        const movieDetailsPreview = document.getElementById("movieDetailsPreview");
+        movieInfoDropdownContainer.classList.add("d-none");
+        movieDetailsPreview.classList.add("d-none");
 
-    // Reset Title/Description text
-    const movieInfoDropdown = document.getElementById("movieInfoDropdown");
-    const dropdownSelected = movieInfoDropdown.querySelector(".dropdown-selected");
-    dropdownSelected.textContent = "Select a movie";
+        // Reset Title/Description text
+        const movieInfoDropdown = document.getElementById("movieInfoDropdown");
+        const dropdownSelected = movieInfoDropdown.querySelector(".dropdown-selected");
+        dropdownSelected.textContent = "Select a movie";
 
-    // Reset rating
-    reelSlots.forEach(slot => slot.classList.remove('filled', 'hovered'));
-    ratingInput.value = '';  // Clear the hidden rating input
-    ratingLabel.classList.remove("visible");
+        // Reset rating
+        reelSlots.forEach(slot => slot.classList.remove('filled', 'hovered'));
+        ratingInput.value = '';  // Clear the hidden rating input
+        ratingLabel.classList.remove("visible");
 
-    // Reset dropdown
-    dropdownSelected.textContent = "Select Movie From Watchlist";
-    posterSelector.value = "";
-    dropdownOptions.style.display = "none";
+        // Reset dropdown
+        dropdownSelected.textContent = "Select Movie From Watchlist";
+        posterSelector.value = "";
+        dropdownOptions.style.display = "none";
 
-    // Clear title/comments
-    document.getElementById("postTitle").value = "";
-    document.getElementById("postBody").value = "";
+        // Clear title/comments
+        document.getElementById("postTitle").value = "";
+        document.getElementById("postBody").value = "";
 
-    // Reset "Where to Watch" dropdown
-    document.getElementById("whereToWatchSelected").textContent = "Select Platform";
-    document.getElementById("whereToWatchInput").value = "";
-    document.getElementById("whereToWatchOptions").style.display = "none";
+        // Reset "Where to Watch" dropdown
+        document.getElementById("whereToWatchSelected").textContent = "Select Platform";
+        document.getElementById("whereToWatchInput").value = "";
+        document.getElementById("whereToWatchOptions").style.display = "none";
 
-    // Clear hidden input values
-    document.getElementById("includedMovieTitle").value = "";
-    document.getElementById("includedMovieDescription").value = "";
+        // Clear hidden input values
+        document.getElementById("includedMovieTitle").value = "";
+        document.getElementById("includedMovieDescription").value = "";
 
-    // Reset selected movie info
-    document.getElementById("selectedMovieTitle").textContent = "";
-    document.getElementById("selectedMovieDescription").textContent = "";
+        // Reset selected movie info
+        document.getElementById("selectedMovieTitle").textContent = "";
+        document.getElementById("selectedMovieDescription").textContent = "";
 
-    // Reset validation error styles and messages
-    [titleInput, uploadBox, posterDropdown, ratingInput].forEach(el => {
-        el.classList.remove('is-invalid');
-    });
-    document.getElementById('filmReelRating').classList.remove('border', 'border-danger');
-    document.getElementById('ratingFeedback').style.display = 'none';
-    const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
-    invalidFeedbacks.forEach(feedback => {
-        feedback.style.display = 'none';
-    });
-};
+        // Reset validation error styles and messages
+        [titleInput, uploadBox, posterDropdown, ratingInput].forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+        document.getElementById('filmReelRating').classList.remove('border', 'border-danger');
+        document.getElementById('ratingFeedback').style.display = 'none';
+        const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
+        invalidFeedbacks.forEach(feedback => {
+            feedback.style.display = 'none';
+        });
+    };
 
-modal.addEventListener('hidden.bs.modal', clearPostModal);
-modal.addEventListener('show.bs.modal', clearPostModal);
-
-
+    modal.addEventListener('hidden.bs.modal', clearPostModal);
+    modal.addEventListener('show.bs.modal', clearPostModal);
+    
     // Reset image source to userUpload
     uploadRadio.addEventListener("change", toggleUploadBox);
     posterRadio.addEventListener("change", toggleUploadBox);
@@ -1453,33 +1452,32 @@ document.getElementById('addPostForm').addEventListener('submit', async function
     }
 
    // Image validation (either upload or poster)
-if (
-    (imageSource === 'upload' && !imageId) ||
-    (imageSource === 'poster' && !form.querySelector('#posterSelector').value)
-) {
-    // Image Source: upload (check if image is uploaded)
-    if (imageSource === 'upload') {
-        uploadBox.classList.add('is-invalid');
-        const invalidFeedback = document.getElementById('uploadErrorText');
-        if (invalidFeedback) {
-            invalidFeedback.classList.remove('d-none');  // Show error message
-            invalidFeedback.style.display = 'block'; // Ensure display is block
+    if (
+        (imageSource === 'upload' && !imageId) ||
+        (imageSource === 'poster' && !form.querySelector('#posterSelector').value)
+    ) {
+        // Image Source: upload (check if image is uploaded)
+        if (imageSource === 'upload') {
+            uploadBox.classList.add('is-invalid');
+            const invalidFeedback = document.getElementById('uploadErrorText');
+            if (invalidFeedback) {
+                invalidFeedback.classList.remove('d-none');  // Show error message
+                invalidFeedback.style.display = 'block'; // Ensure display is block
+            }
         }
-    }
 
-    // Image Source: poster (check if poster is selected)
-    if (imageSource === 'poster') {
-        posterDropdown.classList.add('is-invalid');
-        const invalidFeedback = document.getElementById('posterError');
-        if (invalidFeedback) {
-            invalidFeedback.classList.remove('d-none');  // Show error message
-            invalidFeedback.style.display = 'block'; // Ensure display is block
+        // Image Source: poster (check if poster is selected)
+        if (imageSource === 'poster') {
+            posterDropdown.classList.add('is-invalid');
+            const invalidFeedback = document.getElementById('posterError');
+            if (invalidFeedback) {
+                invalidFeedback.classList.remove('d-none');  // Show error message
+                invalidFeedback.style.display = 'block'; // Ensure display is block
+            }
         }
+
+        valid = false;
     }
-
-    valid = false;
-}
-
 
     // Rating validation
     if (!ratingInput.value) {
