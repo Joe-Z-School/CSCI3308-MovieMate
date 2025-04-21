@@ -10,7 +10,7 @@
       <div class="filter-section">
         <h5 class="filter-heading">Newest</h5>
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="newestFilter" checked>
+          <input class="form-check-input" type="checkbox" id="newestFilter">
           <label class="form-check-label" for="newestFilter">Show newest first</label>
         </div>
       </div>
@@ -19,52 +19,52 @@
         <h5 class="filter-heading">Genre</h5>
         <div class="genre-filters">
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="actionFilter" value="action">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="actionFilter" value="action">
             <label class="form-check-label" for="actionFilter">Action</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="comedyFilter" value="comedy">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="comedyFilter" value="comedy">
             <label class="form-check-label" for="comedyFilter">Comedy</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="dramaFilter" value="drama">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="dramaFilter" value="drama">
             <label class="form-check-label" for="dramaFilter">Drama</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="fantasyFilter" value="fantasy">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="fantasyFilter" value="fantasy">
             <label class="form-check-label" for="fantasyFilter">Fantasy</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="horrorFilter" value="horror">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="horrorFilter" value="horror">
             <label class="form-check-label" for="horrorFilter">Horror</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="mysteryFilter" value="mystery">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="mysteryFilter" value="mystery">
             <label class="form-check-label" for="mysteryFilter">Mystery</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="romanceFilter" value="romance">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="romanceFilter" value="romance">
             <label class="form-check-label" for="romanceFilter">Romance</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="scifiFilter" value="sci-fi">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="scifiFilter" value="sci-fi">
             <label class="form-check-label" for="scifiFilter">Sci-fi</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="thrillerFilter" value="thriller">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="thrillerFilter" value="thriller">
             <label class="form-check-label" for="thrillerFilter">Thriller</label>
           </div>
           
           <div class="genre-item">
-            <input class="form-check-input" type="checkbox" id="westernFilter" value="western">
+            <input class="form-check-input genre-checkbox" type="checkbox" id="westernFilter" value="western">
             <label class="form-check-label" for="westernFilter">Western</label>
           </div>
         </div>
@@ -94,8 +94,29 @@
         </select>
       </div>
       
+      <div class="filter-section">
+        <h5 class="filter-heading">Rating</h5>
+        <select id="ratingFilter" class="form-select filter-select">
+          <option selected value="">Any Rating</option>
+          <option value="9">9+</option>
+          <option value="8">8+</option>
+          <option value="7">7+</option>
+          <option value="6">6+</option>
+          <option value="5">5+</option>
+        </select>
+      </div>
+      
+      <div id="activeFiltersDisplay" class="active-filters mt-3 mb-3" style="display: none;">
+        <h6 class="filter-subheading">Active Filters:</h6>
+        <div id="activeFiltersList" class="active-filters-list"></div>
+      </div>
+      
       <button id="applyFiltersBtn" class="btn btn-primary apply-filters-btn">
         <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+      </button>
+      
+      <button id="clearFiltersBtn" class="btn btn-outline-secondary clear-filters-btn mt-2" style="display: none;">
+        <i class="bi bi-x-circle me-1"></i> Clear Filters
       </button>
     </div>
     
@@ -137,8 +158,8 @@
                 <input type="text" id="actorFilter" class="form-control" placeholder="Actor name">
               </div>
               <div class="col-md-4">
-                <label for="ratingFilter" class="form-label">Minimum Rating</label>
-                <select id="ratingFilter" class="form-select">
+                <label for="advancedRatingFilter" class="form-label">Minimum Rating</label>
+                <select id="advancedRatingFilter" class="form-select">
                   <option selected value="">Any Rating</option>
                   <option value="9">9+</option>
                   <option value="8">8+</option>
@@ -147,6 +168,11 @@
                   <option value="5">5+</option>
                 </select>
               </div>
+            </div>
+            <div class="text-end mt-3">
+              <button id="advancedApplyFiltersBtn" class="btn btn-primary apply-filters-btn">
+                <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+              </button>
             </div>
           </div>
         </div>
@@ -177,6 +203,13 @@
                 <option value="rating">Rating</option>
               </select>
             </div>
+          </div>
+          
+          <!-- Back to trending button -->
+          <div id="backToTrendingContainer" class="mb-3">
+            <button id="backToTrendingBtn" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-1"></i> Back to Trending
+            </button>
           </div>
           
           <div id="resultsContainer" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
@@ -344,6 +377,12 @@
     padding-bottom: 8px;
     font-size: 1.1rem;
   }
+
+  .filter-subheading {
+    color: #ddd;
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
   
   .genre-filters {
     display: flex;
@@ -387,7 +426,6 @@
     background-color: var(--primary-purple);
     border: none;
     width: 100%;
-    margin-top: 15px;
     transition: all 0.3s;
   }
   
@@ -395,6 +433,41 @@
     background-color: var(--dark-purple);
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .clear-filters-btn {
+    width: 100%;
+    color: #ddd;
+    border-color: #444;
+    transition: all 0.3s;
+  }
+
+  .clear-filters-btn:hover {
+    background-color: #444;
+    color: white;
+  }
+
+  /* Active filters display */
+  .active-filters {
+    background-color: #2A2A2A;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+  }
+
+  .active-filter-tag {
+    display: inline-block;
+    background-color: var(--primary-purple);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin: 3px;
+    font-size: 0.8rem;
+  }
+
+  .active-filter-tag .filter-remove {
+    cursor: pointer;
+    margin-left: 5px;
   }
   
   /* Main content styles */
@@ -593,6 +666,23 @@
     color: #fff;
     font-weight: 600;
   }
+
+  /* Back to trending button */
+  #backToTrendingContainer {
+    margin-bottom: 15px;
+  }
+
+  #backToTrendingBtn {
+    color: #ddd;
+    border-color: #555;
+    transition: all 0.3s ease;
+  }
+
+  #backToTrendingBtn:hover {
+    background-color: var(--dark-purple);
+    color: white;
+    border-color: var(--accent-purple);
+  }
   
   /* Movie cards */
   .movie-card {
@@ -697,6 +787,12 @@
     color: #999;
     font-size: 0.8rem;
     margin-bottom: 0;
+  }
+
+  .movie-genre {
+    color: #999;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
   }
   
   .watchlist-btn {
@@ -864,6 +960,62 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentQuery = '';
   let selectedGenres = [];
   let currentTab = 'popular';
+  let currentMovieCache = new Map(); // Cache to avoid refetching movie details
+
+  // State management for active filters
+  const filterState = {
+    genres: [],
+    year: '',
+    type: '',
+    director: '',
+    actor: '',
+    rating: '',
+    newestFirst: true,
+    
+    // Method to check if any filters are active
+    hasActiveFilters() {
+      return this.genres.length > 0 || 
+             this.year !== '' || 
+             this.type !== '' || 
+             this.director !== '' || 
+             this.actor !== '' || 
+             this.rating !== '';
+    },
+    
+    // Reset all filters
+    clearAll() {
+      this.genres = [];
+      this.year = '';
+      this.type = '';
+      this.director = '';
+      this.actor = '';
+      this.rating = '';
+      
+      // Reset the UI to match the state
+      document.querySelectorAll('.genre-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      
+      document.getElementById('yearFilter').value = '';
+      document.getElementById('typeFilter').value = '';
+      document.getElementById('ratingFilter').value = '';
+      
+      if (document.getElementById('directorFilter')) {
+        document.getElementById('directorFilter').value = '';
+      }
+      
+      if (document.getElementById('actorFilter')) {
+        document.getElementById('actorFilter').value = '';
+      }
+      
+      if (document.getElementById('advancedRatingFilter')) {
+        document.getElementById('advancedRatingFilter').value = '';
+      }
+      
+      // Update UI to show no active filters
+      updateActiveFiltersDisplay();
+    }
+  };
 
   // Toggle advanced search options
   const advancedSearchToggle = document.getElementById('advancedSearchToggle');
@@ -885,14 +1037,67 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
-  // Handle genre filter checkboxes
-  const genreCheckboxes = document.querySelectorAll('.genre-item input');
+  // Add event listener for the advanced filters apply button
+  document.getElementById('advancedApplyFiltersBtn').addEventListener('click', function() {
+    // Update filter state with the values from advanced filters
+    filterState.director = document.getElementById('directorFilter').value;
+    filterState.actor = document.getElementById('actorFilter').value;
+    filterState.rating = document.getElementById('advancedRatingFilter').value;
+    
+    // Update UI to show active filters
+    updateActiveFiltersDisplay();
+    
+    // Close the advanced filters panel
+    advancedSearchOptions.classList.remove('show');
+    setTimeout(() => {
+      advancedSearchOptions.style.display = 'none';
+    }, 300);
+    advancedSearchToggle.innerHTML = '<i class="bi bi-sliders me-1"></i> Advanced Filters';
+    
+    // Apply the filters
+    applyFiltersBtn.click();
+  });
+  
+  document.getElementById('ratingFilter').addEventListener('change', function() {
+    if (document.getElementById('advancedRatingFilter')) {
+      document.getElementById('advancedRatingFilter').value = this.value;
+    }
+    filterState.rating = this.value;
+    updateActiveFiltersDisplay();
+  });
+  
+  document.getElementById('directorFilter')?.addEventListener('input', function() {
+    filterState.director = this.value;
+    updateActiveFiltersDisplay();
+  });
+  
+  document.getElementById('actorFilter')?.addEventListener('input', function() {
+    filterState.actor = this.value;
+    updateActiveFiltersDisplay();
+  });
+  
+  document.getElementById('yearFilter').addEventListener('change', function() {
+    filterState.year = this.value;
+    updateActiveFiltersDisplay();
+  });
+  
+  document.getElementById('typeFilter').addEventListener('change', function() {
+    filterState.type = this.value;
+    updateActiveFiltersDisplay();
+  });
+  
+  // Handle genre filter checkboxes with improved selection
+  const genreCheckboxes = document.querySelectorAll('.genre-checkbox');
   genreCheckboxes.forEach(checkbox => {
     checkbox.addEventListener('change', function() {
+      const genre = this.value;
+      
       if (this.checked) {
-        selectedGenres.push(this.value);
+        if (!filterState.genres.includes(genre)) {
+          filterState.genres.push(genre);
+        }
       } else {
-        selectedGenres = selectedGenres.filter(genre => genre !== this.value);
+        filterState.genres = filterState.genres.filter(g => g !== genre);
       }
       
       // Update UI to show active filters
@@ -902,90 +1107,181 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Function to update the display of active filters
   function updateActiveFiltersDisplay() {
-    const filterSidebar = document.querySelector('.filter-sidebar');
+    const activeFiltersDisplay = document.getElementById('activeFiltersDisplay');
+    const activeFiltersList = document.getElementById('activeFiltersList');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     
-    // Remove any existing active filters indicator
-    const existingIndicator = filterSidebar.querySelector('.active-filters-indicator');
-    if (existingIndicator) {
-      existingIndicator.remove();
-    }
+    // Clear the current list
+    activeFiltersList.innerHTML = '';
     
-    // Count active filters
-    const activeFiltersCount = selectedGenres.length + 
-                              (document.getElementById('yearFilter').value ? 1 : 0) +
-                              (document.getElementById('typeFilter').value ? 1 : 0) +
-                              (document.getElementById('directorFilter')?.value ? 1 : 0) +
-                              (document.getElementById('actorFilter')?.value ? 1 : 0) +
-                              (document.getElementById('ratingFilter')?.value ? 1 : 0);
-    
-    // If there are active filters, show indicator
-    if (activeFiltersCount > 0) {
-      const indicator = document.createElement('div');
-      indicator.className = 'active-filters-indicator';
-      indicator.innerHTML = `<span>${activeFiltersCount}</span> active ${activeFiltersCount === 1 ? 'filter' : 'filters'}`;
+    // Check if we have any active filters
+    if (filterState.hasActiveFilters()) {
+      activeFiltersDisplay.style.display = 'block';
+      clearFiltersBtn.style.display = 'block';
       
-      // Insert before the apply button
-      const applyBtn = document.getElementById('applyFiltersBtn');
-      filterSidebar.insertBefore(indicator, applyBtn);
+      // Add genre filters
+      filterState.genres.forEach(genre => {
+        const tag = document.createElement('span');
+        tag.className = 'active-filter-tag';
+        tag.innerHTML = `Genre: ${genre} <span class="filter-remove" data-type="genre" data-value="${genre}">×</span>`;
+        activeFiltersList.appendChild(tag);
+      });
       
-      // Style the indicator
-      indicator.style.backgroundColor = 'var(--accent-purple)';
-      indicator.style.color = 'white';
-      indicator.style.padding = '5px 10px';
-      indicator.style.borderRadius = '4px';
-      indicator.style.marginBottom = '10px';
-      indicator.style.textAlign = 'center';
-      indicator.style.fontWeight = 'bold';
+      // Add year filter if set
+      if (filterState.year) {
+        const tag = document.createElement('span');
+        tag.className = 'active-filter-tag';
+        tag.innerHTML = `Year: ${filterState.year} <span class="filter-remove" data-type="year">×</span>`;
+        activeFiltersList.appendChild(tag);
+      }
+      
+      // Add type filter if set
+      if (filterState.type) {
+        const tag = document.createElement('span');
+        tag.className = 'active-filter-tag';
+        tag.innerHTML = `Type: ${filterState.type} <span class="filter-remove" data-type="type">×</span>`;
+        activeFiltersList.appendChild(tag);
+      }
+      
+      // Add director filter if set
+      if (filterState.director) {
+        const tag = document.createElement('span');
+        tag.className = 'active-filter-tag';
+        tag.innerHTML = `Director: ${filterState.director} <span class="filter-remove" data-type="director">×</span>`;
+        activeFiltersList.appendChild(tag);
+      }
+      
+      // Add actor filter if set
+      if (filterState.actor) {
+        const tag = document.createElement('span');
+        tag.className = 'active-filter-tag';
+        tag.innerHTML = `Actor: ${filterState.actor} <span class="filter-remove" data-type="actor">×</span>`;
+        activeFiltersList.appendChild(tag);
+      }
+      
+      // Add rating filter if set
+      if (filterState.rating) {
+        const tag = document.createElement('span');
+        tag.className = 'active-filter-tag';
+        tag.innerHTML = `Rating: ${filterState.rating}+ <span class="filter-remove" data-type="rating">×</span>`;
+        activeFiltersList.appendChild(tag);
+      }
+      
+      // Add event listeners to remove buttons
+      document.querySelectorAll('.filter-remove').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const filterType = this.getAttribute('data-type');
+          const filterValue = this.getAttribute('data-value');
+          
+          if (filterType === 'genre' && filterValue) {
+            filterState.genres = filterState.genres.filter(g => g !== filterValue);
+            document.getElementById(filterValue + 'Filter').checked = false;
+          } else if (filterType === 'year') {
+            filterState.year = '';
+            document.getElementById('yearFilter').value = '';
+          } else if (filterType === 'type') {
+            filterState.type = '';
+            document.getElementById('typeFilter').value = '';
+          } else if (filterType === 'director') {
+            filterState.director = '';
+            document.getElementById('directorFilter').value = '';
+          } else if (filterType === 'actor') {
+            filterState.actor = '';
+            document.getElementById('actorFilter').value = '';
+          } else if (filterType === 'rating') {
+            filterState.rating = '';
+            document.getElementById('ratingFilter').value = '';
+            if (document.getElementById('advancedRatingFilter')) {
+              document.getElementById('advancedRatingFilter').value = '';
+            }
+          }
+          
+          // Update the display
+          updateActiveFiltersDisplay();
+        });
+      });
+    } else {
+      activeFiltersDisplay.style.display = 'none';
+      clearFiltersBtn.style.display = 'none';
     }
   }
   
-  // Apply filters button
+  // Clear filters button
+  document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+    filterState.clearAll();
+  });
+  
+  // Apply filters button with enhanced functionality
   const applyFiltersBtn = document.getElementById('applyFiltersBtn');
   applyFiltersBtn.addEventListener('click', function() {
     resetSearch();
     
     // Check if we have any active filters
-    const hasDirectorFilter = document.getElementById('directorFilter')?.value?.trim() !== '';
-    const hasActorFilter = document.getElementById('actorFilter')?.value?.trim() !== '';
-    const hasGenreFilter = selectedGenres.length > 0;
-    
-    // Hide trending and show results section
-    document.getElementById('trendingSection').classList.add('d-none');
-    document.getElementById('resultsSection').classList.remove('d-none');
-    
-    // If there's a search query, use that
-    if (currentQuery) {
+    if (filterState.hasActiveFilters()) {
+      // Hide trending and show results section
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      
+      // If there's a search query, use that with filters
+      if (currentQuery) {
+        performSearch(currentQuery, 1, true);
+      } else {
+        // Otherwise use filtered search
+        performFilteredSearch();
+      }
+    } else if (currentQuery) {
+      // If there's only a search query with no filters
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      document.getElementById('backToTrendingContainer').classList.remove('d-none');
       performSearch(currentQuery, 1);
-    } 
-    // If any filters are active, use filtered search
-    else if (hasDirectorFilter || hasActorFilter || hasGenreFilter) {
-      performFilteredSearch();
-    }
-    // Otherwise show trending results
-    else {
+    } else {
+      // If no filters and no search, show trending
       loadTrendingMovies(currentTab);
       document.getElementById('trendingSection').classList.remove('d-none');
       document.getElementById('resultsSection').classList.add('d-none');
     }
   });
   
-  // Handle sorting options
+  // Back to trending button
+  document.getElementById('backToTrendingBtn').addEventListener('click', function() {
+    // Show trending section, hide results
+    document.getElementById('trendingSection').classList.remove('d-none');
+    document.getElementById('resultsSection').classList.add('d-none');
+    
+    // Reset the search input
+    document.getElementById('searchInput').value = '';
+    currentQuery = '';
+  });
+  
+  // Store current sort order
+  let currentSortOrder = 'relevance';
+  
+  // Handle sorting options with improved behavior
   const sortOptions = document.getElementById('sortOptions');
   sortOptions.addEventListener('change', function() {
+    currentSortOrder = this.value;
+    sortMovieCards();
+  });
+  
+  // Function to sort movie cards - separated to avoid duplication
+  function sortMovieCards() {
     const resultsContainer = document.getElementById('resultsContainer');
     const movieCards = Array.from(resultsContainer.querySelectorAll('.col'));
     
     // Sort the movie cards based on selected option
     movieCards.sort((a, b) => {
-      const sortBy = sortOptions.value;
+      const sortBy = currentSortOrder;
       
       if (sortBy === 'title') {
         const titleA = a.querySelector('.movie-title').textContent.toLowerCase();
         const titleB = b.querySelector('.movie-title').textContent.toLowerCase();
         return titleA.localeCompare(titleB);
       } else if (sortBy === 'year') {
-        const yearA = parseInt(a.querySelector('.movie-year').textContent) || 0;
-        const yearB = parseInt(b.querySelector('.movie-year').textContent) || 0;
+        // Extract year from text which might include additional information
+        const yearA = parseInt(a.querySelector('.movie-year').textContent.match(/\d{4}/)?.[0] || 0);
+        const yearB = parseInt(b.querySelector('.movie-year').textContent.match(/\d{4}/)?.[0] || 0);
         return yearB - yearA; // Newest first
       } else if (sortBy === 'rating') {
         const ratingA = parseFloat(a.querySelector('.movie-rating').textContent.replace(/[^\d.]/g, '')) || 0;
@@ -999,9 +1295,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Re-append sorted cards to container
     movieCards.forEach(card => resultsContainer.appendChild(card));
-  });
+  }
   
-  // Handle tab switching
+  // Handle tab switching with improved loading
   const tabButtons = document.querySelectorAll('.tab-btn');
   tabButtons.forEach(button => {
     button.addEventListener('click', function() {
@@ -1042,6 +1338,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchTerm = searchInput.value.trim();
     if (searchTerm) {
       resetSearch();
+      document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      
+      // Update sort options to default on new search
+      if (currentSortOrder !== 'relevance') {
+        sortOptions.value = 'relevance';
+        currentSortOrder = 'relevance';
+      }
+      
       performSearch(searchTerm, 1);
     }
   });
@@ -1070,8 +1374,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Reset search state
   function resetSearch() {
+    // Only reset the page number and query when starting a new search
     page = 1;
     currentQuery = searchInput.value.trim();
+    
+    // Clear previous results
     document.getElementById('resultsContainer').innerHTML = '';
   }
   
@@ -1079,30 +1386,33 @@ document.addEventListener('DOMContentLoaded', function() {
   function performFilteredSearch() {
     if (isLoading) return;
     
-    // Show loading state
-    isLoading = true;
-    document.getElementById('loadingIndicator').classList.remove('d-none');
-    document.getElementById('noResultsMessage').classList.add('d-none');
-    document.getElementById('loadMoreBtn').classList.add('d-none');
+    // Don't reset the whole search if we're just loading more results
+    if (page === 1) {
+      // Show loading state
+      document.getElementById('loadingIndicator').classList.remove('d-none');
+      document.getElementById('noResultsMessage').classList.add('d-none');
+      document.getElementById('loadMoreBtn').classList.add('d-none');
+      
+      // Clear previous results only on a new search
+      document.getElementById('resultsContainer').innerHTML = '';
+    }
     
-    // Get filter values
-    const yearFilter = document.getElementById('yearFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
-    const directorFilter = document.getElementById('directorFilter')?.value || '';
-    const actorFilter = document.getElementById('actorFilter')?.value || '';
-    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+    isLoading = true;
+    
+    // Get filter values from the filter state
+    const genresString = filterState.genres.join(',');
     
     // Determine primary search term based on available filters
     let searchQuery = '';
     
     // If director or actor is specified, use that as primary search term
-    if (directorFilter) {
-      searchQuery = `director:${directorFilter}`;
-    } else if (actorFilter) {
-      searchQuery = `actor:${actorFilter}`;
-    } else if (selectedGenres.length > 0) {
+    if (filterState.director) {
+      searchQuery = `director:${filterState.director}`;
+    } else if (filterState.actor) {
+      searchQuery = `actor:${filterState.actor}`;
+    } else if (filterState.genres.length > 0) {
       // Otherwise use first genre as search term
-      searchQuery = selectedGenres[0];
+      searchQuery = filterState.genres[0];
     } else {
       // Default search term if none provided
       searchQuery = 'movie';
@@ -1111,30 +1421,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Build the API URL with query parameters - using search endpoint with filters
     let apiUrl = `/api/movies/search?query=${encodeURIComponent(searchQuery)}&page=${page}`;
     
-    if (selectedGenres.length > 0) {
-      apiUrl += `&genres=${selectedGenres.join(',')}`;
+    if (genresString) {
+      apiUrl += `&genres=${genresString}`;
     }
     
-    if (yearFilter) {
-      apiUrl += `&year=${yearFilter}`;
+    if (filterState.year) {
+      apiUrl += `&year=${filterState.year}`;
     }
     
-    if (typeFilter) {
-      apiUrl += `&type=${typeFilter}`;
+    if (filterState.type) {
+      apiUrl += `&type=${filterState.type}`;
     }
     
     // Only add these if they weren't used as the primary search term
-    if (directorFilter && !searchQuery.startsWith('director:')) {
-      apiUrl += `&director=${encodeURIComponent(directorFilter)}`;
+    if (filterState.director && !searchQuery.startsWith('director:')) {
+      apiUrl += `&director=${encodeURIComponent(filterState.director)}`;
     }
     
-    if (actorFilter && !searchQuery.startsWith('actor:')) {
-      apiUrl += `&actor=${encodeURIComponent(actorFilter)}`;
+    if (filterState.actor && !searchQuery.startsWith('actor:')) {
+      apiUrl += `&actor=${encodeURIComponent(filterState.actor)}`;
     }
     
-    if (ratingFilter) {
-      apiUrl += `&minRating=${ratingFilter}`;
+    if (filterState.rating) {
+      apiUrl += `&minRating=${filterState.rating}`;
     }
+    
+    // Add sorting parameters using the current sort order
+    if (currentSortOrder !== 'relevance') {
+      apiUrl += `&sort=${currentSortOrder}`;
+    }
+    
+    // Add newest first parameter based on checkbox
+    apiUrl += `&newestFirst=${document.getElementById('newestFilter').checked}`;
     
     fetch(apiUrl)
       .then(response => {
@@ -1148,119 +1466,103 @@ document.addEventListener('DOMContentLoaded', function() {
         isLoading = false;
         
         if (!data.success || !data.results || data.results.length === 0) {
-          document.getElementById('noResultsMessage').classList.remove('d-none');
+          if (page === 1) {
+            document.getElementById('noResultsMessage').classList.remove('d-none');
+          }
           return;
         }
         
-        // Format the results to match frontend expectations
-        const formattedResults = formatMovieResults(data);
-        
         // Render results
-        renderSearchResults(formattedResults.results);
+        renderSearchResults(data.results);
+        
+        // Update results title with count
+        const resultsTitle = document.querySelector('.results-title');
+        if (resultsTitle) {
+          resultsTitle.textContent = `Search Results (${data.totalResults})`;
+        }
         
         // Show Load More button if there are more results
-        if (formattedResults.totalResults > page * 10) {
+        if (data.hasMorePages) {
           const loadMoreBtn = document.getElementById('loadMoreBtn');
           loadMoreBtn.classList.remove('d-none');
           loadMoreBtn.onclick = () => {
             page++;
             performFilteredSearch();
           };
+        } else {
+          document.getElementById('loadMoreBtn').classList.add('d-none');
         }
       })
       .catch(error => {
         console.error('Error fetching filtered results:', error);
         document.getElementById('loadingIndicator').classList.add('d-none');
-        document.getElementById('noResultsMessage').classList.remove('d-none');
+        if (page === 1) {
+          document.getElementById('noResultsMessage').classList.remove('d-none');
+        }
         isLoading = false;
       });
   }
   
-  // Format movie results to ensure consistent structure
-  function formatMovieResults(data) {
-    // If the data is already in the required format
-    if (data.results && Array.isArray(data.results) && 
-        data.results[0] && (data.results[0].id || data.results[0].imdbID)) {
-      
-      return {
-        success: true,
-        results: data.results.map(movie => ({
-          id: movie.id || movie.imdbID,
-          title: movie.title || movie.Title,
-          year: movie.year || movie.Year,
-          poster: (movie.poster || movie.Poster) && (movie.poster || movie.Poster) !== 'N/A' 
-            ? (movie.poster || movie.Poster) 
-            : `/api/placeholder/300/450`,
-          rating: movie.rating || movie.imdbRating || '7.0'
-        })),
-        totalResults: data.totalResults || data.results.length
-      };
-    }
-    
-    // Return data as is if it doesn't match expected format
-    return data;
-  }
-  
   // Main search function
-  function performSearch(query, currentPage = 1) {
+  function performSearch(query, currentPage = 1, withFilters = false) {
     if (isLoading) {
       return; // Prevent multiple simultaneous searches
     }
     
-    const yearFilter = document.getElementById('yearFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
-    const directorFilter = document.getElementById('directorFilter')?.value || '';
-    const actorFilter = document.getElementById('actorFilter')?.value || '';
-    const ratingFilter = document.getElementById('ratingFilter')?.value || '';
+    // Don't reset the whole search if we're just loading more results
+    if (currentPage === 1) {
+      // Show loading state
+      document.getElementById('loadingIndicator').classList.remove('d-none');
+      document.getElementById('noResultsMessage').classList.add('d-none');
+      document.getElementById('loadMoreBtn').classList.add('d-none');
+      
+      // Hide trending section and show results section
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      
+      // Clear previous results only on a new search
+      document.getElementById('resultsContainer').innerHTML = '';
+    }
     
-    // Show loading state
     isLoading = true;
-    document.getElementById('loadingIndicator').classList.remove('d-none');
-    document.getElementById('noResultsMessage').classList.add('d-none');
-    document.getElementById('loadMoreBtn').classList.add('d-none');
-    
-    // Hide trending section and show results section
-    document.getElementById('trendingSection').classList.add('d-none');
-    document.getElementById('resultsSection').classList.remove('d-none');
-    
-    // Determine if we need to modify the search query to include director/actor
-    let searchTerms = query;
-    
-    // If director or actor is specified and not already in the query
-    if (directorFilter && !query.includes('director:')) {
-      if (query.trim() !== '') {
-        searchTerms = `${query} director:${directorFilter}`;
-      } else {
-        searchTerms = `director:${directorFilter}`;
-      }
-    }
-    
-    if (actorFilter && !query.includes('actor:')) {
-      if (searchTerms.trim() !== '') {
-        searchTerms = `${searchTerms} actor:${actorFilter}`;
-      } else {
-        searchTerms = `actor:${actorFilter}`;
-      }
-    }
     
     // Build the API URL with query parameters
-    let apiUrl = `/api/movies/search?query=${encodeURIComponent(searchTerms)}&page=${currentPage}`;
+    let apiUrl = `/api/movies/search?query=${encodeURIComponent(query)}&page=${currentPage}`;
     
-    if (yearFilter) {
-      apiUrl += `&year=${yearFilter}`;
+    // Add filters if requested
+    if (withFilters) {
+      if (filterState.year) {
+        apiUrl += `&year=${filterState.year}`;
+      }
+      
+      if (filterState.type) {
+        apiUrl += `&type=${filterState.type}`;
+      }
+      
+      if (filterState.genres.length > 0) {
+        apiUrl += `&genres=${filterState.genres.join(',')}`;
+      }
+      
+      if (filterState.director) {
+        apiUrl += `&director=${encodeURIComponent(filterState.director)}`;
+      }
+      
+      if (filterState.actor) {
+        apiUrl += `&actor=${encodeURIComponent(filterState.actor)}`;
+      }
+      
+      if (filterState.rating) {
+        apiUrl += `&minRating=${filterState.rating}`;
+      }
     }
     
-    if (typeFilter) {
-      apiUrl += `&type=${typeFilter}`;
+    // Add sorting parameters using the current sort order
+    if (currentSortOrder !== 'relevance') {
+      apiUrl += `&sort=${currentSortOrder}`;
     }
     
-    if (selectedGenres.length > 0) {
-      apiUrl += `&genres=${selectedGenres.join(',')}`;
-    }
-    
-    if (ratingFilter) {
-      apiUrl += `&minRating=${ratingFilter}`;
-    }
+    // Add newest first parameter based on checkbox
+    apiUrl += `&newestFirst=${document.getElementById('newestFilter').checked}`;
     
     // Fetch from the API
     fetch(apiUrl)
@@ -1275,43 +1577,46 @@ document.addEventListener('DOMContentLoaded', function() {
         isLoading = false;
         
         if (!data.success || !data.results || data.results.length === 0) {
-          document.getElementById('noResultsMessage').classList.remove('d-none');
+          if (currentPage === 1) {
+            document.getElementById('noResultsMessage').classList.remove('d-none');
+          }
           return;
         }
         
-        // Format results to ensure consistent structure
-        const formattedResults = formatMovieResults(data);
-        
         // Render results
-        renderSearchResults(formattedResults.results);
+        renderSearchResults(data.results);
+        
+        // Update results title with count
+        const resultsTitle = document.querySelector('.results-title');
+        if (resultsTitle) {
+          resultsTitle.textContent = `Search Results (${data.totalResults})`;
+        }
         
         // Show Load More button if there are more results
-        if (formattedResults.totalResults > currentPage * 10) {
+        if (data.hasMorePages) {
           const loadMoreBtn = document.getElementById('loadMoreBtn');
           loadMoreBtn.classList.remove('d-none');
           loadMoreBtn.onclick = () => {
             page++;
-            performSearch(query, page);
+            performSearch(query, page, withFilters);
           };
+        } else {
+          document.getElementById('loadMoreBtn').classList.add('d-none');
         }
       })
       .catch(error => {
         console.error('Error fetching search results:', error);
         document.getElementById('loadingIndicator').classList.add('d-none');
-        document.getElementById('noResultsMessage').classList.remove('d-none');
+        if (currentPage === 1) {
+          document.getElementById('noResultsMessage').classList.remove('d-none');
+        }
         isLoading = false;
       });
   }
   
-  // Render search results
+  // Render search results with improved movie info display
   function renderSearchResults(movies) {
     const resultsContainer = document.getElementById('resultsContainer');
-    
-    // Update results count
-    const resultsTitle = document.querySelector('.results-title');
-    if (resultsTitle) {
-      resultsTitle.textContent = `Search Results (${movies.length})`;
-    }
     
     movies.forEach((movie, index) => {
       const movieElement = document.createElement('div');
@@ -1326,11 +1631,23 @@ document.addEventListener('DOMContentLoaded', function() {
       // Extract year from movie.year which might be a range like "2022-2023"
       const year = movie.year ? movie.year.split('-')[0].trim() : '';
       
+      // Format rating to show one decimal place if it's a whole number
+      let displayRating = movie.rating;
+      if (movie.rating && movie.rating !== 'N/A') {
+        const numRating = parseFloat(movie.rating);
+        displayRating = Number.isInteger(numRating) ? numRating.toFixed(1) : numRating.toString();
+      } else {
+        displayRating = '7.0';
+      }
+      
       // Prepare genres display if available
       let genreDisplay = '';
       if (movie.genre) {
+        // Get the first genre if multiple are provided
         const genres = typeof movie.genre === 'string' ? movie.genre.split(',')[0].trim() : '';
         genreDisplay = `<div class="movie-genre">${genres}</div>`;
+      } else {
+        genreDisplay = '';
       }
       
       movieElement.innerHTML = `
@@ -1346,7 +1663,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="movie-year-rating">
               <div class="movie-year">${year}</div>
               <div class="movie-rating">
-                <i class="bi bi-star-fill"></i> ${movie.rating !== 'N/A' ? movie.rating : '—'}
+                <i class="bi bi-star-fill"></i> ${displayRating}
               </div>
             </div>
             ${genreDisplay}
@@ -1357,14 +1674,13 @@ document.addEventListener('DOMContentLoaded', function() {
       resultsContainer.appendChild(movieElement);
     });
     
-    // Apply current sort option to the new results
-    if (sortOptions.value !== 'relevance') {
-      const event = new Event('change');
-      sortOptions.dispatchEvent(event);
+    // Apply current sort only if necessary and remember the current sort order
+    if (currentSortOrder !== 'relevance') {
+      sortMovieCards();
     }
   }
   
-  // Load trending movies
+  // Load trending movies with improved error handling
   function loadTrendingMovies(type = 'popular') {
     // Clear the container and show loading state
     const trendingContainer = document.getElementById('trendingContainer');
@@ -1387,11 +1703,8 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         
-        // Format the results to ensure consistent structure
-        const formattedResults = formatMovieResults(data);
-        
         // Render trending movies with staggered animation
-        formattedResults.results.forEach((movie, index) => {
+        data.results.forEach((movie, index) => {
           const movieElement = document.createElement('div');
           movieElement.className = 'col animate-fade-in';
           movieElement.style.animationDelay = `${index * 0.05}s`;
@@ -1402,6 +1715,23 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Extract year from movie.year which might be a range
           const year = movie.year ? movie.year.split('-')[0].trim() : '';
+          
+          // Format rating to show one decimal place if it's a whole number
+          let displayRating = movie.rating;
+          if (movie.rating && movie.rating !== 'N/A') {
+            const numRating = parseFloat(movie.rating);
+            displayRating = Number.isInteger(numRating) ? numRating.toFixed(1) : numRating.toString();
+          } else {
+            displayRating = '7.0';
+          }
+          
+          // Prepare genres display if available
+          let genreDisplay = '';
+          if (movie.genre) {
+            // Get the first genre if multiple are provided
+            const genres = typeof movie.genre === 'string' ? movie.genre.split(',')[0].trim() : '';
+            genreDisplay = `<div class="movie-genre">${genres}</div>`;
+          }
           
           movieElement.innerHTML = `
             <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
@@ -1416,9 +1746,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="movie-year-rating">
                   <div class="movie-year">${year}</div>
                   <div class="movie-rating">
-                    <i class="bi bi-star-fill"></i> ${movie.rating !== 'N/A' ? movie.rating : '—'}
+                    <i class="bi bi-star-fill"></i> ${displayRating}
                   </div>
                 </div>
+                ${genreDisplay}
               </div>
             </div>
           `;
@@ -1436,9 +1767,13 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
     
-  // Implement scroll-based loading for infinite scroll effect
+  // Implement scroll-based loading with debounce for better performance
   let debounceTimer;
+  let scrollLock = false;
+  
   window.onscroll = () => {
+    if (scrollLock) return; // Prevent multiple triggers while loading
+    
     clearTimeout(debounceTimer); // Reset debounce timer
     debounceTimer = setTimeout(() => {
       if (isLoading) return; // Skip if already loading
@@ -1455,13 +1790,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // Load more results when user is near bottom
         const loadMoreBtn = document.getElementById('loadMoreBtn');
         if (!loadMoreBtn.classList.contains('d-none')) {
+          // Lock scrolling until new content is loaded
+          scrollLock = true;
           loadMoreBtn.click();
+          // Release lock after a short delay to prevent multiple loads
+          setTimeout(() => {
+            scrollLock = false;
+          }, 1000);
         }
       }
     }, 150);
   };
   
-  // Add to watchlist function
+  // Enhanced watchlist functionality
   window.addToWatchlist = function(imdbId, title, posterUrl) {
     // Get the button that was clicked
     const watchlistBtn = event.target.closest('.watchlist-btn');
@@ -1486,14 +1827,20 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        // Keep the check mark
+        // Keep the check mark and update tooltip
+        watchlistBtn.title = "Added to watchlist";
         console.log('Added to watchlist:', title);
       } else {
         // Reset button on error
         watchlistBtn.innerHTML = '<i class="bi bi-plus-lg"></i>';
         watchlistBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
         watchlistBtn.style.color = '#fff';
-        console.error('Error adding to watchlist');
+        console.error('Error adding to watchlist:', data.error);
+        
+        // Show error if user is not logged in
+        if (data.error === 'User not authenticated') {
+          alert('Please log in to add movies to your watchlist');
+        }
       }
     })
     .catch(error => {
@@ -1511,13 +1858,34 @@ document.addEventListener('DOMContentLoaded', function() {
   // Handle "newest first" checkbox
   const newestFilter = document.getElementById('newestFilter');
   newestFilter.addEventListener('change', function() {
-    if (this.checked) {
-      // If we're on the results page, sort by year
-      if (!document.getElementById('resultsSection').classList.contains('d-none')) {
+    filterState.newestFirst = this.checked;
+    
+    // If we're on the results page, update sorting
+    if (!document.getElementById('resultsSection').classList.contains('d-none')) {
+      if (this.checked) {
+        // Update the sort dropdown UI
         sortOptions.value = 'year';
-        sortOptions.dispatchEvent(new Event('change'));
+        // Update the global sorting variable
+        currentSortOrder = 'year';
+        // Apply sorting
+        sortMovieCards();
       }
     }
   });
+  
+  // Sync advanced rating filter with sidebar rating filter
+  document.getElementById('ratingFilter').addEventListener('change', function() {
+    const advancedRatingFilter = document.getElementById('advancedRatingFilter');
+    if (advancedRatingFilter) {
+      advancedRatingFilter.value = this.value;
+    }
+  });
+  
+  document.getElementById('advancedRatingFilter')?.addEventListener('change', function() {
+    document.getElementById('ratingFilter').value = this.value;
+  });
+  
+  // Initialize active filters display on page load
+  updateActiveFiltersDisplay();
 });
 </script>
