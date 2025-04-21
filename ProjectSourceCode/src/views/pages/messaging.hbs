@@ -42,6 +42,9 @@
    <!-- Chat Area Section -->
    <div class="col-md-9 col-sm-12 chat-area">
     <div class="chat-header d-flex align-items-center">
+      <button id="toggle-friends" class="btn btn-outline-light d-md-none me-2" title="Toggle Friends List">
+        <i class="bi bi-people-fill"></i>
+      </button>
       <div id="chat-profile" class="me-3">
         <img id="chat-profile-icon" src="" alt="Profile Icon" class="rounded-circle" width="40" height="40" style="display: none;">
       </div>
@@ -89,5 +92,11 @@
     name: "{{activeUser.name}}",
     profile_icon: "{{activeUser.profile_icon}}"
   };
+
+  // Toggle friends list for responsive design
+  document.getElementById('toggle-friends')?.addEventListener('click', () => {
+    document.querySelector('.friends-list')?.classList.toggle('open');
+  });
+
 </script>
 

@@ -342,6 +342,34 @@ html, body {
     }
   }
 
+  @media (max-width: 768px) {
+    .friends-list {
+      position: fixed;
+      left: -100%;
+      top: 60px; /* below navbar */
+      width: 100%;
+      max-width: 300px;
+      height: calc(100vh - 60px);
+      background-color: var(--lighterBackground);
+      z-index: 1050;
+      transition: left 0.3s ease-in-out;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    }
+  
+    .friends-list.open {
+      left: 0;
+    }
+  
+    .chat-area {
+      width: 100%;
+    }   
+
+    .chat-area.blurred {
+      filter: blur(3px);
+      pointer-events: none;
+    }
+    
+  }
 
   /*navbar specific styling*/
 
@@ -353,7 +381,7 @@ html, body {
   /* Fix navbar to the top */
   top: 0;
   left: 0;
-  z-index: 1000;
+  z-index: 1100;
 }
 
 /* Logo styles */

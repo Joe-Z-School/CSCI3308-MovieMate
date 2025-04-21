@@ -191,6 +191,13 @@ function openChat(friend) {
     unreadBadge.textContent = "0";
     unreadBadge.style.display = "none";
   }
+
+  if (window.innerWidth <= 768) {
+    const friendsList = document.querySelector(".friends-list");
+    const chatArea = document.querySelector(".chat-area");
+    friendsList.classList.remove("open");
+    chatArea.classList.remove("blurred");
+  }
 }
 
 // Send a private message using send button
@@ -569,6 +576,18 @@ document.addEventListener('DOMContentLoaded', () => {
   sendButton.setAttribute('disabled', 'true') // Disable send button
   imageUpButton.setAttribute('disabled', 'true') // Disable image upload button
   emojiButton.setAttribute('disabled', 'true') // Disable emoji add button
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const friendsListToggle = document.getElementById("friendsListToggle");
+  const friendsList = document.querySelector(".friends-list");
+  const chatArea = document.querySelector(".chat-area");
+
+  // Toggle visibility manually
+  friendsListToggle?.addEventListener("click", () => {
+    friendsList.classList.toggle("active");
+    chatArea.classList.toggle("blurred");
+  });  
 });
 
 setInterval(updateFriendsList, 15000); // 15 seconds
