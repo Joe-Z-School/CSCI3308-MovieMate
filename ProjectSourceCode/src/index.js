@@ -167,6 +167,7 @@ app.get('/api/movies/new', movieController.getNewMovies);
 // Routes for the enhanced explore page
 app.get('/api/movies/filter', movieController.filterMovies);
 app.get('/api/movies/trending', movieController.getTrendingMovies);
+app.get('/api/movies/popular-searches', movieController.getPopularSearches);
 app.get('/api/placeholder/:width/:height', movieController.getPlaceholderImage);
 
 // Details page
@@ -1375,19 +1376,25 @@ app.get('/image/:identifier', async (req, res) => {
 app.post('/add-to-watchlist', async (req, res) => {
   const userId = req.session.user?.id;
   const { imdbID, title, picture, description } = req.body;
+  const alreadyAdded = await checkWatchlist(userId, title);
 
-  try {
-    console.log('In add-to-watchlist with picture:', picture);
-    const imageUrl = await uploadPoster(picture, imdbID);
-
-    await db.query(
-      'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
-      [userId, title, imageUrl, description]
-    );
-
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: 'Failed to add movie to Watchlist' });
+  if(!alreadyAdded){
+    try {
+      console.log('In add-to-watchlist with picture:', picture);
+      const imageUrl = await uploadPoster(picture, imdbID);
+    
+        await db.query(
+          'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
+          [userId, title, imageUrl, description]
+        );
+        res.json({ success: true });
+    
+    } catch (err) {
+      res.status(500).json({ success: false, error: 'Failed to add movie to Watchlist' });
+    }
+  }
+  else{
+    res.status(500).json({ success: false, error: 'Movie already in watchlist' });
   }
 });
 
@@ -1408,6 +1415,19 @@ app.post('/remove-from-watchlist', async (req, res) => {
     res.render('pages/profile', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.', profile: req.session.user});
   });
 });
+
+async function checkWatchlist(userId, title){
+  const userIdString = String(userId);
+  try{
+    const inWatchlist = await db.oneOrNone('SELECT EXISTS( SELECT 1 FROM watchlist WHERE user_id = $1 AND title = $2 )', [userIdString, title]);
+    console.log('Checking watchlist and got: ', inWatchlist)
+    return inWatchlist && inWatchlist.exists;
+  }
+  catch{
+    console.error('Error finding movie in watchlist', error);
+    throw error;
+  }
+}
 
 
 // *****************************************************
@@ -1689,6 +1709,7 @@ app.get('/messaging', async (req, res) => {
 });
 
 const multer = require('multer');
+const { error } = require('console');
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB limit
