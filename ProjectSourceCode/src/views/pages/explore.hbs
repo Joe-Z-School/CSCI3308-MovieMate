@@ -245,7 +245,6 @@
             <div class="trending-tabs">
               <button class="tab-btn active" data-tab="popular">Popular</button>
               <button class="tab-btn" data-tab="latest">Latest</button>
-              <button class="tab-btn" data-tab="recommended">For You</button>
             </div>
           </div>
           
@@ -1404,7 +1403,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Handle tab switching with improved loading
-  // Handle tab switching with improved loading
 const tabButtons = document.querySelectorAll('.tab-btn');
 tabButtons.forEach(button => {
   button.addEventListener('click', function() {
@@ -1416,8 +1414,23 @@ tabButtons.forEach(button => {
     // Get the tab type
     const tabType = this.getAttribute('data-tab');
     
-    // Special handling for "latest" tab
+    // Reset existing filters
+    filterState.clearAll();
+    
+    // Keep search box empty for all tabs
+    document.getElementById('searchInput').value = '';
+    currentQuery = '';
+    
+    // Set the active view to results
+    activeView = 'results';
+    
+    // Reset search state
+    resetSearch();
+    
+    // Special handling based on tab type
     if (tabType === 'latest') {
+      // --- LATEST TAB: Current year movies sorted newest first ---
+      
       // Set the current year
       const currentYear = new Date().getFullYear(); // This will be 2025 in your app's timeline
       
@@ -1428,79 +1441,109 @@ tabButtons.forEach(button => {
       // Set sorting to year/newest first
       document.getElementById('newestFilter').checked = true;
       filterState.newestFirst = true;
-      
-      // Clear other filters
-      filterState.genres = [];
-      filterState.type = '';
-      filterState.director = '';
-      filterState.actor = '';
-      filterState.rating = '';
-      
-      // Update UI checkboxes
-      document.querySelectorAll('.genre-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
-      });
-      
-      document.getElementById('typeFilter').value = '';
-      document.getElementById('ratingFilter').value = '';
-      
-      if (document.getElementById('directorFilter')) {
-        document.getElementById('directorFilter').value = '';
-      }
-      
-      if (document.getElementById('actorFilter')) {
-        document.getElementById('actorFilter').value = '';
-      }
-      
-      if (document.getElementById('advancedRatingFilter')) {
-        document.getElementById('advancedRatingFilter').value = '';
-      }
+      sortOptions.value = 'year';
+      currentSortOrder = 'year';
       
       // Update the UI to show active filters
       updateActiveFiltersDisplay();
-      
-      // Keep search box empty since we're using a year filter, not a text search
-      document.getElementById('searchInput').value = '';
-      currentQuery = '';
-      
-      // Reset search state
-      resetSearch();
       
       // Hide trending and show results section
       document.getElementById('trendingSection').classList.add('d-none');
       document.getElementById('resultsSection').classList.remove('d-none');
       document.getElementById('backToTrendingContainer').classList.remove('d-none');
-      activeView = 'results';
       
-      // Update sort options to 'year'
-      sortOptions.value = 'year';
-      currentSortOrder = 'year';
-      
-      // For the latest movies, we need a default search term but we'll rely on the year filter
-      // The search term can be something generic like "movie" since the year filter will do the work
+      // For the latest movies, use a generic search term with year filter
       const defaultSearchTerm = "movie"; // Generic term that will match most movies
-      
-      // Perform search with year filter
       performSearch(defaultSearchTerm, 1, true);
       
-      // Update the results title to something more descriptive
+      // Update the results title
       const resultsTitle = document.querySelector('.results-title');
       if (resultsTitle) {
         resultsTitle.textContent = `Latest Movies (${currentYear})`;
       }
       
-      return; // Skip the regular trending loading below
+    } else if (tabType === 'popular') {
+      // --- POPULAR TAB: Highly-rated, recent, mainstream movies ---
+      
+      // Set rating filter to show higher-rated movies
+      filterState.rating = "7"; // 7+ rated movies
+      document.getElementById('ratingFilter').value = "7";
+      
+      // Set genre filters for mainstream popular genres
+      filterState.genres = ["action", "adventure"];
+      document.querySelectorAll('.genre-checkbox').forEach(checkbox => {
+        if (["actionFilter", "adventureFilter"].includes(checkbox.id)) {
+          checkbox.checked = true;
+        }
+      });
+      
+      // Set sort by rating
+      sortOptions.value = 'rating';
+      currentSortOrder = 'rating';
+      
+      // Update the UI to show active filters
+      updateActiveFiltersDisplay();
+      
+      // Hide trending and show results section
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      
+      // Popular movies search term with filters
+      const popularSearchTerm = "movie";
+      performSearch(popularSearchTerm, 1, true);
+      
+      // Update the results title
+      const resultsTitle = document.querySelector('.results-title');
+      if (resultsTitle) {
+        resultsTitle.textContent = "Popular Movies";
+      }
+      
+    } else if (tabType === 'recommended') {
+      // --- FOR YOU TAB: Critically acclaimed, diverse selections ---
+      
+      // Set rating filter for critically acclaimed movies
+      filterState.rating = "8"; // 8+ rated movies
+      document.getElementById('ratingFilter').value = "8";
+      
+      // Sort by rating for critically acclaimed movies
+      sortOptions.value = 'rating';
+      currentSortOrder = 'rating';
+      
+      // Update the UI to show active filters
+      updateActiveFiltersDisplay();
+      
+      // Hide trending and show results section
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      
+      // For "For You" recommended movies
+      const recommendedSearchTerm = "movie";
+      performSearch(recommendedSearchTerm, 1, true);
+      
+      // Update the results title
+      const resultsTitle = document.querySelector('.results-title');
+      if (resultsTitle) {
+        resultsTitle.textContent = "Recommended For You";
+      }
+      
+    } else {
+      // Default handling for any other tabs
+      currentTab = tabType;
+      
+      // Show trending section and hide results
+      document.getElementById('trendingSection').classList.remove('d-none');
+      document.getElementById('resultsSection').classList.add('d-none');
+      activeView = 'trending';
+      
+      // Show loading state
+      const trendingContainer = document.getElementById('trendingContainer');
+      trendingContainer.innerHTML = generateSkeletonLoaders(5);
+      
+      // Load trending movies
+      loadTrendingMovies(currentTab);
     }
-    
-    // Regular handling for other tabs
-    currentTab = tabType;
-    
-    // Show loading state
-    const trendingContainer = document.getElementById('trendingContainer');
-    trendingContainer.innerHTML = generateSkeletonLoaders(5);
-    
-    // Load new trending movies
-    loadTrendingMovies(currentTab);
   });
 });
   
