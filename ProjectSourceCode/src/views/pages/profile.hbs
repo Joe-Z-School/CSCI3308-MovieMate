@@ -743,7 +743,7 @@
         </div>
         {{/each}}
     </div>
-    {{> postDetailsModal}}  <!-- Include post details modal -->
+    {{> postDetailsModal}}
 </div>
 
 {{#unless posts.length}}
@@ -806,6 +806,7 @@
                         <input type="hidden" id="posterSelector" name="posterSelector" />
                         <input type="hidden" id="movieTitle" name="movieTitle" />
                         <input type="hidden" id="movieDescription" name="movieDescription" />
+                        <input type="hidden" id="imdb_id" name="imdb_id" />
                     </div>
                     <!-- Post Title -->
                     <div class="mb-3">
@@ -841,7 +842,7 @@
                         <label for="postBody" class="form-label mb-2 fw-bold" style="color: #999">Your Comments</label>
                         <div class="form-floating-container">
                             <textarea class="form-control floating-input" id="postBody" name="postBody" rows="4" placeholder=" "></textarea>                    
-                            <label for="postTitle" class="floating-label">Share your thoughts about the movie...</label>
+                            <label for="postBody" class="floating-label">Share your thoughts about the movie...</label>
                         </div>
                     </div>
                     <!-- Star Rating (Film Reel Style) -->                    
@@ -999,6 +1000,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const includeMovieDetailsCheckbox = document.getElementById("includeMovieDetails");
     const movieInfoDropdownContainer = document.getElementById("movieInfoDropdownContainer");
     const movieDetailsPreview = document.getElementById("movieDetailsPreview");
+    const titleInput = document.getElementById("postTitle");
+
+    console.log(document.getElementById("postDetailsModal"));
 
     let selectedMovie = null;
 
@@ -1066,6 +1070,10 @@ document.addEventListener("DOMContentLoaded", function () {
         reader.readAsDataURL(file);
     }
 
+    function extractImdbIdFromUrl(url) {
+        const match = url.match(/\/image\/(tt\d+)/);
+        return match ? match[1] : null;
+    }
     
     // Watchlist dropdown logic
     async function fetchWatchlist() {
@@ -1089,7 +1097,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             else {
                 watchlist.forEach(movie => {
-                    // Movie Title and Description Dropdown
+                  // Movie Title and Description Dropdown
                     const movieOption = document.createElement("div");
                     movieOption.classList.add("option");
                     movieOption.textContent = movie.title;
@@ -1097,71 +1105,87 @@ document.addEventListener("DOMContentLoaded", function () {
                         selected.textContent = movie.title;
                         optionsContainer.style.display = "none";
                         dropdown.classList.remove("open-down");
+
                         // Set preview for movie details
                         document.getElementById("selectedMovieTitle").textContent = movie.title;
                         document.getElementById("selectedMovieDescription").textContent = movie.description || "No description available";
                         movieDetailsPreview.classList.remove("d-none");
+
                         // Set hidden fields for movie title and description
                         document.getElementById("includedMovieTitle").value = movie.title;
                         document.getElementById("includedMovieDescription").value = movie.description || "No description available";
+
+                        // Handle movie selection and extract IMDb ID from poster picture
+                        const imdbId = movie.imdb_id || movie.poster_picture.match(/\/image\/(tt\d+)/)?.[1] || '';
+                        document.getElementById('imdb_id').value = imdbId;
+                        console.log('Extracted IMDb ID:', imdbId);
+
                         selectedMovie = movie; // Store selected movie details
                     });
                     optionsContainer.appendChild(movieOption);
-
+                    
                     // Poster Dropdown
                     const posterOption = document.createElement("div");
                     posterOption.classList.add("option");
                     posterOption.textContent = movie.title;
                     posterOption.addEventListener("click", () => {
                         // Get the selected movie details
-                        posterSelected.textContent = movie.title; // Update the movie title in the selector
-                        posterOptionsContainer.style.display = "none"; // Hide the options container
-                        posterDropdown.classList.remove("open-down"); // Remove the dropdown open class
+                        posterSelected.textContent = movie.title;
+                        posterOptionsContainer.style.display = "none";
+                        posterDropdown.classList.remove("open-down");
+
                         // Set the selected poster image in hidden field
                         posterSelector.value = movie.poster_picture;
+
+                        // Extract IMDb ID from poster_picture
+                        const imdbId = movie.imdb_id || movie.poster_picture.match(/\/image\/(tt\d+)/)?.[1] || '';
+                        document.getElementById('imdb_id').value = imdbId;
+                        console.log('Extracted IMDb ID:', imdbId);
+
                         document.getElementById("movieTitle").value = movie.title;
                         document.getElementById("movieDescription").value = movie.description || "No description available";
+
                         // Lock the title and description if the poster is selected
                         if (posterRadio.checked) {
                             includeMovieDetailsCheckbox.checked = true;
-                            document.getElementById("includedMovieTitle").value = movie.title; // Set the title in the hidden field
-                            document.getElementById("includedMovieDescription").value = movie.description || "No description available"; // Set the description
+                            document.getElementById("includedMovieTitle").value = movie.title;
+                            document.getElementById("includedMovieDescription").value = movie.description || "No description available";
                         }
+
                         // Update the preview section with the movie title and description
                         const movieTitlePreview = document.getElementById("selectedMovieTitle");
                         const movieDescriptionPreview = document.getElementById("selectedMovieDescription");
-                        // Update the preview content
-                        movieTitlePreview.textContent = movie.title; // Update the title preview
-                        movieDescriptionPreview.textContent = movie.description || "No description available"; // Update the description preview
-                        // Show the preview container by removing the 'd-none' class
+                        movieTitlePreview.textContent = movie.title;
+                        movieDescriptionPreview.textContent = movie.description || "No description available";
+
                         movieDetailsPreview.classList.remove("d-none");
+
                         // Image preview container
                         const previewContainer = document.getElementById("preview-container");
-                        // Show the image preview container if it's hidden
                         previewContainer.classList.remove("hidden");
-                        // Update the poster image preview source
+
                         let previewImage = document.getElementById("preview-image");
-                        // If the preview image element doesn't exist, create it
                         if (!previewImage) {
                             previewImage = document.createElement("img");
                             previewImage.id = "preview-image";
                             previewImage.classList.add("img-fluid", "rounded", "shadow");
-                            previewContainer.appendChild(previewImage); // Add the image to the preview container
+                            previewContainer.appendChild(previewImage);
                         }
-                        // Update the poster image preview source
+
                         previewImage.src = movie.poster_picture;
-                        previewImage.alt = `Poster for ${movie.title}`; // Optionally, add an alt description for the image
-                        // Hide the "Select Title/Description For Movie" dropdown if using a poster
+                        previewImage.alt = `Poster for ${movie.title}`;
+
                         const titleDescriptionDropdown = document.getElementById("titleDescriptionDropdown");
                         if (titleDescriptionDropdown) {
-                            titleDescriptionDropdown.classList.add("d-none"); // Hide the dropdown
+                            titleDescriptionDropdown.classList.add("d-none");
                         }
-                        // Optionally, hide movie info dropdown and lock the title/description fields
+
                         const movieInfoDropdownContainer = document.getElementById("movieInfoDropdownContainer");
                         movieInfoDropdownContainer.classList.add("d-none");
                     });
                     posterOptionsContainer.appendChild(posterOption);
                 });
+
             }
             
             includeMovieDetailsCheckbox.addEventListener("change", () => {
@@ -1381,7 +1405,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const titleInput = document.getElementById("postTitle");
         const uploadBox = document.getElementById("upload-box");
         const posterDropdown = document.getElementById("posterSelector");
-        const ratingInput = document.getElementById("ratingValue"); // Targeting the correct hidden input
+        const ratingInput = document.getElementById("ratingValue");
 
         // Reset radio
         uploadRadio.checked = true;
@@ -1396,21 +1420,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Reset Include Title/Description Checkbox
         const includeMovieDetailsCheckbox = document.getElementById("includeMovieDetails");
-        includeMovieDetailsCheckbox.checked = false;
+        if (includeMovieDetailsCheckbox) {
+            includeMovieDetailsCheckbox.checked = false;
+        }
         const movieInfoDropdownContainer = document.getElementById("movieInfoDropdownContainer");
         const movieDetailsPreview = document.getElementById("movieDetailsPreview");
-        movieInfoDropdownContainer.classList.add("d-none");
-        movieDetailsPreview.classList.add("d-none");
+        if (movieInfoDropdownContainer) {
+            movieInfoDropdownContainer.classList.add("d-none");
+        }
+        if (movieDetailsPreview) {
+            movieDetailsPreview.classList.add("d-none");
+        }
 
         // Reset Title/Description text
         const movieInfoDropdown = document.getElementById("movieInfoDropdown");
-        const dropdownSelected = movieInfoDropdown.querySelector(".dropdown-selected");
-        dropdownSelected.textContent = "Select a movie";
+        const dropdownSelected = movieInfoDropdown?.querySelector(".dropdown-selected");
+        if (dropdownSelected) {
+            dropdownSelected.textContent = "Select a movie";
+        }
 
         // Reset rating
         reelSlots.forEach(slot => slot.classList.remove('filled', 'hovered'));
-        ratingInput.value = '';  // Clear the hidden rating input
-        ratingLabel.classList.remove("visible");
+        if (ratingInput) {
+            ratingInput.value = '';  // Clear the hidden rating input
+        }
+        if (ratingLabel) {
+            ratingLabel.classList.remove("visible");
+        }
 
         // Reset dropdown
         dropdownSelected.textContent = "Select Movie From Watchlist";
@@ -1418,33 +1454,58 @@ document.addEventListener("DOMContentLoaded", function () {
         dropdownOptions.style.display = "none";
 
         // Clear title/comments
-        document.getElementById("postTitle").value = "";
-        document.getElementById("postBody").value = "";
+        if (titleInput) {
+            titleInput.value = "";
+        }
+        const postBody = document.getElementById("postBody");
+        if (postBody) {
+            postBody.value = "";
+        }
 
         // Reset "Where to Watch" dropdown
-        document.getElementById("whereToWatchSelected").textContent = "Select Platform";
-        document.getElementById("whereToWatchInput").value = "";
-        document.getElementById("whereToWatchOptions").style.display = "none";
+        const whereToWatchSelected = document.getElementById("whereToWatchSelected");
+        if (whereToWatchSelected) {
+            whereToWatchSelected.textContent = "Select Platform";
+        }
+        const whereToWatchInput = document.getElementById("whereToWatchInput");
+        if (whereToWatchInput) {
+            whereToWatchInput.value = "";
+        }
+        const whereToWatchOptions = document.getElementById("whereToWatchOptions");
+        if (whereToWatchOptions) {
+            whereToWatchOptions.style.display = "none";
+        }
 
         // Clear hidden input values
         document.getElementById("includedMovieTitle").value = "";
         document.getElementById("includedMovieDescription").value = "";
 
         // Reset selected movie info
-        document.getElementById("selectedMovieTitle").textContent = "";
-        document.getElementById("selectedMovieDescription").textContent = "";
+        const selectedMovieTitle = document.getElementById("selectedMovieTitle");
+        const selectedMovieDescription = document.getElementById("selectedMovieDescription");
+        if (selectedMovieTitle) {
+            selectedMovieTitle.textContent = "";
+        }
+        if (selectedMovieDescription) {
+            selectedMovieDescription.textContent = "";
+        }
 
         // Reset validation error styles and messages
         [titleInput, uploadBox, posterDropdown, ratingInput].forEach(el => {
-            el.classList.remove('is-invalid');
+            if (el) el.classList.remove('is-invalid');
         });
-        document.getElementById('filmReelRating').classList.remove('border', 'border-danger');
-        document.getElementById('ratingFeedback').style.display = 'none';
+
+        document.getElementById('filmReelRating')?.classList.remove('border', 'border-danger');
+        const ratingFeedback = document.getElementById('ratingFeedback');
+        if (ratingFeedback) {
+            ratingFeedback.style.display = 'none';
+        }
         const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
         invalidFeedbacks.forEach(feedback => {
             feedback.style.display = 'none';
         });
     };
+
 
     modal.addEventListener('hidden.bs.modal', clearPostModal);
     modal.addEventListener('show.bs.modal', clearPostModal);
@@ -1460,6 +1521,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setupWhereToWatchDropdown();
 });
 
+
 document.getElementById('addPostForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     const form = e.target;
@@ -1468,9 +1530,9 @@ document.getElementById('addPostForm').addEventListener('submit', async function
     const ratingInput = document.getElementById('ratingValue');
     const imageSource = document.querySelector('input[name="imageSource"]:checked')?.id;
     const includeDescription = form.querySelector('#includeDescriptionToggle')?.checked || false;
-    const whereToWatch = form.querySelector('#whereToWatchInput')?.value || '';
-    const movieTitle = document.getElementById('includedMovieTitle')?.value || '';
-    const movieDescription = document.getElementById('includedMovieDescription')?.value || '';
+    const whereToWatch = document.getElementById('whereToWatchInput')?.value || '';
+    let movieTitle = document.getElementById('includedMovieTitle')?.value || '';
+    let movieDescription = document.getElementById('includedMovieDescription')?.value || '';
     
     let imageId = null;
     let imdbId = null;
@@ -1504,18 +1566,23 @@ document.getElementById('addPostForm').addEventListener('submit', async function
     // If the image source is a poster, extract IMDb ID
     if (imageSource === 'poster') {
         imdbId = document.getElementById('posterSelector').value;
+        console.log('imdbId of poster: ', imdbId);
+        
+        // Normalize IMDb ID: remove '/image/' if present
         if (imdbId?.startsWith('/image/')) {
-            imdbId = imdbId.replace('/image/', '');
+            // Extract the image ID (from the images table) rather than IMDb ID
+            imageId = imdbId.replace('/image/', '');
+            imdbId = null;  // Set imdbId to null because it's not a valid IMDb ID
         }
     }
     else if (imageSource === 'upload') {
         imageId = form.dataset.uploadedImageId || null;
     }
 
-   // Image validation (either upload or poster)
+    // Image validation (either upload or poster)
     if (
         (imageSource === 'upload' && !imageId) ||
-        (imageSource === 'poster' && !form.querySelector('#posterSelector').value)
+        (imageSource === 'poster' && !imdbId && !imageId)  // Allow missing IMDb ID only if it's a social post
     ) {
         // Image Source: upload (check if image is uploaded)
         if (imageSource === 'upload') {
@@ -1570,8 +1637,8 @@ document.getElementById('addPostForm').addEventListener('submit', async function
         body: postBody.value.trim(),
         rating: ratingInput.value,
         imageSource,
-        imageId,
-        imdbId,
+        imageId,  // Use imageId if it's a social post image
+        imdbId,   // Use imdbId if it's a valid poster
         includeDescription,
         whereToWatch,
         movieTitle,

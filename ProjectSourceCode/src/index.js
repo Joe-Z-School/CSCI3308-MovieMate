@@ -1152,7 +1152,8 @@ app.post('/posts', async (req, res) => {
   }
 });
 
-async function createPost({ userId,
+async function createPost({
+  userId,
   title,
   body,
   rating,
@@ -1167,19 +1168,28 @@ async function createPost({ userId,
   try {
     let finalCoverUrl = null;
 
-    // Get image route path depending on source
-    if (imageSource === 'poster' && imdbId) {
-      const result = await db.oneOrNone(
-        'SELECT id FROM images WHERE imdb_id = $1',
-        [imdbId]
-      );
-
-      if (!result) {
-        throw new Error(`No image found for IMDb ID: ${imdbId}`);
+    if (imageSource === 'poster') {
+      if (imageId && imageId.startsWith('tt')) {
+        // OMDb image: use imdbId directly from imageId
+        imdbId = imageId;
+        finalCoverUrl = `/image/${imdbId}`;
+      } else if (imageId) {
+        // imageId is a numeric ID from your own 'images' table
+        const imageResult = await db.oneOrNone(
+          'SELECT imdb_id FROM images WHERE id = $1',
+          [parseInt(imageId)]
+        );
+    
+        if (!imageResult) {
+          throw new Error(`No image found for image ID: ${imageId}`);
+        }
+    
+        imdbId = imageResult.imdb_id;
+        finalCoverUrl = `/image/${imdbId}`;
       }
-
-      finalCoverUrl = `/image/${result.id}`; // Route to serve the image
-    } else if (imageSource === 'upload' && imageId) {
+    }
+    // Handle uploaded images (user uploads)
+    else if (imageSource === 'upload' && imageId) {
       const result = await db.oneOrNone(
         'SELECT id FROM user_images WHERE id = $1',
         [imageId]
@@ -1189,10 +1199,10 @@ async function createPost({ userId,
         throw new Error(`No image found for upload ID: ${imageId}`);
       }
 
-      finalCoverUrl = `/user-image/${result.id}`;
+      finalCoverUrl = `/user-image/${result.id}`;  // Correct URL for user-uploaded image
     }
 
-    // Include the description if needed
+    // Handle movie description if needed
     if (includeDescription && imdbId) {
       const movie = await db.oneOrNone('SELECT description FROM watchlist WHERE imdb_id = $1', [imdbId]);
       if (movie) {
@@ -1200,6 +1210,7 @@ async function createPost({ userId,
       }
     }
 
+    // Insert the new post into the database
     const insertQuery = `
       INSERT INTO posts (
         user_id,
@@ -1210,27 +1221,28 @@ async function createPost({ userId,
         where_to_watch,
         movieTitle,
         movieDescription
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id`;
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id`;
 
     const inserted = await db.one(insertQuery, [
       userId,
       title,
       body,
       rating,
-      finalCoverUrl,
+      finalCoverUrl,  // Correct cover URL for image
       whereToWatch,
-      movieTitle || null,
-      movieDescription || null
+      movieTitle || null,  // Set movie title, or null if not provided
+      movieDescription || null  // Set movie description, or null if not provided
     ]);
 
-    return inserted.id;
+    return inserted.id;  // Return the ID of the created post
   } catch (err) {
     console.error('Error in createPost:', err);
-    throw err;
+    throw err;  // Throw an error if something goes wrong
   }
 }
+
 
 // *****************************************************
 // <!-- Friends Posts -->
@@ -1315,6 +1327,58 @@ app.get('/load-more', async (req, res) => {
     res.status(500).json({ error: "Failed to load posts" });
   }
 });
+
+app.get('/posts/:id', async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.session.user?.id;
+  console.log('Fetching post ID:', postId, 'for user:', userId);
+
+  try {
+    const post = await db.oneOrNone(`
+      SELECT 
+        posts.id, 
+        posts.title, 
+        posts.body, 
+        posts.cover, 
+        posts.where_to_watch, 
+        posts.review, 
+        posts.like_count, 
+        posts.comment_count,
+        posts.movieTitle,
+        posts.movieDescription,
+        users.username AS user,
+        EXISTS (
+          SELECT 1 FROM post_likes 
+          WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
+        ) AS liked
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      WHERE posts.id = $2
+    `, [userId, postId]);
+    
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    
+    // Get comments
+    const comments = await db.any(`
+      SELECT users.username AS user, post_comments.comment AS "commentText"
+      FROM post_comments
+      JOIN users ON post_comments.user_id = users.id
+      WHERE post_comments.post_id = $1
+      ORDER BY post_comments.created_at ASC
+    `, [postId]);
+    
+    post.comments = comments;
+    
+    res.json(post);
+    
+  } catch (err) {
+    console.error('Error fetching post:', err.message);
+    console.error(err.stack);
+    res.status(500).json({ message: 'Error loading post' });
+  }
+  
+});
+
 
 // watchlist functions: will need modification later when other pages are fully completed
 
@@ -1425,8 +1489,6 @@ app.post('/add-to-watchlist', async (req, res) => {
   }
 });
 
-
-
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
   const counts = await db.one(`
@@ -1484,7 +1546,7 @@ async function checkWatchlist(userId, title) {
 // *****************************************************
 app.get('/profile', async (req, res) => {
   const profileUserID = req.query.id ? Number(req.query.id) : req.session.user.id;
-  const loggedInUserID = req.session.user.id ? req.session.user.id : null;
+  const loggedInUserID = req.session.user?.id || null;
   const isOwnProfile = loggedInUserID === profileUserID;
   const counts = await db.one(`
     SELECT 
@@ -1492,9 +1554,20 @@ app.get('/profile', async (req, res) => {
       (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
       (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
   `, [profileUserID]);
-  posts = await db.any(
-    `SELECT * FROM posts WHERE user_id = $1`, [profileUserID]
-  );
+
+  const posts = await db.any(`
+    SELECT 
+      p.*, 
+      COUNT(DISTINCT pc.id) AS comment_count,
+      COUNT(DISTINCT pl.user_id) AS like_count
+    FROM posts p
+    LEFT JOIN post_comments pc ON p.id = pc.post_id
+    LEFT JOIN post_likes pl ON p.id = pl.post_id
+    WHERE p.user_id = $1
+    GROUP BY p.id
+    ORDER BY p.created_at DESC
+  `, [profileUserID]);
+  
   if (isOwnProfile) {
     res.render('pages/profile', {
       user: req.session.user,
@@ -1527,7 +1600,7 @@ app.get('/profile', async (req, res) => {
           ON f.following_user_id = $1 AND f.followed_user_id = u.id
         LEFT JOIN follow_requests fr
           ON fr.requester_id = $1 AND fr.receiver_id = u.id
-         WHERE u.id = $2`,
+        WHERE u.id = $2`,
       [loggedInUserID, profileUserID]
     );
     console.log(profileUser)
@@ -1537,6 +1610,7 @@ app.get('/profile', async (req, res) => {
       followersCount: counts.followers_count,
       followingCount: counts.following_count,
       watchlistCount: counts.watchlist_count,
+      posts: posts,
       isOwnProfile: isOwnProfile
     });
   }
@@ -1624,11 +1698,20 @@ app.get('/profile/watchlist/data', async (req, res) => {
   const userId = req.query.userId || req.session.user.id;  // Get the userId either from the query or session
   try {
     const watchlist = await db.any(`
-      SELECT id, title, poster_picture, description FROM watchlist
-      WHERE user_id = $1
-      ORDER BY id DESC
+      SELECT 
+        w.id, 
+        w.title, 
+        w.poster_picture,
+        w.description,
+        i.imdb_id
+      FROM watchlist w
+      LEFT JOIN images i 
+        ON ('/image/' || i.id) = w.poster_picture
+      WHERE w.user_id = $1
+      ORDER BY w.id DESC
     `, [userId]);
 
+    console.log('Watchlist from /profile/watchlist/data: ', watchlist);
     // Ensure watchlist is an array before sending it as JSON
     if (Array.isArray(watchlist)) {
       res.json(watchlist);  // Send the watchlist as a JSON response
@@ -1640,6 +1723,7 @@ app.get('/profile/watchlist/data', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch watchlist' });
   }
 });
+
 
 
 // app.post('/remove-from-watchlist', async (req, res) => {
