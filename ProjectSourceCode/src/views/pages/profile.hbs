@@ -1119,6 +1119,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         posterDropdown.classList.remove("open-down"); // Remove the dropdown open class
                         // Set the selected poster image in hidden field
                         posterSelector.value = movie.poster_picture;
+                        console.log('posterSelector is: ', posterSelector);
                         document.getElementById("movieTitle").value = movie.title;
                         document.getElementById("movieDescription").value = movie.description || "No description available";
                         // Lock the title and description if the poster is selected
@@ -1504,6 +1505,7 @@ document.getElementById('addPostForm').addEventListener('submit', async function
     // If the image source is a poster, extract IMDb ID
     if (imageSource === 'poster') {
         imdbId = document.getElementById('posterSelector').value;
+        console.log('imdbId of poster: ', imdbId);
         if (imdbId?.startsWith('/image/')) {
             imdbId = imdbId.replace('/image/', '');
         }
