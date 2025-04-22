@@ -1328,6 +1328,58 @@ app.get('/load-more', async (req, res) => {
   }
 });
 
+app.get('/posts/:id', async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.session.user?.id;
+  console.log('Fetching post ID:', postId, 'for user:', userId);
+
+  try {
+    const post = await db.oneOrNone(`
+      SELECT 
+        posts.id, 
+        posts.title, 
+        posts.body, 
+        posts.cover, 
+        posts.where_to_watch, 
+        posts.review, 
+        posts.like_count, 
+        posts.comment_count,
+        posts.movieTitle,
+        posts.movieDescription,
+        users.username AS user,
+        EXISTS (
+          SELECT 1 FROM post_likes 
+          WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
+        ) AS liked
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      WHERE posts.id = $2
+    `, [userId, postId]);
+    
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    
+    // Get comments
+    const comments = await db.any(`
+      SELECT users.username AS user, post_comments.comment AS "commentText"
+      FROM post_comments
+      JOIN users ON post_comments.user_id = users.id
+      WHERE post_comments.post_id = $1
+      ORDER BY post_comments.created_at ASC
+    `, [postId]);
+    
+    post.comments = comments;
+    
+    res.json(post);
+    
+  } catch (err) {
+    console.error('Error fetching post:', err.message);
+    console.error(err.stack);
+    res.status(500).json({ message: 'Error loading post' });
+  }
+  
+});
+
+
 // watchlist functions: will need modification later when other pages are fully completed
 
 // app.post('/add-to-watchlist', async (req, res) => {

@@ -1,3 +1,106 @@
+<style>
+
+.modal-content {
+  background-color: #2c3e50;
+  border-radius: 15px;
+  color: white;
+  padding: 1rem;
+}
+
+.modal-header {
+  border-bottom: 1px solid #34495e;
+  padding: 1rem;
+}
+
+/* User Section */
+.modal-header .d-flex {
+  display: flex;
+  align-items: center;
+}
+
+.modal-header .btn-close {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.25rem;
+}
+
+/* Movie Picture */
+#postDetailCover {
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1rem;
+}
+
+/* Like and Comment Section */
+.d-flex i {
+  color: white;
+}
+
+.like-count, .comment-count {
+  color: white;
+  font-size: 1.25rem;
+}
+
+/* User Comment (Body) */
+#userComment {
+  color: #ecf0f1;
+  font-size: 1rem;
+}
+
+/* Review and Where to Watch */
+#reviewText {
+  font-size: 1.125rem;
+}
+
+#postDetailWhereToWatchInput {
+  font-size: 1.125rem;
+}
+
+/* Comments Section */
+#postDetailCommentsSection {
+  border-top: 1px solid #34495e;
+  padding-top: 1rem;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.comment {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #34495e;
+}
+
+.comment-author {
+  font-weight: bold;
+  color: #ecf0f1;
+}
+
+.comment-text {
+  font-size: 1rem;
+  color: #bdc3c7;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  .modal-dialog {
+    max-width: 90%;
+  }
+}
+
+/* Profile Icons: Keep them white */
+.modal-header .bi-person-circle {
+  color: white;
+}
+
+/* Heart and Comment Icons */
+.d-flex i.bi-heart-fill,
+.d-flex i.bi-chat-dots {
+  color: white !important; /* Ensure heart and comment icons in modal are white */
+}
+
+</style>
+
 <!-- Post Details Modal -->
 <div class="modal fade" id="postDetailsModal" tabindex="-1" aria-labelledby="postDetailsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -11,63 +114,104 @@
       </div>
       <div class="modal-body">
         <!-- Post Cover Image -->
-        <div class="ratio ratio-1x1" style="overflow: hidden;">
+        <div class="ratio ratio-16x9" style="overflow: hidden; border-radius: 10px;">
           <img src="" alt="Post Cover" id="postDetailCover" class="w-100 h-100" style="object-fit: cover;">
         </div>
 
+        <!-- Like, Comment and Count -->
+        <div class="d-flex justify-content-between mt-3">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-heart-fill text-danger me-2" style="font-size: 1.5rem;"></i>
+            <span class="like-count me-4" style="font-size: 1.25rem;">0</span> <!-- Add me-4 here -->
+            <i class="bi bi-chat-dots text-light me-2" style="font-size: 1.5rem;"></i>
+            <span class="comment-count" style="font-size: 1.25rem;">0</span>
+          </div>
+        </div>
+
         <!-- Post Title & Rating -->
-        <h5 class="mt-3" id="postTitle"></h5>
-        <p id="ratingValue" class="text-light"></p>
-
-        <!-- Movie Description Preview with Read More link -->
-        <p id="movieDescPreview" class="text-light"></p>
-
-        <!-- Review and Where to Watch -->
-        <p id="reviewText" class="text-light"><strong>Review:</strong> <span id="ratingValue"></span></p>
-        <p id="whereToWatchInput" class="text-light"><strong>Where to Watch:</strong> <span id="whereToWatchInput"></span></p>
-
-        <!-- Like Button -->
-        <div class="mt-4">
-          <button class="btn heart-button" aria-label="Like">
-            <i class="bi bi-heart" style="color: white;"></i>
-            <span class="like-count ms-1" style="color: white;">{{like_count}}</span>
-          </button>
-        </div>
-
-        <!-- Comments Section -->
-        <div id="commentsSection">
-            {{#each post.comments}}
-            <div class="comment">
-                <strong>{{this.user}}</strong>: {{this.commentText}}
-            </div>
-            {{/each}}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Movie Description Modal -->
-<div class="modal fade" id="movieDescriptionModal" tabindex="-1" aria-labelledby="movieDescriptionModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div class="d-flex align-items-center">
-          <i class="bi bi-film fs-4 me-2 text-secondary"></i>
-          <strong class="text-light" id="modalMovieTitle"></strong>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Movie Poster -->
-        <div class="ratio ratio-1x1" style="overflow: hidden;">
-          <img src="" alt="Movie Poster" id="modalMovieCover" class="w-100 h-100" style="object-fit: cover;">
-        </div>
+        <h5 class="mt-3 text-light" id="postDetailTitle"></h5>
+        <p id="postDetailRating" class="text-light"></p>
 
         <!-- Full Movie Description -->
-        <p id="modalMovieDescription" class="text-light mt-3"></p>
+        <p id="postDetailMovieDesc" class="text-light"></p>
+
+        <!-- Review and Where to Watch -->
+        <p id="reviewText" class="text-light mt-3"><strong>Review:</strong> <span id="ratingValue"></span></p>
+        <label><strong>Where To Watch: </strong><span id="postDetailWhereToWatchInput"></span></label>
+        <br>
+
+        <!-- Comments Section -->
+        <label>Comments:</label>
+        <div id="postDetailCommentsSection" class="mt-3">
+            <!-- Comments will be dynamically inserted here -->
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+
+
+<script>
+async function showPostDetails(postId) {
+  console.log("Show details for post ID:", postId); // Check if this is triggered
+
+  try {
+    const res = await fetch(`/posts/${postId}`);
+    if (!res.ok) throw new Error('Failed to fetch post');
+
+    const post = await res.json();
+    console.log("📦 Post data:", post);
+
+    // Update modal content
+    document.getElementById("postUser").textContent = post.user || 'Unknown User';
+    document.getElementById("postDetailCover").src = post.cover || '/path/to/default-cover.jpg'; // Ensure a fallback image
+    document.getElementById("postDetailTitle").textContent = post.title || 'No Title';
+    document.getElementById("postDetailRating").textContent = post.movieTitle ? `Movie: ${post.movieTitle}` : '';
+    
+    // Full movie description
+    const movieDescElement = document.getElementById("postDetailMovieDesc");
+    movieDescElement.textContent = post.moviedescription || 'No description available';
+
+    // Review and Where to Watch section
+    const reviewTextEl = document.getElementById('reviewText');
+    reviewTextEl.style.display = post.review ? 'block' : 'none';
+    document.getElementById('ratingValue').textContent = post.review ? `${post.review}/5` : '';
+
+    const watchEl = document.getElementById('postDetailWhereToWatchInput');
+    watchEl.textContent = post.where_to_watch || 'Not available';
+    watchEl.parentElement.style.display = post.where_to_watch ? 'block' : 'none';
+
+    // Like section (heart with counter)
+    const likeCount = document.querySelector('.like-count');
+    likeCount.textContent = post.like_count || 0;
+
+    const commentCount = document.querySelector('.comment-count');
+    commentCount.textContent = post.comments ? post.comments.length : 0;
+
+
+    // Clear and update Comments section
+    const commentsSection = document.getElementById('postDetailCommentsSection');
+    commentsSection.innerHTML = ''; // Clear existing comments
+
+    if (post.comments && post.comments.length > 0) {
+      post.comments.forEach(comment => {
+        const div = document.createElement('div');
+        div.className = 'comment';
+        div.innerHTML = `<strong>${comment.user}</strong>: ${comment.commentText}`;
+        commentsSection.appendChild(div);
+      });
+    }
+
+    // Show the modal after content is updated
+    const modal = new bootstrap.Modal(document.getElementById("postDetailsModal"));
+    modal.show();
+
+  } catch (err) {
+    console.error('Error loading post details:', err);
+  }
+}
+
+
+
+</script>

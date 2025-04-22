@@ -743,7 +743,7 @@
         </div>
         {{/each}}
     </div>
-    {{> postDetailsModal}}  <!-- Include post details modal -->
+    {{> postDetailsModal}}
 </div>
 
 {{#unless posts.length}}
@@ -1001,6 +1001,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const movieInfoDropdownContainer = document.getElementById("movieInfoDropdownContainer");
     const movieDetailsPreview = document.getElementById("movieDetailsPreview");
     const titleInput = document.getElementById("postTitle");
+
+    console.log(document.getElementById("postDetailsModal"));
 
     let selectedMovie = null;
 
@@ -1666,7 +1668,5 @@ document.getElementById('addPostForm').addEventListener('submit', async function
         alert('An error occurred while submitting the post. Please try again later.');
     }
 });
-
-
 
 </script>
