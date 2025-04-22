@@ -1152,7 +1152,8 @@ app.post('/posts', async (req, res) => {
   }
 });
 
-async function createPost({ userId,
+async function createPost({
+  userId,
   title,
   body,
   rating,
@@ -1167,19 +1168,28 @@ async function createPost({ userId,
   try {
     let finalCoverUrl = null;
 
-    // Get image route path depending on source
-    if (imageSource === 'poster' && imdbId) {
-      const result = await db.oneOrNone(
-        'SELECT id FROM images WHERE imdb_id = $1',
-        [imdbId]
-      );
-
-      if (!result) {
-        throw new Error(`No image found for IMDb ID: ${imdbId}`);
+    if (imageSource === 'poster') {
+      if (imageId && imageId.startsWith('tt')) {
+        // OMDb image: use imdbId directly from imageId
+        imdbId = imageId;
+        finalCoverUrl = `/image/${imdbId}`;
+      } else if (imageId) {
+        // imageId is a numeric ID from your own 'images' table
+        const imageResult = await db.oneOrNone(
+          'SELECT imdb_id FROM images WHERE id = $1',
+          [parseInt(imageId)]
+        );
+    
+        if (!imageResult) {
+          throw new Error(`No image found for image ID: ${imageId}`);
+        }
+    
+        imdbId = imageResult.imdb_id;
+        finalCoverUrl = `/image/${imdbId}`;
       }
-
-      finalCoverUrl = `/image/${result.id}`; // Route to serve the image
-    } else if (imageSource === 'upload' && imageId) {
+    }
+    // Handle uploaded images (user uploads)
+    else if (imageSource === 'upload' && imageId) {
       const result = await db.oneOrNone(
         'SELECT id FROM user_images WHERE id = $1',
         [imageId]
@@ -1189,10 +1199,10 @@ async function createPost({ userId,
         throw new Error(`No image found for upload ID: ${imageId}`);
       }
 
-      finalCoverUrl = `/user-image/${result.id}`;
+      finalCoverUrl = `/user-image/${result.id}`;  // Correct URL for user-uploaded image
     }
 
-    // Include the description if needed
+    // Handle movie description if needed
     if (includeDescription && imdbId) {
       const movie = await db.oneOrNone('SELECT description FROM watchlist WHERE imdb_id = $1', [imdbId]);
       if (movie) {
@@ -1200,6 +1210,7 @@ async function createPost({ userId,
       }
     }
 
+    // Insert the new post into the database
     const insertQuery = `
       INSERT INTO posts (
         user_id,
@@ -1210,27 +1221,28 @@ async function createPost({ userId,
         where_to_watch,
         movieTitle,
         movieDescription
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id`;
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id`;
 
     const inserted = await db.one(insertQuery, [
       userId,
       title,
       body,
       rating,
-      finalCoverUrl,
+      finalCoverUrl,  // Correct cover URL for image
       whereToWatch,
-      movieTitle || null,
-      movieDescription || null
+      movieTitle || null,  // Set movie title, or null if not provided
+      movieDescription || null  // Set movie description, or null if not provided
     ]);
 
-    return inserted.id;
+    return inserted.id;  // Return the ID of the created post
   } catch (err) {
     console.error('Error in createPost:', err);
-    throw err;
+    throw err;  // Throw an error if something goes wrong
   }
 }
+
 
 // *****************************************************
 // <!-- Friends Posts -->
@@ -1424,8 +1436,6 @@ app.post('/add-to-watchlist', async (req, res) => {
     res.status(500).json({ success: false, error: 'Movie already in watchlist' });
   }
 });
-
-
 
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
@@ -1636,11 +1646,20 @@ app.get('/profile/watchlist/data', async (req, res) => {
   const userId = req.query.userId || req.session.user.id;  // Get the userId either from the query or session
   try {
     const watchlist = await db.any(`
-      SELECT id, title, poster_picture, description FROM watchlist
-      WHERE user_id = $1
-      ORDER BY id DESC
+      SELECT 
+        w.id, 
+        w.title, 
+        w.poster_picture,
+        w.description,
+        i.imdb_id
+      FROM watchlist w
+      LEFT JOIN images i 
+        ON ('/image/' || i.id) = w.poster_picture
+      WHERE w.user_id = $1
+      ORDER BY w.id DESC
     `, [userId]);
 
+    console.log('Watchlist from /profile/watchlist/data: ', watchlist);
     // Ensure watchlist is an array before sending it as JSON
     if (Array.isArray(watchlist)) {
       res.json(watchlist);  // Send the watchlist as a JSON response
