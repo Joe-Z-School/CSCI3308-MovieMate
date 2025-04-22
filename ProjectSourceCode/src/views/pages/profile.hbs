@@ -602,6 +602,66 @@
         box-shadow: 0 0 5px rgba(220, 53, 69, 0.4);
     }
 
+    /* Container for all posts */
+    .post-container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 30px;
+        justify-content: center;
+    }
+
+    /* Each individual post card */
+    .post-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #333;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 225px;
+        height: 300px;
+        padding: 15px;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Ensure the image stays at the top */
+    .post-content img {
+        object-fit: cover;
+        border-radius: 8px;
+        height: 180px; /* Fixed height for images */
+    }
+
+    .post-content h5 {
+        text-align: center; /* Center the title */
+        margin-bottom: 10px; 
+    }
+
+    /* The footer with icons and text */
+    .post-footer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: auto; 
+        padding-top: 10px;
+        border-top: 1px solid #444;
+    }
+
+    .post-footer i {
+        margin-right: 5px; 
+    }
+
+    /* Styling the icons */
+    .bi {
+        font-size: 18px;
+    }
+
+    .post-footer span {
+        font-size: 14px;
+        margin-left: 3px
+    }
+
 </style>
 
 {{> nav}}
@@ -666,23 +726,24 @@
         Add Post
     </button>
     {{/if}}
-
     <h3 style="margin-top: 30px;">Recent Posts</h3>
     <div class="post-container">
         {{#each posts}}
-        <div class="post-content">
+        <div class="post-content mb-4">
             <a href="#" data-bs-toggle="modal" data-bs-target="#postDetailsModal" onclick="showPostDetails('{{id}}')">
-                <img src="{{cover}}" alt="{{title}} cover" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 10px;">
+                <img src="{{cover}}" alt="{{title}} cover" class="w-100 rounded mb-2" style="object-fit: cover;">
             </a>
-            <h5>{{title}}</h5>
-            <p>Review: {{review}}</p>
-            <p><strong>Where to Watch:</strong> {{where_to_watch}}</p>
+            <h5 class="text-light">{{title}}</h5>
+            <div class="d-flex align-items-center text-light mb-1 post-footer">
+                <i class="bi bi-chat-dots me-1"></i>
+                <span class="me-3">{{comment_count}}</span>
+                <i class="bi bi-heart me-1"></i>
+                <span>{{like_count}}</span>
+            </div>
         </div>
         {{/each}}
     </div>
-
     {{> postDetailsModal}}  <!-- Include post details modal -->
-
 </div>
 
 {{#unless posts.length}}
@@ -1172,7 +1233,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const optionsContainer = document.getElementById("whereToWatchOptions");
         const hiddenInput = document.getElementById("whereToWatchInput");
 
-        const platforms = ["Netflix", "Hulu", "Amazon Prime", "Disney+", "HBO Max"];
+        const platforms = ["Netflix", "Hulu", "Amazon Prime", "Disney+", "HBO Max", "Other"];
 
         optionsContainer.innerHTML = "";
         platforms.forEach(platform => {
@@ -1540,25 +1601,5 @@ document.getElementById('addPostForm').addEventListener('submit', async function
         alert('An error occurred while submitting the post. Please try again later.');
     }
 });
-
-
-
-// Show post details in the modal
-function showPostDetails(postId) {
-    // Find the post details for the given postId (you can get this from your post data)
-    const post = posts.find(post => post.id === postId);
-
-    // Populate modal with post data
-    if (post) {
-        document.getElementById('postDetailCover').src = "../../resources/img/" + post.cover;
-        document.getElementById('postTitle').innerText = post.title;
-        document.getElementById('ratingValue').innerText = 'Review: ' + post.review;
-        document.getElementById('postBody').innerText = 'Description: ' + post.body;
-        document.getElementById('whereToWatchInput').innerText = 'Where to Watch: ' + post.where_to_watch;
-    }
-}
-
-
-
 
 </script>
