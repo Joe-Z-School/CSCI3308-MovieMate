@@ -1385,28 +1385,43 @@ app.get('/image/:identifier', async (req, res) => {
 
 app.post('/add-to-watchlist', async (req, res) => {
   const userId = req.session.user?.id;
-  const { imdbID, title, picture, description } = req.body;
+  const { imdbID, title, picture, description, source } = req.body;
+
   const alreadyAdded = await checkWatchlist(userId, title);
 
-  if(!alreadyAdded){
+  if (!alreadyAdded) {
     try {
       console.log('In add-to-watchlist with picture:', picture);
-      const imageUrl = await uploadPoster(picture, imdbID);
-    
-        await db.query(
-          'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
-          [userId, title, imageUrl, description]
-        );
-        res.json({ success: true });
-    
+      console.log('Source:', source);
+
+      let imageUrl;
+
+      if (source === 'social') {
+        // If coming from the social page, image is already stored
+        imageUrl = picture;
+        console.log('Using existing image from /image/...:', imageUrl);
+      } else {
+        // Otherwise, fetch and store the image (from OMDb)
+        imageUrl = await uploadPoster(picture, imdbID);
+        console.log('Downloaded and stored new image:', imageUrl);
+      }
+
+      await db.query(
+        'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
+        [userId, title, imageUrl, description]
+      );
+
+      res.json({ success: true });
+
     } catch (err) {
+      console.error('Error inserting into watchlist:', err);
       res.status(500).json({ success: false, error: 'Failed to add movie to Watchlist' });
     }
-  }
-  else{
+  } else {
     res.status(500).json({ success: false, error: 'Movie already in watchlist' });
   }
 });
+
 
 
 app.post('/remove-from-watchlist', async (req, res) => {
