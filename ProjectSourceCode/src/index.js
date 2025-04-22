@@ -267,16 +267,18 @@ app.get('/register', (req, res) => {
 
 // Register
 app.post('/register', async (req, res) => {
-  //hash the password using bcrypt library
-  const hash = await bcrypt.hash(req.body.password, 10);
-  console.log('Generated Hash:', hash);
+  const { first_name, last_name, username, email, profile_icon, bio, password } = req.body;
 
-  const first_name = req.body.first_name;
-  const last_name = req.body.last_name;
-  const username = req.body.username;
-  const email = req.body.email;
-  const profile_icon = req.body.profile_icon;
-  const bio = req.body.bio;
+  // Email format validation using a regular expression
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    req.session.Message = 'Invalid email format';
+    return res.redirect('/register');
+  }
+
+  // Hash the password using bcrypt library
+  const hash = await bcrypt.hash(password, 10);
+  console.log('Generated Hash:', hash);
 
   // Generate a timestamp for when this request is made
   const created_at = new Date().toISOString();
@@ -289,7 +291,8 @@ app.post('/register', async (req, res) => {
     console.log('data successfully added');
     res.redirect('/login');
   } catch (err) {
-    req.session.Message = 'An error occurred';
+    console.error('Registration error:', err);
+    req.session.Message = 'An error occurred during registration';
     res.redirect('/register');
   };
 });
@@ -1263,7 +1266,7 @@ app.get('/social', async (req, res) => {
   LIMIT $2 OFFSET $3
 `, [userId, limit, offset]);
 
-  console.log("Sent posts:", posts);
+    console.log("Sent posts:", posts);
 
     res.render('pages/social', { layout: 'main', user: req.session.user, posts });
   } catch (err) {
@@ -1426,7 +1429,12 @@ app.post('/add-to-watchlist', async (req, res) => {
 
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
-
+  const counts = await db.one(`
+    SELECT 
+      (SELECT COUNT(*) FROM friends WHERE followed_user_id = $1) AS followers_count,
+      (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
+      (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
+  `, [req.session.user.id]);
   if (!title) {
     res.render('pages/profile', { layout: 'Main', message: 'Movie title is required', status: 400 });
     return;
@@ -1435,20 +1443,36 @@ app.post('/remove-from-watchlist', async (req, res) => {
   db.tx(async remove => {
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
-    res.render('pages/profile', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.`, profile: req.session.user });
+    res.render('pages/profile', {
+      layout: 'main',
+      success: true, message: `Successfully removed ${title} from your watchlist.`,
+      profile: req.session.user,
+      followersCount: counts.followers_count,
+      followingCount: counts.following_count,
+      watchlistCount: counts.watchlist_count,
+      isOwnProfile: true
+    });
   }).catch(err => {
-    res.render('pages/profile', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.', profile: req.session.user});
+    res.render('pages/profile', {
+      layout: 'main', error: true,
+      message: 'Failed to remove movie from watchlist.',
+      profile: req.session.user,
+      followersCount: counts.followers_count,
+      followingCount: counts.following_count,
+      watchlistCount: counts.watchlist_count,
+      isOwnProfile: true
+    });
   });
 });
 
-async function checkWatchlist(userId, title){
+async function checkWatchlist(userId, title) {
   const userIdString = String(userId);
-  try{
+  try {
     const inWatchlist = await db.oneOrNone('SELECT EXISTS( SELECT 1 FROM watchlist WHERE user_id = $1 AND title = $2 )', [userIdString, title]);
     console.log('Checking watchlist and got: ', inWatchlist)
     return inWatchlist && inWatchlist.exists;
   }
-  catch{
+  catch {
     console.error('Error finding movie in watchlist', error);
     throw error;
   }
@@ -1586,7 +1610,9 @@ app.post('/profile/edit', async (req, res) => {
 //Profile Watchlist Route
 app.get('/profile/watchlist', async (req, res) => {
   const userId = req.query.userId || req.session.user.id;
-
+  const profileUserID = req.query.userId ? Number(req.query.userId) : req.session.user.id;
+  const loggedInUserID = req.session.user.id ? req.session.user.id : null;
+  const isOwnProfile = loggedInUserID === profileUserID;
   try {
     const watchlist = await db.any(`
       SELECT id, title, poster_picture, where_to_watch, description
@@ -1598,6 +1624,7 @@ app.get('/profile/watchlist', async (req, res) => {
     res.render('pages/watchlist', {
       user: req.session.user,
       watchlist: watchlist,
+      isOwnProfile: isOwnProfile
     });
   } catch (err) {
     console.error('Error fetching watchlist:', err);
