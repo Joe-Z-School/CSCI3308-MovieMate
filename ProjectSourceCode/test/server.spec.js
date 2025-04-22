@@ -7,6 +7,8 @@ const chaiHttp = require('chai-http');
 chai.should();
 chai.use(chaiHttp);
 const { assert, expect } = chai;
+const sinon = require('sinon');
+const utils = require('../src/utils/apiHelper.js'); // Adjust this path if your utils file is elsewhere
 
 let agent; // For session-aware requests
 
@@ -444,9 +446,15 @@ describe('Watchlist API', () => {
 
   before(async () => {
     await agent.get('/dev/login-as-11');
+    sinon.stub(utils, 'uploadPoster').resolves('/image/fake/path.jpg');
   });
 
-  it('should add a movie to the watchlist', done => {
+  after(() => {
+    utils.uploadPoster.restore();
+  });
+
+  
+  it('should add a movie to the watchlist (non-social source)', done => {
     agent
       .post('/add-to-watchlist')
       .send(testMovie)
@@ -454,6 +462,41 @@ describe('Watchlist API', () => {
         res.should.have.status(200);
         res.body.should.have.property('success', true);
         done();
+      });
+  });
+
+  it('should add a movie from the social page without uploading poster', done => {
+    const socialMovie = {
+      imdbID: 'tt7654321',
+      title: 'Social Movie',
+      picture: '/image/social/path.jpg',
+      description: 'Movie from social page',
+      source: 'social'
+    };
+
+    agent
+      .post('/add-to-watchlist')
+      .send(socialMovie)
+      .end((err, res) => {
+        res.should.have.status(200);
+        res.body.should.have.property('success', true);
+        done();
+      });
+  });
+
+  it('should not add a movie that already exists in the watchlist', done => {
+    agent
+      .post('/add-to-watchlist')
+      .send(testMovie)
+      .end(() => {
+        agent
+          .post('/add-to-watchlist')
+          .send(testMovie)
+          .end((err, res) => {
+            res.should.have.status(500);
+            res.body.should.have.property('error', 'Movie already in watchlist');
+            done();
+          });
       });
   });
 
@@ -472,7 +515,7 @@ describe('Watchlist API', () => {
       .post('/remove-from-watchlist')
       .send({})
       .end((err, res) => {
-        res.should.have.status(200); // it's rendered HTML
+        res.should.have.status(200);
         res.text.should.include('Movie title is required');
         done();
       });
@@ -488,6 +531,7 @@ describe('Watchlist API', () => {
         done();
       });
   });
+  
 });
 */
 // ********************** PROFILE **************************************
@@ -582,48 +626,6 @@ describe('Profile Routes', () => {
         done();
       });
   });
-
-  /*
-  it('should show error on profile edit with missing data', done => {
-    agent
-      .post('/profile/edit')
-      .type('form')
-      .send({
-        first_name: '',
-        last_name: '',
-        email: '',
-        bio: '',
-        profile_icon: ''
-      })
-      .end((err, res) => {
-        res.should.redirect;
-        res.should.redirectTo(/\/profile\?edit=true&error=1$/);
-        done();
-      });
-  });
-
-  it('should handle DB failure in /profile/followers gracefully', async () => {
-    const originalAny = db.any;
-    db.any = () => Promise.reject(new Error('Simulated DB failure'));
-  
-    const res = await agent.get('/profile/followers');
-    res.should.have.status(500);
-    res.text.should.include('Error loading followers');
-  
-    db.any = originalAny;
-  });
-  
-  it('should handle DB failure in /profile/following gracefully', async () => {
-    const originalAny = db.any;
-    db.any = () => Promise.reject(new Error('Simulated DB failure'));
-  
-    const res = await agent.get('/profile/following');
-    res.should.have.status(500);
-    res.text.should.include('Error loading following');
-  
-    db.any = originalAny;
-  });
-  */
   
 });
   

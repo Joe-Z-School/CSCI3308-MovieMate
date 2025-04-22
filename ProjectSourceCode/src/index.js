@@ -1220,48 +1220,6 @@ app.get('/load-more', async (req, res) => {
 });
 
 
-// watchlist functions: will need modification later when other pages are fully completed
-
-// app.post('/add-to-watchlist', async (req, res) => {
-//   const { title, poster_picture, whereToWatch } = req.body;
-//   const userId = req.session.user?.id;
-
-//   if (!title || !poster_picture || !whereToWatch) {
-//     res.json('pages/social', { layout: 'main', message: 'Incomplete movie information.', status: 400 });
-//     return;
-//   }
-
-//   try {
-//     await db.none(
-//           `INSERT INTO watchlist (user_id, title, poster_picture, where_to_watch)
-//           VALUES ($1, $2, $3, $4)
-//           ON CONFLICT DO NOTHING`,
-//           [userId, title, poster_picture, whereToWatch]
-//       );
-//       res.json({ success: true, message: `${title} added to watchlist.` });
-//   } catch (err) {
-//       console.error('Add to watchlist error:', err);
-//       res.status(500).json({ success: false, message: 'Server error.' });
-//   }
-// });
-
-// app.post('/remove-from-watchlist', async (req, res) => {
-//   const title = req.body.title;
-
-//   if (!title) {
-//     res.json('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400 });
-//     return;
-//   }
-
-//   db.tx(async remove => {
-//     // Remove the course from the student's list of courses.
-//     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
-//   }).then(social => {
-//     res.json('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
-//   }).catch(err => {
-//     res.json('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
-//   });
-// });
 /*
 app.get('/image/:imdbID', async (req, res) => {
   const { imdbID } = req.params;
@@ -1280,44 +1238,99 @@ app.get('/image/:imdbID', async (req, res) => {
   res.set('Content-Type', image.content_type);
   res.send(image.image_data);
 });
-
+*/
 
 app.post('/add-to-watchlist', async (req, res) => {
   const userId = req.session.user?.id;
-  const {imdbID, title, picture, description } = req.body;
+  const { imdbID, title, picture, description, source } = req.body;
 
-  try {
-    console.log('In add-to-watchlist with picture:', picture);
-    const imageUrl = await uploadPoster(picture, imdbID);
+  const alreadyAdded = await checkWatchlist(userId, title);
 
-    await db.query(
-      'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
-      [userId, title, imageUrl, description]
-    );
+  if (!alreadyAdded) {
+    try {
+      console.log('In add-to-watchlist with picture:', picture);
+      console.log('Source:', source);
 
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: 'Failed to add movie to Watchlist' });
+      let imageUrl;
+
+      if (source === 'social') {
+        // If coming from the social page, image is already stored
+        imageUrl = picture;
+        console.log('Using existing image from /image/...:', imageUrl);
+      } else {
+        // Otherwise, fetch and store the image (from OMDb)
+        imageUrl = await uploadPoster(picture, imdbID);
+        console.log('Downloaded and stored new image:', imageUrl);
+      }
+
+      await db.query(
+        'INSERT INTO watchlist (user_id, title, poster_picture, description) VALUES ($1, $2, $3, $4)',
+        [userId, title, imageUrl, description]
+      );
+
+      res.json({ success: true });
+
+    } catch (err) {
+      console.error('Error inserting into watchlist:', err);
+      res.status(500).json({ success: false, error: 'Failed to add movie to Watchlist' });
+    }
+  } else {
+    res.status(500).json({ success: false, error: 'Movie already in watchlist' });
   }
 });
 
 
+
 app.post('/remove-from-watchlist', async (req, res) => {
   const title = req.body.title;
-
+  const counts = await db.one(`
+    SELECT 
+      (SELECT COUNT(*) FROM friends WHERE followed_user_id = $1) AS followers_count,
+      (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
+      (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
+  `, [req.session.user.id]);
   if (!title) {
-    res.render('pages/social', { layout: 'Main', message: 'Movie title is required', status: 400 });
+    res.render('pages/profile', { layout: 'Main', message: 'Movie title is required', status: 400 });
     return;
   }
 
   db.tx(async remove => {
     await remove.none('DELETE FROM watchlist WHERE title = $1;', [title]);
   }).then(social => {
-    res.render('pages/social', { layout: 'main', success: true, message: `Successfully removed ${title} from your watchlist.` });
+    res.render('pages/profile', {
+      layout: 'main',
+      success: true, message: `Successfully removed ${title} from your watchlist.`,
+      profile: req.session.user,
+      followersCount: counts.followers_count,
+      followingCount: counts.following_count,
+      watchlistCount: counts.watchlist_count,
+      isOwnProfile: true
+    });
   }).catch(err => {
-    res.render('pages/social', { layout: 'main', error: true, message: 'Failed to remove movie from watchlist.' });
+    res.render('pages/profile', {
+      layout: 'main', error: true,
+      message: 'Failed to remove movie from watchlist.',
+      profile: req.session.user,
+      followersCount: counts.followers_count,
+      followingCount: counts.following_count,
+      watchlistCount: counts.watchlist_count,
+      isOwnProfile: true
+    });
   });
 });
+
+async function checkWatchlist(userId, title) {
+  const userIdString = String(userId);
+  try {
+    const inWatchlist = await db.oneOrNone('SELECT EXISTS( SELECT 1 FROM watchlist WHERE user_id = $1 AND title = $2 )', [userIdString, title]);
+    console.log('Checking watchlist and got: ', inWatchlist)
+    return inWatchlist && inWatchlist.exists;
+  }
+  catch {
+    console.error('Error finding movie in watchlist', error);
+    throw error;
+  }
+}
 
 app.get('/watchlist', async (req, res) => {
   const userId = req.session.user?.id;
@@ -1335,7 +1348,33 @@ app.get('/watchlist', async (req, res) => {
     res.status(500).send('Error loading watchlist');
   }
 });
-*/
+
+async function uploadPoster(posterUrl, imdbID) {
+  // Check if the poster already exists in the database
+  const existing = await db.query('SELECT * FROM images WHERE imdb_id = $1', [imdbID]);
+  if (existing.length > 0) {
+    console.log('Poster already exists in database.');
+    return `/image/${imdbID}`; // endpoint to serve the image
+  }
+
+  // Fetch the image
+  console.log('Fetching image from:', posterUrl);
+  const response = await axios.get(posterUrl, { responseType: 'arraybuffer' });
+  console.log('Fetched image, content-type:', response.headers['content-type']);
+
+  const buffer = Buffer.from(response.data, 'binary');
+  const contentType = response.headers['content-type'];
+
+  // Insert into the database
+  await db.query(
+    `INSERT INTO images (imdb_id, image_data, content_type) VALUES ($1, $2, $3)`,
+    [imdbID, buffer, contentType]
+  );
+
+  console.log('Poster uploaded to database');
+  return `/image/${imdbID}`;
+}
+
 
 // *****************************************************
 //  <!-- Profile Page --!>
