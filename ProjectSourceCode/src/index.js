@@ -1460,7 +1460,7 @@ async function checkWatchlist(userId, title){
 // *****************************************************
 app.get('/profile', async (req, res) => {
   const profileUserID = req.query.id ? Number(req.query.id) : req.session.user.id;
-  const loggedInUserID = req.session.user.id ? req.session.user.id : null;
+  const loggedInUserID = req.session.user?.id || null;
   const isOwnProfile = loggedInUserID === profileUserID;
   const counts = await db.one(`
     SELECT 
@@ -1468,9 +1468,20 @@ app.get('/profile', async (req, res) => {
       (SELECT COUNT(*) FROM friends WHERE following_user_id = $1) AS following_count,
       (SELECT COUNT(*) FROM watchlist WHERE user_id = $1) AS watchlist_count
   `, [profileUserID]);
-  posts = await db.any(
-    `SELECT * FROM posts WHERE user_id = $1`, [profileUserID]
-  );
+
+  const posts = await db.any(`
+    SELECT 
+      p.*, 
+      COUNT(DISTINCT pc.id) AS comment_count,
+      COUNT(DISTINCT pl.user_id) AS like_count
+    FROM posts p
+    LEFT JOIN post_comments pc ON p.id = pc.post_id
+    LEFT JOIN post_likes pl ON p.id = pl.post_id
+    WHERE p.user_id = $1
+    GROUP BY p.id
+    ORDER BY p.created_at DESC
+  `, [profileUserID]);
+  
   if (isOwnProfile) {
     res.render('pages/profile', {
       user: req.session.user,
@@ -1503,7 +1514,7 @@ app.get('/profile', async (req, res) => {
           ON f.following_user_id = $1 AND f.followed_user_id = u.id
         LEFT JOIN follow_requests fr
           ON fr.requester_id = $1 AND fr.receiver_id = u.id
-         WHERE u.id = $2`,
+        WHERE u.id = $2`,
       [loggedInUserID, profileUserID]
     );
     console.log(profileUser)
@@ -1513,6 +1524,7 @@ app.get('/profile', async (req, res) => {
       followersCount: counts.followers_count,
       followingCount: counts.following_count,
       watchlistCount: counts.watchlist_count,
+      posts: posts,
       isOwnProfile: isOwnProfile
     });
   }
@@ -1613,6 +1625,7 @@ app.get('/profile/watchlist/data', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch watchlist' });
   }
 });
+
 
 
 // app.post('/remove-from-watchlist', async (req, res) => {
