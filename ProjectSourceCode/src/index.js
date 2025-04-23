@@ -1266,6 +1266,7 @@ app.get('/social', async (req, res) => {
     posts.movieTitle,
     posts.movieDescription,
     users.username AS user,
+    users.profile_icon As icon,
     EXISTS (
       SELECT 1 FROM post_likes 
       WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
@@ -1309,6 +1310,7 @@ app.get('/load-more', async (req, res) => {
     posts.movieTitle,
     posts.movieDescription,
     users.username AS user,
+    users.profile_icon As icon,
     EXISTS (
       SELECT 1 FROM post_likes 
       WHERE post_likes.user_id = $1 AND post_likes.post_id = posts.id
