@@ -9,10 +9,16 @@
 
 ---
 
-## 🌐 Live Demo & Deployment
+## 🌐 Deployment & Live Demo
 
-- 🚀 Deployed App: [https://csci3308-moviemate.onrender.com](https://csci3308-moviemate.onrender.com)  
-- 🎬 [Watch the Video Demo](https://vimeo.com/1078150699?share=copy)
+<p align="center">
+  <a href="https://csci3308-moviemate.onrender.com" target="_blank">
+    <img src="https://img.shields.io/badge/🚀%20Live%20App-Visit-blueviolet?style=for-the-badge" alt="Live App Badge"/>
+  </a>
+  <a href="https://vimeo.com/1078150699?share=copy" target="_blank">
+    <img src="https://img.shields.io/badge/%20Demo%20Video-Vimeo-1ab7ea?style=for-the-badge&logo=vimeo&logoColor=white" alt="Demo Video on Vimeo Badge"/>
+  </a>
+</p>
 
 ---
 
