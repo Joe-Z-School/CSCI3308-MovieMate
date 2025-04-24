@@ -20,7 +20,7 @@
 
 - [✨ Features](#-features)
 - [🛠 Technologies Used](#-technologies-used)
-- [🗺️ Architecture](#architecture)
+- [🗺️ Architecture](#-architecture)
 - [📦 Installation](#-installation)
 - [⚙️ Configuration](#-configuration)
 - [🔑 API Keys](#-api-keys)
