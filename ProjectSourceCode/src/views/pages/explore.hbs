@@ -243,9 +243,8 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="section-title mb-0">Trending Now</h2>
             <div class="trending-tabs">
-              <button class="tab-btn active" data-tab="popular">Popular</button>
+              <button class="tab-btn" data-tab="popular">High Rated</button>
               <button class="tab-btn" data-tab="latest">Latest</button>
-              <button class="tab-btn" data-tab="recommended">For You</button>
             </div>
           </div>
           
@@ -961,6 +960,10 @@ document.addEventListener('DOMContentLoaded', function() {
   let selectedGenres = [];
   let currentTab = 'popular';
   let currentMovieCache = new Map(); // Cache to avoid refetching movie details
+  let hasMoreResults = true;
+  let hasMoreTrending = true;
+  let activeView = 'trending'; // 'trending' or 'results'
+  let scrollLock = false;
 
   // State management for active filters
   const filterState = {
@@ -1016,6 +1019,104 @@ document.addEventListener('DOMContentLoaded', function() {
       updateActiveFiltersDisplay();
     }
   };
+
+  // Create spinner elements
+  const resultsSpinnerHTML = `
+    <div id="results-spinner" class="text-center py-4 my-3" style="display: none;">
+      <div class="spinner-border" role="status" style="color: var(--primary-purple);">
+        <span class="visually-hidden">Loading more results...</span>
+      </div>
+      <p class="mt-2" style="color: var(--accent-purple);">Loading more results...</p>
+    </div>
+  `;
+  
+  const trendingSpinnerHTML = `
+    <div id="trending-spinner" class="text-center py-4 my-3" style="display: none;">
+      <div class="spinner-border" role="status" style="color: var(--primary-purple);">
+        <span class="visually-hidden">Loading more movies...</span>
+      </div>
+      <p class="mt-2" style="color: var(--accent-purple);">Loading more movies...</p>
+    </div>
+  `;
+
+  // Create error elements with retry buttons
+  const resultsErrorHTML = `
+    <div id="results-error" class="text-center py-4 my-3" style="display: none;">
+      <p style="color: #ff6b6b;">Failed to load more results</p>
+      <button id="retry-results-button" class="btn" style="background-color: var(--primary-purple); color: white;">
+        <i class="bi bi-arrow-repeat me-2"></i>Try Again
+      </button>
+    </div>
+  `;
+  
+  const trendingErrorHTML = `
+    <div id="trending-error" class="text-center py-4 my-3" style="display: none;">
+      <p style="color: #ff6b6b;">Failed to load more movies</p>
+      <button id="retry-trending-button" class="btn" style="background-color: var(--primary-purple); color: white;">
+        <i class="bi bi-arrow-repeat me-2"></i>Try Again
+      </button>
+    </div>
+  `;
+
+  // Create end of content messages
+  const resultsEndHTML = `
+    <div id="results-end" class="text-center py-4 my-3" style="display: none;">
+      <p style="color: var(--accent-purple);">You've reached the end of the search results.</p>
+    </div>
+  `;
+  
+  const trendingEndHTML = `
+    <div id="trending-end" class="text-center py-4 my-3" style="display: none;">
+      <p style="color: var(--accent-purple);">You've reached the end of our recommendations.</p>
+    </div>
+  `;
+
+  // Append elements to the appropriate containers
+  const resultsContainer = document.getElementById('resultsContainer');
+  const trendingContainer = document.getElementById('trendingContainer');
+  
+  if (resultsContainer) {
+    resultsContainer.insertAdjacentHTML('afterend', resultsSpinnerHTML);
+    resultsContainer.insertAdjacentHTML('afterend', resultsErrorHTML);
+    resultsContainer.insertAdjacentHTML('afterend', resultsEndHTML);
+  }
+  
+  if (trendingContainer) {
+    trendingContainer.insertAdjacentHTML('afterend', trendingSpinnerHTML);
+    trendingContainer.insertAdjacentHTML('afterend', trendingErrorHTML);
+    trendingContainer.insertAdjacentHTML('afterend', trendingEndHTML);
+  }
+
+  // Get references to all the new elements
+  const resultsSpinner = document.getElementById('results-spinner');
+  const trendingSpinner = document.getElementById('trending-spinner');
+  const resultsError = document.getElementById('results-error');
+  const trendingError = document.getElementById('trending-error');
+  const resultsEnd = document.getElementById('results-end');
+  const trendingEnd = document.getElementById('trending-end');
+  const retryResultsButton = document.getElementById('retry-results-button');
+  const retryTrendingButton = document.getElementById('retry-trending-button');
+  
+  // Add event listeners to the retry buttons
+  if (retryResultsButton) {
+    retryResultsButton.addEventListener('click', () => {
+      resultsError.style.display = 'none';
+      loadMoreResults();
+    });
+  }
+  
+  if (retryTrendingButton) {
+    retryTrendingButton.addEventListener('click', () => {
+      trendingError.style.display = 'none';
+      loadMoreTrending();
+    });
+  }
+  
+  // Remove the existing Load More button as we'll use automatic loading
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  if (loadMoreBtn) {
+    loadMoreBtn.remove();
+  }
 
   // Toggle advanced search options
   const advancedSearchToggle = document.getElementById('advancedSearchToggle');
@@ -1222,6 +1323,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('trendingSection').classList.add('d-none');
       document.getElementById('resultsSection').classList.remove('d-none');
       document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      activeView = 'results';
       
       // If there's a search query, use that with filters
       if (currentQuery) {
@@ -1235,12 +1337,14 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('trendingSection').classList.add('d-none');
       document.getElementById('resultsSection').classList.remove('d-none');
       document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      activeView = 'results';
       performSearch(currentQuery, 1);
     } else {
       // If no filters and no search, show trending
       loadTrendingMovies(currentTab);
       document.getElementById('trendingSection').classList.remove('d-none');
       document.getElementById('resultsSection').classList.add('d-none');
+      activeView = 'trending';
     }
   });
   
@@ -1249,6 +1353,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show trending section, hide results
     document.getElementById('trendingSection').classList.remove('d-none');
     document.getElementById('resultsSection').classList.add('d-none');
+    activeView = 'trending';
     
     // Reset the search input
     document.getElementById('searchInput').value = '';
@@ -1298,25 +1403,141 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Handle tab switching with improved loading
-  const tabButtons = document.querySelectorAll('.tab-btn');
-  tabButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      // Remove active class from all tabs
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      // Add active class to clicked tab
-      this.classList.add('active');
+const tabButtons = document.querySelectorAll('.tab-btn');
+tabButtons.forEach(button => {
+  button.addEventListener('click', function() {
+    // Remove active class from all tabs
+    tabButtons.forEach(btn => btn.classList.remove('active'));
+    // Add active class to clicked tab
+    this.classList.add('active');
+    
+    // Get the tab type
+    const tabType = this.getAttribute('data-tab');
+    
+    // Reset existing filters
+    filterState.clearAll();
+    
+    // Keep search box empty for all tabs
+    document.getElementById('searchInput').value = '';
+    currentQuery = '';
+    
+    // Set the active view to results
+    activeView = 'results';
+    
+    // Reset search state
+    resetSearch();
+    
+    // Special handling based on tab type
+    if (tabType === 'latest') {
+      // --- LATEST TAB: Current year movies sorted newest first ---
       
-      // Load different content based on the tab
-      currentTab = this.getAttribute('data-tab');
+      // Set the current year
+      const currentYear = new Date().getFullYear(); // This will be 2025 in your app's timeline
+      
+      // Update the filter state with the current year
+      filterState.year = currentYear.toString();
+      document.getElementById('yearFilter').value = currentYear.toString();
+      
+      // Set sorting to year/newest first
+      document.getElementById('newestFilter').checked = true;
+      filterState.newestFirst = true;
+      sortOptions.value = 'year';
+      currentSortOrder = 'year';
+      
+      // Update the UI to show active filters
+      updateActiveFiltersDisplay();
+      
+      // Hide trending and show results section
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      
+      // For the latest movies, use a generic search term with year filter
+      const defaultSearchTerm = "movie"; // Generic term that will match most movies
+      performSearch(defaultSearchTerm, 1, true);
+      
+      // Update the results title
+      const resultsTitle = document.querySelector('.results-title');
+      if (resultsTitle) {
+        resultsTitle.textContent = `Latest Movies (${currentYear})`;
+      }
+      
+    } else if (tabType === 'popular') {
+      // --- POPULAR TAB: Highly-rated, recent, mainstream movies ---
+      
+      // Set rating filter to show higher-rated movies
+      filterState.rating = "7"; // 7+ rated movies
+      document.getElementById('ratingFilter').value = "7";
+      
+      // Set sort by rating
+      sortOptions.value = 'rating';
+      currentSortOrder = 'rating';
+      
+      // Update the UI to show active filters
+      updateActiveFiltersDisplay();
+      
+      // Hide trending and show results section
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      
+      // Popular movies search term with filters
+      const popularSearchTerm = "movie";
+      performSearch(popularSearchTerm, 1, true);
+      
+      // Update the results title
+      const resultsTitle = document.querySelector('.results-title');
+      if (resultsTitle) {
+        resultsTitle.textContent = "Popular Movies";
+      }
+      
+    } else if (tabType === 'recommended') {
+      // --- FOR YOU TAB: Critically acclaimed, diverse selections ---
+      
+      // Set rating filter for critically acclaimed movies
+      filterState.rating = "8"; // 8+ rated movies
+      document.getElementById('ratingFilter').value = "8";
+      
+      // Sort by rating for critically acclaimed movies
+      sortOptions.value = 'rating';
+      currentSortOrder = 'rating';
+      
+      // Update the UI to show active filters
+      updateActiveFiltersDisplay();
+      
+      // Hide trending and show results section
+      document.getElementById('trendingSection').classList.add('d-none');
+      document.getElementById('resultsSection').classList.remove('d-none');
+      document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      
+      // For "For You" recommended movies
+      const recommendedSearchTerm = "movie";
+      performSearch(recommendedSearchTerm, 1, true);
+      
+      // Update the results title
+      const resultsTitle = document.querySelector('.results-title');
+      if (resultsTitle) {
+        resultsTitle.textContent = "Recommended For You";
+      }
+      
+    } else {
+      // Default handling for any other tabs
+      currentTab = tabType;
+      
+      // Show trending section and hide results
+      document.getElementById('trendingSection').classList.remove('d-none');
+      document.getElementById('resultsSection').classList.add('d-none');
+      activeView = 'trending';
       
       // Show loading state
       const trendingContainer = document.getElementById('trendingContainer');
       trendingContainer.innerHTML = generateSkeletonLoaders(5);
       
-      // Load new trending movies
+      // Load trending movies
       loadTrendingMovies(currentTab);
-    });
+    }
   });
+});
   
   // Handle popular search pills
   const popularSearchButtons = document.querySelectorAll('.popular-search-pill');
@@ -1339,6 +1560,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchTerm) {
       resetSearch();
       document.getElementById('backToTrendingContainer').classList.remove('d-none');
+      activeView = 'results';
       
       // Update sort options to default on new search
       if (currentSortOrder !== 'relevance') {
@@ -1377,9 +1599,53 @@ document.addEventListener('DOMContentLoaded', function() {
     // Only reset the page number and query when starting a new search
     page = 1;
     currentQuery = searchInput.value.trim();
+    hasMoreResults = true;
     
     // Clear previous results
     document.getElementById('resultsContainer').innerHTML = '';
+    
+    // Hide previous messages and errors
+    if (resultsEnd) resultsEnd.style.display = 'none';
+    if (resultsError) resultsError.style.display = 'none';
+  }
+
+  // Helper functions for infinite scroll spinners
+  function showResultsSpinner() {
+    if (resultsSpinner) resultsSpinner.style.display = 'block';
+    if (resultsError) resultsError.style.display = 'none';
+  }
+  
+  function hideResultsSpinner() {
+    if (resultsSpinner) resultsSpinner.style.display = 'none';
+  }
+  
+  function showTrendingSpinner() {
+    if (trendingSpinner) trendingSpinner.style.display = 'block';
+    if (trendingError) trendingError.style.display = 'none';
+  }
+  
+  function hideTrendingSpinner() {
+    if (trendingSpinner) trendingSpinner.style.display = 'none';
+  }
+  
+  function showResultsError() {
+    hideResultsSpinner();
+    if (resultsError) resultsError.style.display = 'block';
+  }
+  
+  function showTrendingError() {
+    hideTrendingSpinner();
+    if (trendingError) trendingError.style.display = 'block';
+  }
+  
+  function showResultsEnd() {
+    hideResultsSpinner();
+    if (resultsEnd) resultsEnd.style.display = 'block';
+  }
+  
+  function showTrendingEnd() {
+    hideTrendingSpinner();
+    if (trendingEnd) trendingEnd.style.display = 'block';
   }
   
   // Perform filtered search with no query term
@@ -1391,10 +1657,12 @@ document.addEventListener('DOMContentLoaded', function() {
       // Show loading state
       document.getElementById('loadingIndicator').classList.remove('d-none');
       document.getElementById('noResultsMessage').classList.add('d-none');
-      document.getElementById('loadMoreBtn').classList.add('d-none');
       
       // Clear previous results only on a new search
       document.getElementById('resultsContainer').innerHTML = '';
+    } else {
+      // For infinite scrolling, show the spinner instead
+      showResultsSpinner();
     }
     
     isLoading = true;
@@ -1463,11 +1731,16 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(data => {
         document.getElementById('loadingIndicator').classList.add('d-none');
+        hideResultsSpinner();
         isLoading = false;
         
         if (!data.success || !data.results || data.results.length === 0) {
           if (page === 1) {
             document.getElementById('noResultsMessage').classList.remove('d-none');
+          } else {
+            // No more results with infinite scroll
+            hasMoreResults = false;
+            showResultsEnd();
           }
           return;
         }
@@ -1481,23 +1754,22 @@ document.addEventListener('DOMContentLoaded', function() {
           resultsTitle.textContent = `Search Results (${data.totalResults})`;
         }
         
-        // Show Load More button if there are more results
-        if (data.hasMorePages) {
-          const loadMoreBtn = document.getElementById('loadMoreBtn');
-          loadMoreBtn.classList.remove('d-none');
-          loadMoreBtn.onclick = () => {
-            page++;
-            performFilteredSearch();
-          };
-        } else {
-          document.getElementById('loadMoreBtn').classList.add('d-none');
+        // Check if there are more pages
+        hasMoreResults = data.hasMorePages;
+        if (!hasMoreResults) {
+          showResultsEnd();
         }
+
+        // Increment page for next load
+        page++;
       })
       .catch(error => {
         console.error('Error fetching filtered results:', error);
         document.getElementById('loadingIndicator').classList.add('d-none');
         if (page === 1) {
           document.getElementById('noResultsMessage').classList.remove('d-none');
+        } else {
+          showResultsError();
         }
         isLoading = false;
       });
@@ -1514,7 +1786,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Show loading state
       document.getElementById('loadingIndicator').classList.remove('d-none');
       document.getElementById('noResultsMessage').classList.add('d-none');
-      document.getElementById('loadMoreBtn').classList.add('d-none');
       
       // Hide trending section and show results section
       document.getElementById('trendingSection').classList.add('d-none');
@@ -1522,6 +1793,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Clear previous results only on a new search
       document.getElementById('resultsContainer').innerHTML = '';
+    } else {
+      // For infinite scrolling, show the spinner
+      showResultsSpinner();
     }
     
     isLoading = true;
@@ -1574,16 +1848,21 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(data => {
         document.getElementById('loadingIndicator').classList.add('d-none');
+        hideResultsSpinner();
         isLoading = false;
         
         if (!data.success || !data.results || data.results.length === 0) {
           if (currentPage === 1) {
             document.getElementById('noResultsMessage').classList.remove('d-none');
+          } else {
+            // No more results for infinite scroll
+            hasMoreResults = false;
+            showResultsEnd();
           }
           return;
         }
-        
-        // Render results
+
+      // Render results
         renderSearchResults(data.results);
         
         // Update results title with count
@@ -1592,25 +1871,117 @@ document.addEventListener('DOMContentLoaded', function() {
           resultsTitle.textContent = `Search Results (${data.totalResults})`;
         }
         
-        // Show Load More button if there are more results
-        if (data.hasMorePages) {
-          const loadMoreBtn = document.getElementById('loadMoreBtn');
-          loadMoreBtn.classList.remove('d-none');
-          loadMoreBtn.onclick = () => {
-            page++;
-            performSearch(query, page, withFilters);
-          };
-        } else {
-          document.getElementById('loadMoreBtn').classList.add('d-none');
+        // Check if there are more pages
+        hasMoreResults = data.hasMorePages;
+        if (!hasMoreResults) {
+          showResultsEnd();
         }
+        
+        // Increment page for next load
+        page++;
       })
       .catch(error => {
         console.error('Error fetching search results:', error);
         document.getElementById('loadingIndicator').classList.add('d-none');
         if (currentPage === 1) {
           document.getElementById('noResultsMessage').classList.remove('d-none');
+        } else {
+          showResultsError();
         }
         isLoading = false;
+      });
+  }
+
+  // Function to load more trending movies
+  async function loadMoreTrending() {
+    if (isLoading || !hasMoreTrending) return;
+    
+    isLoading = true;
+    showTrendingSpinner();
+    
+    try {
+      // Build the API URL for trending movies
+      const apiUrl = `/api/movies/trending?type=${currentTab}&page=${page + 1}`;
+      
+      // Fetch more trending movies
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error('Network response was not ok');
+      
+      const data = await response.json();
+      
+      hideTrendingSpinner();
+      
+      if (data.success && data.results && data.results.length > 0) {
+        // Increment the page counter for next load
+        page++;
+        
+        // Render the new movies
+        renderTrendingMovies(data.results);
+        
+        // Check if there are more pages
+        hasMoreTrending = data.hasMorePages;
+        if (!hasMoreTrending) {
+          showTrendingEnd();
+        }
+      } else {
+        // No more trending movies
+        hasMoreTrending = false;
+        showTrendingEnd();
+      }
+    } catch (error) {
+      console.error('Error loading more trending movies:', error);
+      showTrendingError();
+    } finally {
+      isLoading = false;
+    }
+  }
+  
+  // Load trending movies with improved error handling
+  function loadTrendingMovies(type = 'popular') {
+    // Reset pagination for trending when changing tabs
+    if (currentTab !== type) {
+      page = 1;
+      hasMoreTrending = true;
+      if (trendingEnd) trendingEnd.style.display = 'none';
+      if (trendingError) trendingError.style.display = 'none';
+    }
+    
+    currentTab = type;
+    
+    // Clear the container and show loading state
+    const trendingContainer = document.getElementById('trendingContainer');
+    trendingContainer.innerHTML = generateSkeletonLoaders(5);
+    
+    // Fetch trending movies from the API
+    fetch(`/api/movies/trending?type=${type}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Clear placeholders
+        trendingContainer.innerHTML = '';
+        
+        if (!data.success || !data.results) {
+          console.error('Invalid trending data format');
+          return;
+        }
+        
+        // Render trending movies with staggered animation
+        renderTrendingMovies(data.results);
+        
+        // Update pagination data
+        hasMoreTrending = data.hasMorePages;
+      })
+      .catch(error => {
+        console.error('Error loading trending movies:', error);
+        trendingContainer.innerHTML = `
+          <div class="col-12 text-center text-light">
+            <p>Unable to load trending movies. Please try again later.</p>
+          </div>
+        `;
       });
   }
   
@@ -1680,128 +2051,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Load trending movies with improved error handling
-  function loadTrendingMovies(type = 'popular') {
-    // Clear the container and show loading state
+  // Function to render trending movies
+  function renderTrendingMovies(movies) {
     const trendingContainer = document.getElementById('trendingContainer');
-    trendingContainer.innerHTML = generateSkeletonLoaders(5);
     
-    // Fetch trending movies from the API
-    fetch(`/api/movies/trending?type=${type}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        // Clear placeholders
-        trendingContainer.innerHTML = '';
-        
-        if (!data.success || !data.results) {
-          console.error('Invalid trending data format');
-          return;
-        }
-        
-        // Render trending movies with staggered animation
-        data.results.forEach((movie, index) => {
-          const movieElement = document.createElement('div');
-          movieElement.className = 'col animate-fade-in';
-          movieElement.style.animationDelay = `${index * 0.05}s`;
-          
-          const posterUrl = movie.poster && movie.poster !== 'N/A' 
-            ? movie.poster 
-            : `/api/placeholder/300/450`;
-          
-          // Extract year from movie.year which might be a range
-          const year = movie.year ? movie.year.split('-')[0].trim() : '';
-          
-          // Format rating to show one decimal place if it's a whole number
-          let displayRating = movie.rating;
-          if (movie.rating && movie.rating !== 'N/A') {
-            const numRating = parseFloat(movie.rating);
-            displayRating = Number.isInteger(numRating) ? numRating.toFixed(1) : numRating.toString();
-          } else {
-            displayRating = 'N/A';
-          }
-          
-          // Prepare genres display if available
-          let genreDisplay = '';
-          if (movie.genre) {
-            // Get the first genre if multiple are provided
-            const genres = typeof movie.genre === 'string' ? movie.genre.split(',')[0].trim() : '';
-            genreDisplay = `<div class="movie-genre">${genres}</div>`;
-          }
-          
-          movieElement.innerHTML = `
-            <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
-              <div class="poster-container">
-                <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
-                <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title.replace(/'/g, "\\'")}', '${posterUrl}')">
-                  <i class="bi bi-plus-lg"></i>
-                </button>
-              </div>
-              <div class="movie-info">
-                <div class="movie-title">${movie.title}</div>
-                <div class="movie-year-rating">
-                  <div class="movie-year">${year}</div>
-                  <div class="movie-rating">
-                    <i class="bi bi-star-fill"></i> ${displayRating}
-                  </div>
-                </div>
-                ${genreDisplay}
+    movies.forEach((movie, index) => {
+      const movieElement = document.createElement('div');
+      movieElement.className = 'col animate-fade-in';
+      movieElement.style.animationDelay = `${index * 0.05}s`;
+      
+      const posterUrl = movie.poster && movie.poster !== 'N/A' 
+        ? movie.poster 
+        : `/api/placeholder/300/450`;
+      
+      // Extract year from movie.year which might be a range
+      const year = movie.year ? movie.year.split('-')[0].trim() : '';
+      
+      // Format rating to show one decimal place if it's a whole number
+      let displayRating = movie.rating;
+      if (movie.rating && movie.rating !== 'N/A') {
+        const numRating = parseFloat(movie.rating);
+        displayRating = Number.isInteger(numRating) ? numRating.toFixed(1) : numRating.toString();
+      } else {
+        displayRating = 'N/A';
+      }
+      
+      // Prepare genres display if available
+      let genreDisplay = '';
+      if (movie.genre) {
+        // Get the first genre if multiple are provided
+        const genres = typeof movie.genre === 'string' ? movie.genre.split(',')[0].trim() : '';
+        genreDisplay = `<div class="movie-genre">${genres}</div>`;
+      }
+      
+      movieElement.innerHTML = `
+        <div class="movie-card" data-imdb-id="${movie.id}" onclick="location.href='/movies/details/${movie.id}'">
+          <div class="poster-container">
+            <img src="${posterUrl}" alt="${movie.title}" class="movie-poster">
+            <button class="watchlist-btn" title="Add to watchlist" onclick="event.stopPropagation(); addToWatchlist('${movie.id}', '${movie.title.replace(/'/g, "\\'")}', '${posterUrl}')">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+          <div class="movie-info">
+            <div class="movie-title">${movie.title}</div>
+            <div class="movie-year-rating">
+              <div class="movie-year">${year}</div>
+              <div class="movie-rating">
+                <i class="bi bi-star-fill"></i> ${displayRating}
               </div>
             </div>
-          `;
-          
-          trendingContainer.appendChild(movieElement);
-        });
-      })
-      .catch(error => {
-        console.error('Error loading trending movies:', error);
-        trendingContainer.innerHTML = `
-          <div class="col-12 text-center text-light">
-            <p>Unable to load trending movies. Please try again later.</p>
+            ${genreDisplay}
           </div>
-        `;
-      });
+        </div>
+      `;
+      
+      trendingContainer.appendChild(movieElement);
+    });
   }
-    
-  // Implement scroll-based loading with debounce for better performance
-  let debounceTimer;
-  let scrollLock = false;
-  
-  window.onscroll = () => {
-    if (scrollLock) return; // Prevent multiple triggers while loading
-    
-    clearTimeout(debounceTimer); // Reset debounce timer
-    debounceTimer = setTimeout(() => {
-      if (isLoading) return; // Skip if already loading
-      
-      const scrollPosition = window.innerHeight + window.scrollY;
-      const pageHeight = Math.max(
-        document.body.scrollHeight, 
-        document.documentElement.scrollHeight,
-        document.body.offsetHeight, 
-        document.documentElement.offsetHeight
-      );
-      
-      if (scrollPosition >= pageHeight - 500) {
-        // Load more results when user is near bottom
-        const loadMoreBtn = document.getElementById('loadMoreBtn');
-        if (!loadMoreBtn.classList.contains('d-none')) {
-          // Lock scrolling until new content is loaded
-          scrollLock = true;
-          loadMoreBtn.click();
-          // Release lock after a short delay to prevent multiple loads
-          setTimeout(() => {
-            scrollLock = false;
-          }, 1000);
-        }
-      }
-    }, 150);
-  };
-  
+
   // Enhanced watchlist functionality
   window.addToWatchlist = function(imdbId, title, posterUrl) {
     // Get the button that was clicked
@@ -1887,5 +2194,86 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initialize active filters display on page load
   updateActiveFiltersDisplay();
+
+  // Implement scroll-based loading with debounce for better performance
+  let debounceTimer;
+  
+  window.addEventListener('scroll', () => {
+    if (scrollLock) return; // Prevent multiple triggers while loading
+    
+    clearTimeout(debounceTimer); // Reset debounce timer
+    
+    debounceTimer = setTimeout(() => {
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const pageHeight = Math.max(
+        document.body.scrollHeight, 
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight, 
+        document.documentElement.offsetHeight
+      );
+      
+      // If we're near the bottom of the page
+      if (scrollPosition >= pageHeight - 500) {
+        // Determine which content to load based on active view
+        if (activeView === 'results' && !isLoading && hasMoreResults) {
+          // Lock scrolling until new content is loaded
+          scrollLock = true;
+          
+          // If we have filters, use filtered search
+          if (filterState.hasActiveFilters()) {
+            performFilteredSearch();
+          } else if (currentQuery) {
+            // Otherwise use standard search
+            performSearch(currentQuery, page);
+          }
+          
+          // Release lock after a short delay to prevent multiple loads
+          setTimeout(() => {
+            scrollLock = false;
+          }, 1000);
+        } else if (activeView === 'trending' && !isLoading && hasMoreTrending) {
+          // Lock scrolling until new content is loaded
+          scrollLock = true;
+          loadMoreTrending();
+          
+          // Release lock after a short delay to prevent multiple loads
+          setTimeout(() => {
+            scrollLock = false;
+          }, 1000);
+        }
+      }
+    }, 150);
+  });
+
+  // Set up a mutation observer to detect when sections are hidden/shown
+  const trendingSection = document.getElementById('trendingSection');
+  const resultsSection = document.getElementById('resultsSection');
+  
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      if (mutation.attributeName === 'class') {
+        const target = mutation.target;
+        // Check if trending section is visible
+        if (target === trendingSection && !target.classList.contains('d-none')) {
+          activeView = 'trending';
+          console.log('Switched to trending view');
+        }
+        // Check if results section is visible
+        else if (target === resultsSection && !target.classList.contains('d-none')) {
+          activeView = 'results';
+          console.log('Switched to results view');
+        }
+      }
+    });
+  });
+  
+  // Start observing the sections for class changes
+  if (trendingSection) {
+    observer.observe(trendingSection, { attributes: true });
+  }
+  
+  if (resultsSection) {
+    observer.observe(resultsSection, { attributes: true });
+  }
 });
 </script>

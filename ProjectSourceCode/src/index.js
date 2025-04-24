@@ -168,8 +168,6 @@ app.get('/api/movies/search', movieController.searchMovies);
 app.get('/api/movies/details/:imdbId', movieController.getMovieDetails);
 app.post('/api/movies/watchlist', movieController.addToWatchlist);
 app.post('/api/movies/watched', movieController.markAsWatched);
-app.post('/api/movies/review', movieController.addReview);
-app.get('/api/movies/reviews/:imdbId', movieController.getMovieReviews);
 app.get('/api/movies/new', movieController.getNewMovies);
 
 // Routes for the enhanced explore page
