@@ -9,7 +9,7 @@
 
 ---
 
-## 🌐 Deployment & Live Demo
+## 🌐 Live App & Demo Video
 
 <p align="center">
   <a href="https://csci3308-moviemate.onrender.com" target="_blank">
