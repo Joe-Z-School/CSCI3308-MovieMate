@@ -507,10 +507,6 @@
     
     // Load movie details on page load
     loadMovieDetails(imdbId);
-    loadMovieReviews(imdbId);
-    
-    // Set up star rating in review modal
-    setupStarRating();
     
     // Add toggle functionality for plot expansion
     document.addEventListener('click', function(e) {
@@ -518,9 +514,6 @@
         e.target.classList.toggle('expanded');
       }
     });
-    
-    // Handle review submission
-    document.getElementById('submitReviewBtn').addEventListener('click', submitReview);
     
     // Load movie trailer function
     function loadMovieTrailer(movie) {
@@ -640,165 +633,6 @@
       
       // Call loadMovieTrailer with the movie data
       loadMovieTrailer(movie);
-    }
-    
-    // Load movie reviews
-    function loadMovieReviews(id) {
-      fetch(`/api/movies/reviews/${id}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          document.getElementById('reviews-loading').style.display = 'none';
-          
-          if (data.success && data.reviews && data.reviews.length > 0) {
-            displayReviews(data.reviews);
-          } else {
-            document.getElementById('no-reviews').style.display = 'block';
-          }
-        })
-        .catch(error => {
-          console.error('Error loading reviews:', error);
-          document.getElementById('reviews-loading').style.display = 'none';
-          document.getElementById('no-reviews').style.display = 'block';
-        });
-    }
-    
-    // Display reviews in the UI
-    function displayReviews(reviews) {
-      const container = document.getElementById('reviews-content');
-      container.innerHTML = '';
-      
-      reviews.forEach(review => {
-        const reviewCard = document.createElement('div');
-        reviewCard.className = 'review-card';
-        
-        const date = new Date(review.created_at);
-        const formattedDate = date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-        
-        // Generate stars based on rating
-        let stars = '';
-        for (let i = 1; i <= 5; i++) {
-          stars += `<i class="bi ${i <= review.rating ? 'bi-star-fill' : 'bi-star'}"></i>`;
-        }
-        
-        reviewCard.innerHTML = `
-          <div class="review-header">
-            <div class="reviewer-info">
-              <div class="reviewer-avatar">${review.username.charAt(0).toUpperCase()}</div>
-              <div>
-                <div class="reviewer-name">${review.username}</div>
-                <div class="review-date">${formattedDate}</div>
-              </div>
-            </div>
-            <div class="review-rating">
-              ${stars}
-            </div>
-          </div>
-          <div class="review-content">
-            ${review.comment}
-          </div>
-        `;
-        
-        container.appendChild(reviewCard);
-      });
-    }
-    
-    // Setup star rating functionality
-    function setupStarRating() {
-      const stars = document.querySelectorAll('.star');
-      const ratingInput = document.getElementById('ratingInput');
-      const ratingText = document.querySelector('.rating-text');
-      
-      stars.forEach(star => {
-        star.addEventListener('click', function() {
-          const rating = parseInt(this.getAttribute('data-rating'));
-          
-          // Update hidden input and text
-          ratingInput.value = rating;
-          ratingText.textContent = `${rating}/5`;
-          
-          // Update star styling
-          stars.forEach(s => {
-            const starRating = parseInt(s.getAttribute('data-rating'));
-            if (starRating <= rating) {
-              s.classList.add('selected');
-              s.classList.remove('bi-star');
-              s.classList.add('bi-star-fill');
-            } else {
-              s.classList.remove('selected');
-              s.classList.remove('bi-star-fill');
-              s.classList.add('bi-star');
-            }
-          });
-        });
-      });
-    }
-    
-    // Submit a review
-    function submitReview() {
-      const rating = document.getElementById('ratingInput').value;
-      const comment = document.getElementById('reviewComment').value;
-      
-      if (!rating || rating === '0') {
-        alert('Please select a rating');
-        return;
-      }
-      
-      if (!comment.trim()) {
-        alert('Please write a comment');
-        return;
-      }
-      
-      // Submit the review to the API
-      fetch('/api/movies/review', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imdbId: imdbId,
-          rating: rating,
-          comment: comment
-        }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Close modal and refresh reviews
-          const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
-          modal.hide();
-          
-          // Reset form
-          document.getElementById('reviewForm').reset();
-          document.getElementById('ratingInput').value = '0';
-          document.querySelector('.rating-text').textContent = '0/5';
-          document.querySelectorAll('.star').forEach(s => {
-            s.classList.remove('selected');
-            s.classList.remove('bi-star-fill');
-            s.classList.add('bi-star');
-          });
-          
-          // Reload reviews
-          document.getElementById('reviews-loading').style.display = 'block';
-          document.getElementById('reviews-content').innerHTML = '';
-          document.getElementById('no-reviews').style.display = 'none';
-          loadMovieReviews(imdbId);
-        } else {
-          alert('Failed to submit review');
-        }
-      })
-      .catch(error => {
-        console.error('Error submitting review:', error);
-        alert('Failed to submit review');
-      });
     }
     
     // Display error message
