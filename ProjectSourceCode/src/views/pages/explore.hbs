@@ -1469,14 +1469,6 @@ tabButtons.forEach(button => {
       filterState.rating = "7"; // 7+ rated movies
       document.getElementById('ratingFilter').value = "7";
       
-      // Set genre filters for mainstream popular genres
-      filterState.genres = ["action", "adventure"];
-      document.querySelectorAll('.genre-checkbox').forEach(checkbox => {
-        if (["actionFilter", "adventureFilter"].includes(checkbox.id)) {
-          checkbox.checked = true;
-        }
-      });
-      
       // Set sort by rating
       sortOptions.value = 'rating';
       currentSortOrder = 'rating';

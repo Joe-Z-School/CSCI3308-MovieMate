@@ -29,11 +29,8 @@
               <div class="movie-poster-container">
                 <img id="movie-poster" src="" alt="Movie Poster" class="movie-detail-poster">
                 <div class="movie-actions">
-                  <button id="add-watchlist-btn" class="btn action-btn watchlist-btn" data-movie-id="" data-title="" data-poster="" data-plot="">
-                    <i class="bi bi-plus-lg"></i> Watchlist
-                  </button>
-                  <button id="mark-watched-btn" class="btn action-btn watched-btn" data-movie-id="">
-                    <i class="bi bi-check2-circle"></i> Watched
+                  <button id="add-watchlist-btn" class="btn action-btn watchlist-btn w-100" data-movie-id="" data-title="" data-poster="" data-plot="">
+                    <i class="bi bi-plus-lg"></i> Add to Watchlist
                   </button>
                 </div>
               </div>
@@ -116,7 +113,7 @@
           </div>
           
         <!-- Trailer Section -->
-        <div class="trailer-section mt-3">
+        <div class="trailer-section mt-3 mb-4">
         <h3 class="section-title">Trailer</h3>
         <div class="trailer-container">
             <div id="trailer-loading" class="text-center py-3">
@@ -143,68 +140,9 @@
             </div>
         </div>
         </div>
-          
-          <!-- User Reviews Section -->
-          <div class="reviews-section mt-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h3 class="section-title">User Reviews</h3>
-              <button class="btn add-review-btn btn-sm" data-bs-toggle="modal" data-bs-target="#reviewModal">
-                <i class="bi bi-plus-lg"></i> Add Review
-              </button>
-            </div>
-            
-            <div id="reviews-container">
-              <div id="reviews-loading" class="text-center py-4">
-                <div class="spinner-sm" role="status">
-                  <span class="visually-hidden">Loading reviews...</span>
-                </div>
-                <p>Loading reviews...</p>
-              </div>
-              <div id="reviews-content"></div>
-              <div id="no-reviews" class="text-center py-4" style="display: none;">
-                <p>No reviews yet. Be the first to review this movie!</p>
-              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Review Modal -->
-<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="reviewModalLabel">Write a Review</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="reviewForm">
-          <div class="mb-3">
-            <label for="ratingInput" class="form-label">Rating</label>
-            <div class="rating-input">
-              <div class="stars">
-                <i class="bi bi-star star" data-rating="1"></i>
-                <i class="bi bi-star star" data-rating="2"></i>
-                <i class="bi bi-star star" data-rating="3"></i>
-                <i class="bi bi-star star" data-rating="4"></i>
-                <i class="bi bi-star star" data-rating="5"></i>
-              </div>
-              <input type="hidden" id="ratingInput" name="rating" value="0">
-              <span class="rating-text">0/5</span>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="reviewComment" class="form-label">Comment</label>
-            <textarea class="form-control" id="reviewComment" name="comment" rows="4" placeholder="Share your thoughts about this movie..."></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="submitReviewBtn">Submit Review</button>
       </div>
     </div>
   </div>
@@ -326,17 +264,6 @@
   
   .watchlist-btn:hover {
     background-color: var(--dark-purple);
-    transform: translateY(-2px);
-  }
-  
-  .watched-btn {
-    background-color: transparent;
-    color: white;
-    border: 2px solid var(--primary-purple);
-  }
-  
-  .watched-btn:hover {
-    background-color: rgba(95, 75, 139, 0.2);
     transform: translateY(-2px);
   }
   
@@ -513,133 +440,6 @@
     background-color: #cc0000;
     transform: translateY(-2px);
     color: white;
-  }
-  
-  /* Reviews section */
-  .add-review-btn {
-    background-color: var(--primary-purple);
-    color: white;
-    border: none;
-    transition: all 0.3s ease;
-  }
-  
-  .add-review-btn:hover {
-    background-color: var(--dark-purple);
-    transform: translateY(-2px);
-  }
-  
-  /* Review styles */
-  .review-card {
-    background-color: #2A2A2A;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
-    font-size: 0.9rem;
-  }
-  
-  .review-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    align-items: center;
-  }
-  
-  .reviewer-info {
-    display: flex;
-    align-items: center;
-  }
-  
-  .reviewer-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-    background-color: var(--dark-purple);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-  }
-  
-  .reviewer-name {
-    color: white;
-    font-weight: 600;
-  }
-  
-  .review-rating {
-    color: #ffc107;
-    font-weight: 600;
-  }
-  
-  .review-rating i {
-    margin-left: 2px;
-  }
-  
-  .review-date {
-    color: #777;
-    font-size: 0.9rem;
-    margin-top: 3px;
-  }
-  
-  .review-content {
-    color: #bbb;
-    line-height: 1.6;
-  }
-  
-  /* Review Modal */
-  .modal-content {
-    background-color: #2A2A2A;
-    color: #ddd;
-  }
-  
-  .modal-header {
-    border-bottom-color: #444;
-  }
-  
-  .modal-footer {
-    border-top-color: #444;
-  }
-  
-  .rating-input {
-    display: flex;
-    align-items: center;
-  }
-  
-  .stars {
-    display: flex;
-    margin-right: 10px;
-  }
-  
-  .star {
-    color: #777;
-    font-size: 1.5rem;
-    margin-right: 5px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .star:hover,
-  .star.selected {
-    color: #ffc107;
-  }
-  
-  .rating-text {
-    color: #bbb;
-  }
-  
-  /* Form elements */
-  .form-control {
-    background-color: #333;
-    border-color: #444;
-    color: #fff;
-  }
-  
-  .form-control:focus {
-    background-color: #333;
-    color: #fff;
-    border-color: var(--accent-purple);
-    box-shadow: 0 0 0 0.25rem rgba(150, 131, 195, 0.25);
   }
 
 /* YouTube trailer embed styling */
@@ -831,15 +631,12 @@
         });
       }
       
-      // Set up watchlist buttons
+      // Set up watchlist button
       const watchlistBtn = document.getElementById('add-watchlist-btn');
-      const watchedBtn = document.getElementById('mark-watched-btn');
       watchlistBtn.setAttribute('data-movie-id', movie.imdbID);
       watchlistBtn.setAttribute('data-title', movie.Title);
       watchlistBtn.setAttribute('data-poster', movie.Poster);
       watchlistBtn.setAttribute('data-plot', movie.Plot);
-
-      watchedBtn.setAttribute('data-movie-id', movie.imdbID);
       
       // Call loadMovieTrailer with the movie data
       loadMovieTrailer(movie);
@@ -1045,7 +842,7 @@
           }, 1500);
         } else {
           // Show error and reset
-          this.innerHTML = '<i class="bi bi-plus-lg"></i> Watchlist';
+          this.innerHTML = '<i class="bi bi-plus-lg"></i> Add to Watchlist';
           this.disabled = false;
           if (data.error === 'User not authenticated') {
             window.location.href = '/login';
@@ -1056,53 +853,9 @@
       })
       .catch(error => {
         console.error('Error:', error);
-        this.innerHTML = '<i class="bi bi-plus-lg"></i> Watchlist';
+        this.innerHTML = '<i class="bi bi-plus-lg"></i> Add to Watchlist';
         this.disabled = false;
         alert('Failed to add to watchlist');
-      });
-    });
-    
-    // Mark as watched
-    document.getElementById('mark-watched-btn').addEventListener('click', function() {
-      const movieId = this.getAttribute('data-movie-id');
-      
-      // Show loading state
-      this.disabled = true;
-      this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
-      
-      // Mark as watched API call
-      fetch('/api/movies/watched', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ imdbId: movieId }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Update button to show success
-          this.innerHTML = '<i class="bi bi-check2-circle"></i> Watched';
-          this.classList.add('added');
-          setTimeout(() => {
-            this.disabled = false;
-          }, 1500);
-        } else {
-          // Show error and reset
-          this.innerHTML = '<i class="bi bi-check2-circle"></i> Watched';
-          this.disabled = false;
-          if (data.error === 'User not authenticated') {
-            window.location.href = '/login';
-          } else {
-            alert(data.error || 'Failed to mark as watched');
-          }
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        this.innerHTML = '<i class="bi bi-check2-circle"></i> Watched';
-        this.disabled = false;
-        alert('Failed to mark as watched');
       });
     });
   });
