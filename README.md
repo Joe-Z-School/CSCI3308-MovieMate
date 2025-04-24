@@ -9,18 +9,26 @@
 
 ---
 
+## 🌐 Live Demo & Deployment
+
+- 🚀 Deployed App: [https://csci3308-moviemate.onrender.com](https://csci3308-moviemate.onrender.com)  
+- 🎬 [Watch the Video Demo](https://vimeo.com/1078150699?share=copy)
+
+---
+
 ## 📚 Table of Contents
 
 - [✨ Features](#-features)
 - [🛠 Technologies Used](#-technologies-used)
+- [🗺️ Architecture](#architecture)
 - [📦 Installation](#-installation)
+- [⚙️ Configuration](#-configuration)
 - [🔑 API Keys](#-api-keys)
 - [🗃 Database Setup](#-database-setup)
 - [🚀 Running the Application](#-running-the-application)
 - [📁 Project Structure](#-project-structure)
 - [📡 API Overview](#-api-overview)
 - [👨‍💼 Contributors](#-contributors)
-- [📱 Deployed Application](#-deployed-application)
 
 ---
 
@@ -46,7 +54,21 @@
 
 ---
 
+
 ## 🛠 Technologies Used
+
+### ⚙️ Stack Summary
+
+<p align="left">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Socket.IO-010101?style=for-the-badge&logo=socket.io&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Bootstrap-563d7c?style=for-the-badge&logo=bootstrap&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Handlebars.js-f0772b?style=for-the-badge&logo=handlebarsdotjs&logoColor=white"/>
+</p>
+
+---
 
 ### Frontend
 - Handlebars (HBS)
@@ -66,6 +88,12 @@
 ### External APIs
 - **OMDb API** – for movie metadata
 - **YouTube Data API** – for trailers
+
+---
+
+## 🗺️ Architecture
+
+![image](https://github.com/user-attachments/assets/c8b2ab2f-a093-49b2-8a9f-5e6758d18fbc)
 
 ---
 
@@ -197,9 +225,3 @@ MovieMate includes a robust set of RESTful API routes that power features like u
 | Lizzie Ruff | lizzie.ruff@colorado.edu | [liru4345](https://github.com/liru4345) |
 | Maeve Pettey | maeve.pettey@colorado.edu | [maevePettey](https://github.com/maevePettey) |
 | Ella Pasternak | ella.pasternak@colorado.edu | [elpaster](https://github.com/elpaster) |
-
----
-
-## 📱 Deployed Application
-
-You can try MovieMate at https://csci3308-moviemate.onrender.com
