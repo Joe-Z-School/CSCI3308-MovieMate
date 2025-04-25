@@ -65,6 +65,62 @@
       flex-grow: 1;
       margin-bottom: 60px; 
     }
+    
+    /* Adjust padding and font sizes on smaller screens */
+    
+@media (max-width: 576px) {
+  #bootstrap-overrides .table td, 
+  #bootstrap-overrides .table th {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  #bootstrap-overrides .btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+}
+
+/* Make table scrollable */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Force table cells to wrap text */
+#bootstrap-overrides .table td,
+#bootstrap-overrides .table th {
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* Shrink button and image in small screens */
+@media (max-width: 576px) {
+    #bootstrap-overrides .table td .btn {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+
+    #bootstrap-overrides .table img {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+#bootstrap-overrides .table td .btn {
+    font-size: 1rem;        /* Default size */
+    white-space: nowrap;    /* Keep text in one line */
+    overflow: hidden;       /* Hide overflow text */
+    text-overflow: ellipsis; /* Add ... if text overflows */
+    max-width: 100%;        /* Prevent the button from stretching the column */
+}
+
+@media (max-width: 576px) {
+    #bootstrap-overrides .table td .btn {
+        font-size: 0.75rem;   /* Shrink text on mobile */
+        padding: 5px 10px;    /* Less padding for tighter fit */
+    }
+}
 
 
   </style>
@@ -81,7 +137,7 @@
       <input type="text" id="searchInput" class="form-control" placeholder="Search by username..."
         onkeyup="filterUsers()">
     </div>
-
+    <div class="table-responsive">
     <table class="table custom-table" id="userTable">
       <thead>
         <tr>
@@ -107,20 +163,18 @@
           <td>{{bio}}</td>
           <td>
             {{#if is_following}}
-            <button type="button" class="btn btn-outline-danger" onclick="showUnfollowModal('{{id}}', '{{username}}')"
-              style="padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+            <button type="button" class="btn btn-outline-danger" onclick="showUnfollowModal('{{id}}', '{{username}}')">
               Unfollow
             </button>
             {{else if is_requested}}
-            <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')"
-              style="padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+            <button type="button" class="btn btn-warning" onclick="showCancelRequestModal('{{id}}', '{{username}}')">
               Requested
             </button>
             {{else}}
             <form action="/users/follow" method="POST">
               <input type="hidden" name="following_id" value="{{id}}">
-              <button type="submit"
-                style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">
+              <button type="submit" class="btn btn-purple btn-responsive"
+                style="background-color: #5F4B8B; color: white; border: none;">
                 Follow
               </button>
             </form>
@@ -130,6 +184,7 @@
         {{/each}}
       </tbody>
     </table>
+  </div>
   </div>
 {{>follow-modal}}
   <!-- Custom JS -->
