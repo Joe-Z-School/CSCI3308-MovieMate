@@ -81,7 +81,7 @@
   color: #bdc3c7;
 }
 
-/* Media Queries for Responsiveness */
+/* Responsive */
 @media (max-width: 768px) {
   .modal-dialog {
     max-width: 90%;
@@ -96,10 +96,12 @@
 /* Heart and Comment Icons */
 .d-flex i.bi-heart-fill,
 .d-flex i.bi-chat-dots {
-  color: white !important; /* Ensure heart and comment icons in modal are white */
+  color: white !important;
 }
 
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Post Details Modal -->
 <div class="modal fade" id="postDetailsModal" tabindex="-1" aria-labelledby="postDetailsModalLabel" aria-hidden="true">
@@ -110,7 +112,7 @@
           <i class="bi bi-person-circle fs-4 me-2 text-secondary"></i>
           <strong class="text-light">@<span id="postUser"></span></strong>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">X</button>
       </div>
       <div class="modal-body">
         <!-- Post Cover Image -->
@@ -212,6 +214,29 @@ async function showPostDetails(postId) {
   }
 }
 
+const modalElement = document.getElementById('postDetailsModal');
+const modal = new bootstrap.Modal(modalElement);
 
+document.querySelector('#postDetailsModal .btn-close').addEventListener('click', function () {
+    modal.hide();
+
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+        backdrop.classList.remove('fade', 'show');
+        backdrop.remove();
+    }
+});
+
+function openModal() {
+    modal.show();
+}
+
+modalElement.addEventListener('hidden.bs.modal', function () {
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+        backdrop.classList.remove('fade', 'show');
+        backdrop.remove();
+    }
+});
 
 </script>

@@ -1,13 +1,13 @@
 
 <style>
     body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        display: block !important;
-        justify-content: unset !important;
+        margin: 0;
+        padding: 0;
+        background-color: #111;
+        color: #fff;
+        font-family: sans-serif;
     }
+
 
     /* Purple buttons */
     .btn-purple {
@@ -40,14 +40,108 @@
         cursor: pointer;
     }
 
-   .post-container {
+    .post-container {
         display: grid;
-        grid-template-columns: repeat(2, 1fr); /* Exactly 2 columns */
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 20px;
-        margin-top: 20px;
+        width: 100%;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+
+    .profile-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 5px;
+        text-align: left;
+    }
+
+
+    .profile-info {
+        flex: 1 1 1;
+    }
+
+
+    @media (max-width: 600px) {
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .btn-add-post {
+            width: 100%;
+            font-size: 14px;
+            padding: 10px;
+        }
+
+        h3 {
+            font-size: 20px;
+        }
+
+        .profile-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            height: 270px;
+        }
+
+        .profile-info {
+            margin-bottom: 1px;
+            height: 90px;
+            align-items: center;
+            margin-left: 0px;
+        }
+
+        .profile-bio {
+            margin-bottom: 0px;
+        }
+
+        .btn-edit {
+            margin-top: 1px;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .profile-stats {
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            padding: 1px 0px;
+        }
+
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .page-wrapper {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .profile-container {
         width: 100%;
         max-width: 1000px;
-        padding: 20px;
+    }
+
+    .profile-stats {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 20px;
+        text-align: center;
+        padding: 10px 80px;
     }
 
     /* Style for "Add Post" button */
@@ -244,6 +338,7 @@
 
     #preview-container {
         text-align: center;
+        margin: 0 auto;
     }
 
     #preview-image {
@@ -254,6 +349,7 @@
         background-color: rgba(255, 255, 255, 0.03);
         box-shadow: 0 0 12px 3px rgba(168, 84, 240, 0.5); /* glowing border */
         border-radius: 12px;
+        display: inline-block
     }
 
     #preview-image:hover {
@@ -561,6 +657,25 @@
     @keyframes fadeLabel {
         from { opacity: 0; }
         to { opacity: 1; }
+    }    
+
+    @media (max-width: 576px) {
+        .svg-container {
+            height: 40px; 
+        }
+
+        svg {
+            height: 40px; 
+        }
+
+        .reel-slot rect {
+            transform: translateY(-4px); 
+        }
+
+        .preview-image {
+            align-items: center;
+        }
+
     }
 
     .modal-footer {
@@ -669,90 +784,93 @@
 {{> nav}}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-<div class="profile-container">
-    <div class="profile-header">
-        <img src="../../resources/img/{{profile.profile_icon}}" alt="Profile Picture" class="profile-pic">
+<div class="page-wrapper">
+    <div class="profile-container">
+        <div class="profile-header">
+            <img src="../../resources/img/{{profile.profile_icon}}" alt="Profile Picture" class="profile-pic">
 
-        <div class="profile-info">
-            <h1 class="profile-name">{{profile.first_name}} {{profile.last_name}}</h1>
-            <p class="profile-username">@{{profile.username}}</p>
-            <div class="profile-bio">
-                <p>{{profile.bio}}</p>
-            </div>
-            {{#if isOwnProfile}}
-            <button id="openEditModal" class="btn-edit">Edit Profile</button>
-            {{else}}
-            {{#if profile.is_following}}
-            <button type="button" class="btn btn-outline-danger"
-                style="padding: 10px 20px; font-size: 16px; border-radius: 5px;"
-                onclick="showUnfollowModal('{{profile.id}}', '{{profile.username}}')">Unfollow</button>
-            {{else if profile.is_requested}}
-            <button type="button" class="btn btn-warning"
-                onclick="showCancelRequestModal('{{profile.id}}', '{{profile.username}}')">
-                Requested</button>
-            {{else}}
-            <form action="/users/follow" method="POST">
-                <input type="hidden" name="following_id" value="{{profile.id}}">
-                <button type="submit"
-                    style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
-            </form>
-            {{/if}}
-            {{/if}}
-        </div>
-    </div>
-
-    <div class="profile-stats">
-        <div class="stat-item">
-            <a href="/profile/watchlist?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
-                <div class="stat-value">{{watchlistCount}}</div>
-                <div class="stat-label" id="followers">Watchlist</div>
-            </a>
-        </div>
-        <div class="stat-item">
-            <a href="/profile/followers?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
-                <div class="stat-value">{{followersCount}}</div>
-                <div class="stat-label" id="followers">Followers</div>
-            </a>
-        </div>
-        <div class="stat-item">
-            <a href="/profile/following?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
-                <div class="stat-value">{{followingCount}}</div>
-                <div class="stat-label" id="following">Following</div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Add Post Button -->
-    {{#if isOwnProfile}}
-    <button type="button" class="btn btn-purple mt-4" data-bs-toggle="modal" data-bs-target="#postModal">
-        Add Post
-    </button>
-    {{/if}}
-    <h3 style="margin-top: 30px;">Recent Posts</h3>
-    <div class="post-container">
-        {{#each posts}}
-        <div class="post-content mb-4">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#postDetailsModal" onclick="showPostDetails('{{id}}')">
-                <img src="{{cover}}" alt="{{title}} cover" class="w-100 rounded mb-2" style="object-fit: cover;">
-            </a>
-            <h5 class="text-light">{{title}}</h5>
-            <div class="d-flex align-items-center text-light mb-1 post-footer">
-                <i class="bi bi-chat-dots me-1"></i>
-                <span class="me-3">{{comment_count}}</span>
-                <i class="bi bi-heart me-1"></i>
-                <span>{{like_count}}</span>
+            <div class="profile-info">
+                <h1 class="profile-name">{{profile.first_name}} {{profile.last_name}}</h1>
+                <p class="profile-username">@{{profile.username}}</p>
+                <div class="profile-bio">
+                    <p>{{profile.bio}}</p>
+                </div>
+                {{#if isOwnProfile}}
+                <button id="openEditModal" class="btn-edit">Edit Profile</button>
+                {{else}}
+                {{#if profile.is_following}}
+                <button type="button" class="btn btn-outline-danger"
+                    style="padding: 10px 20px; font-size: 16px; border-radius: 5px;"
+                    onclick="showUnfollowModal('{{profile.id}}', '{{profile.username}}')">Unfollow</button>
+                {{else if profile.is_requested}}
+                <button type="button" class="btn btn-warning"
+                    onclick="showCancelRequestModal('{{profile.id}}', '{{profile.username}}')">
+                    Requested</button>
+                {{else}}
+                <form action="/users/follow" method="POST">
+                    <input type="hidden" name="following_id" value="{{profile.id}}">
+                    <button type="submit"
+                        style="background-color: #5F4B8B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px;">Follow</button>
+                </form>
+                {{/if}}
+                {{/if}}
             </div>
         </div>
-        {{/each}}
+
+        <div class="profile-stats">
+            <div class="stat-item">
+                <a href="/profile/watchlist?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
+                    <div class="stat-value">{{watchlistCount}}</div>
+                    <div class="stat-label" id="followers">Watchlist</div>
+                </a>
+            </div>
+            <div class="stat-item">
+                <a href="/profile/followers?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
+                    <div class="stat-value">{{followersCount}}</div>
+                    <div class="stat-label" id="followers">Followers</div>
+                </a>
+            </div>
+            <div class="stat-item">
+                <a href="/profile/following?userId={{profile.id}}" style="text-decoration: none; color: inherit;">
+                    <div class="stat-value">{{followingCount}}</div>
+                    <div class="stat-label" id="following">Following</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Add Post Button -->
+        {{#if isOwnProfile}}
+        <button type="button" class="btn btn-purple mt-4" data-bs-toggle="modal" data-bs-target="#postModal">
+            Add Post
+        </button>
+        {{/if}}
+        <h3 style="margin-top: 30px;">Recent Posts</h3>
+        <div class="post-container">
+            {{#each posts}}
+            <div class="post-content mb-4">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#postDetailsModal" onclick="showPostDetails('{{id}}')">
+                    <img src="{{cover}}" alt="{{title}} cover" class="w-100 rounded mb-2" style="object-fit: cover;">
+                </a>
+                <h5 class="text-light">{{title}}</h5>
+                <div class="d-flex align-items-center text-light mb-1 post-footer">
+                    <i class="bi bi-chat-dots me-1"></i>
+                    <span class="me-3">{{comment_count}}</span>
+                    <i class="bi bi-heart me-1"></i>
+                    <span>{{like_count}}</span>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+        {{> postDetailsModal}}
     </div>
-    {{> postDetailsModal}}
 </div>
 
-{{#unless posts.length}}
-<p>No posts yet.</p>
-{{/unless}}
+<div class="no-posts align-items-center text-center">
+    {{#unless posts.length}}
+    <p>No posts yet.</p>
+    {{/unless}}
 </div>
-</div>
+
 {{#if isOwnProfile}}
 {{> edit-profile-modal}}
 {{/if}}
@@ -764,7 +882,7 @@
         <div class="modal-content bg-dark text-light">
             <div class="modal-header">
                 <h5 class="modal-title" id="addPostModalLabel">Create a New Post</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">X</button>
             </div>
             <form id="addPostForm" enctype="multipart/form-data">
                 <div class="modal-body">
